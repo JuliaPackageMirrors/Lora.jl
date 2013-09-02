@@ -35,22 +35,43 @@ end
 hasvectormethod(f::Function) = !isgeneric(f) | length(methods(f, (Vector{Float64},))) == 1
 hasgradient{M<:MCMCModel}(m::M) = m.evalg != nothing
 hashessian{M<:MCMCModel}(m::M) = m.evalh != nothing
+hastensor{M<:MCMCModel}(m::M) = m.evalt != nothing
 
 #### User-facing model creation function  ####
 
 # TODO
 
 function model(f::Function; mtype="likelihood", args...)
-
 	if mtype == "likelihood"
-		return MCMCLikelihoodModel( f; args...)
+		return MCMCLikelihoodModel(f; args...)
 	elseif mtype == "whatever"
 	else
 	end
-
-
 end
 
+function model(f1::Function, f2::Function; mtype="likelihood", args...)
+	if mtype == "likelihood"
+		return MCMCLikelihoodModel(f1, f2; args...)
+	elseif mtype == "whatever"
+	else
+	end
+end
+
+function model(f1::Function, f2::Function, f3::Function; mtype="likelihood", args...)
+	if mtype == "likelihood"
+		return MCMCLikelihoodModel(f1, f2, f3; args...)
+	elseif mtype == "whatever"
+	else
+	end
+end
+
+function model(m::Expr; mtype="likelihood", args...)
+	if mtype == "likelihood"
+		return MCMCLikelihoodModel(m::Expr; args...)
+	elseif mtype == "whatever"
+	else
+	end
+end
 
 #### models  #####
 

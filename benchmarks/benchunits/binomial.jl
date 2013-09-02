@@ -9,19 +9,22 @@ beta0 = randn((nbeta,))
 Y = rand(n) .< ( 1 ./ (1. + exp(X * beta0)))
 
 # define model
-model = quote
+ex = quote
 	vars ~ Normal(0, 1.0)  # Normal prior, std 1.0 for predictors
 	prob = 1 / (1. + exp(X * vars)) 
 	Y ~ Bernoulli(prob)
 end
 
-m = MCMCLikModel(model, vars=zeros(nbeta))
-mg = MCMCLikModelG(model, vars=zeros(nbeta))
+m = model(ex, vars=zeros(nbeta))
+mg = model(ex, gradient=true, vars=zeros(nbeta))
 
 name = "binomial 10x1000"
 
-res = [	benchmark( ()-> m.eval(m.init), "loglik eval", name, 1000) ;
-		benchmark( ()-> mg.evalg(mg.init), "loglik and gradient eval", name, 1000) ;
-		benchmark( ()-> run(m * RWM(0.1), steps=100),  
-	           					"100 RWM steps", name, 10) ]
+f1 = ()-> m.eval(m.init)
+f2 = ()-> mg.evalg(mg.init)
+f3 = ()-> run(m * RWM(0.1), steps=100)
+
+res = [	benchmark( f1, "loglik eval", name, 1000) ;
+		benchmark( f2, "loglik and gradient eval", name, 1000) ;
+		benchmark( f3, "100 RWM steps", name, 10) ]
 
