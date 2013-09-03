@@ -2,9 +2,7 @@ module Abcd
 
 	using Distributions
 
-	export ParsingStruct
-	export parseModel!
-
+	
 	const ACC_SYM = :__acc       # name of accumulator variable
 	const PARAM_SYM = :__beta    # name of parameter vector
 	const TEMP_NAME = "tmp"      # prefix of temporary variables in log-likelihood function
@@ -37,8 +35,9 @@ module Abcd
 	typealias Exprref      ExprH{:ref}
 	typealias Exprif       ExprH{:if}
 	typealias Exprcomp     ExprH{:comparison}
+	typealias Exprdot      ExprH{:.}
 
-	## variable symbol polling functions
+	## variable symbol survey functions
 	getSymbols(ex::Any) =        Set{Symbol}()
 	getSymbols(ex::Symbol) =     Set{Symbol}(ex)
 	getSymbols(ex::Array) =      mapreduce(getSymbols, union, ex)
@@ -49,6 +48,7 @@ module Abcd
 	getSymbols(ex::Exprcomp) =   setdiff(mapreduce(getSymbols, union, ex.args), 
 		Set(:(>), :(<), :(>=), :(<=), :(.>), :(.<), :(.<=), :(.>=), :(==)) )
 
+	getSymbols(ex::Exprdot) =     Set{Symbol}(ex.args[1])  # return variable, not fields
 
 	## variable symbol subsitution functions
 	substSymbols(ex::Expr, smap::Dict) =          substSymbols(toExprH(ex), smap::Dict)
@@ -57,6 +57,7 @@ module Abcd
 	substSymbols(ex::Symbol, smap::Dict) =        haskey(smap, ex) ? smap[ex] : ex
 	substSymbols(ex::Vector{Expr}, smap::Dict) =  map(e -> substSymbols(e, smap), ex)
 	substSymbols(ex::Any, smap::Dict) =           ex
+	substSymbols(ex::Exprdot, smap::Dict) =       (ex.args[1] = get(smap, ex.args[1], ex.args[1]) ; toExpr(ex) )
 
 	######### structure for parsing model  ##############
 	type ParsingStruct
@@ -74,6 +75,20 @@ module Abcd
 	ParsingStruct() = ParsingStruct(0, Dict{Symbol, PDims}(), Float64[], :(), Expr[], Expr[], ACC_SYM, 
 		Set{Symbol}(), Set{Symbol}(), Set{Symbol}())
 
+	#### Log-likelihood accumulator type  ####
+	# this makes the generated function easier to generate compared to a Float64
+	#   - embeds the error throwing when log-likelihood reaches -Inf
+	#   - calculates the sum when logpdf() returns an Array
+	immutable LLAcc
+		val::Float64
+		function LLAcc(x::Real)
+			isfinite(x) || error("give up eval")
+			new(x)
+		end
+	end
+	+(ll::LLAcc, x::Real) = LLAcc(ll.val + x)
+	+(ll::LLAcc, x::Array{Float64}) = LLAcc(ll.val + sum(x))
+
 
 	######### first pass on the model
 	#  - extracts parameters definition
@@ -88,6 +103,8 @@ module Abcd
 		explore(ex::Exprref) =    toExpr(ex) # no processing
 		explore(ex::Exprequal) =  toExpr(ex) # no processing
 		explore(ex::Exprvcat) =   toExpr(ex) # no processing
+
+		explore(ex::Exprdot) =    toExpr(ex) # no processing
 		
 		explore(ex::Exprpequal) = (args = ex.args ; Expr(:(=), args[1], Expr(:call, :+, args...)) )
 		explore(ex::Exprmequal) = (args = ex.args ; Expr(:(=), args[1], Expr(:call, :-, args...)) )
@@ -132,13 +149,15 @@ module Abcd
 	function unfold!(m::ParsingStruct)
 
 		explore(ex::Expr) =       explore(toExprH(ex))
-		explore(ex::ExprH) =      error("[unfold] unmanaged expr type $(ex.head)")
+		explore(ex::ExprH) =      error("[unfold] unmanaged expr type $(ex.head) in ($ex)")
 		explore(ex::Exprline) =   nothing     # remove line info
 		explore(ex::Exprref) =    toExpr(ex)   # unchanged
 		explore(ex::Exprcomp) =   toExpr(ex)  # unchanged
 		explore(ex::Exprvcat) =   explore(Expr(:call, :vcat, ex.args...) )  # translate to vcat(), and explore
 		explore(ex::Exprtrans) =  explore(Expr(:call, :transpose, ex.args[1]) )  # translate to transpose() and explore
 		explore(ex::Any) =        ex
+
+		explore(ex::Exprdot) =    toExpr(ex)   # unchanged
 
 		explore(ex::Exprblock) =  mapreduce(explore, (a,b)->b, ex.args)  # process, and return last evaluated
 		
@@ -372,11 +391,13 @@ module Abcd
 	    global vhint = Dict()
 
 	    body = Expr[ betaAssign(m)..., 
-	                 :(local $ACC_SYM = 0.), 
+	                 :($ACC_SYM = LLAcc(0.)), 
 	                 m.exprs...]
 	    
 	    vl = getSymbols(body)  # list of all vars (external, parameters, set by model, and accumulator)
-	    body = vcat(body, [ :(vhint[$(Expr(:quote, v))] = $v) for v in vl ], :(return $(m.finalacc)))
+	    body = vcat(body, 
+	    			[ :(vhint[$(Expr(:quote, v))] = $v) for v in vl ], 
+	    			:(return $(Expr(:., m.finalacc, Expr(:quote, :val)))) )
 
 		# enclose in a try block to catch zero likelihoods (-Inf log likelihood)
 		body = Expr(:try, Expr(:block, body...),
@@ -431,18 +452,19 @@ module Abcd
 			dsym(v::Symbol) = symbol("$DERIV_PREFIX$(v)")
 
 			# initialization statements 
-			body = [ betaAssign(m)...,        # assigments beta vector -> model parameter vars
-			         :($ACC_SYM = 0.),        # initialize accumulator
-			         :($(dsym(m.finalacc)) = 1.0)] # initialize accumulator gradient accumulator  
+			body = [ betaAssign(m)...,              # assigments beta vector -> model parameter vars
+			         :($ACC_SYM = LLAcc(0.)),       # initialize accumulator
+			         :($(dsym(m.finalacc)) = 1.0)]  # initialize accumulator gradient accumulator  
 
 			avars = setdiff(intersect(m.accanc, m.pardesc), Set(m.finalacc)) # active vars without accumulator, treated above  
 			for v in avars 
 				vh = vhint[v]
 				if isa(vh, Real)
 					push!(body, :($(dsym(v)) = 0.))
-				else	
-					# push!(body, :($(dsym(v)) = zeros(Float64, $(Expr(:quote,size(vh))))) )
+				elseif 	isa(vh, Vector)
 					push!(body, :($(dsym(v)) = zeros(Float64, $(Expr(:tuple,size(vh)...)))) )
+				elseif 	isa(vh, Distribution)  #  TODO : find real equivament vector size
+					push!(body, :($(dsym(v)) = zeros(2)))
 				end
 			end
 
@@ -490,7 +512,7 @@ module Abcd
 					push!(body, :( $gsym[ $(Expr(:quote,r)) ] = vec($(dsym(p))) ))
 				end
 			end
-			push!(body, :(($(m.finalacc), $gsym)))
+			push!(body, :( ($(Expr(:., m.finalacc, Expr(:quote, :val))), $gsym) ) )
 
 			# dexp = { :( vec([$(dsym(p))]) ) for p in keys(m.pars)}
 			# dexp = length(m.pars) > 1 ? Expr(:call, :vcat, dexp...) : dexp[1]
@@ -503,9 +525,9 @@ module Abcd
 
 		else  # case without gradient
 			body = [ betaAssign(m)...,        # assigments beta vector -> model parameter vars
-			         :(local $ACC_SYM = 0.),  # initialize accumulator
+			         :($ACC_SYM = LLAcc(0.)),  # initialize accumulator
 	                 m.source.args...,        # model statements
-	                 :(return($ACC_SYM)) ]
+	                 :(return $( Expr(:., ACC_SYM, Expr(:quote, :val)) )) ]
 
 			# enclose in a try block
 			body = Expr(:try, Expr(:block, body...),
