@@ -24,12 +24,18 @@ end
 
 
 ## common operators
-# TODO : check if ds can be removed for clarity
 
 @dfunc +(x::Real, y)     x     sum(ds)
 @dfunc +(x::Array, y)    x     +ds
 @dfunc +(x, y::Real)     y     sum(ds)
 @dfunc +(x, y::Array)    y     +ds
+
+# only additions are possible with LLAcc type 
+@dfunc +(x::LLAcc, y::Real)    x     sum(ds)
+@dfunc +(x::LLAcc, y::Array)   x     +ds
+@dfunc +(x::LLAcc, y::Real)    y     sum(ds)
+@dfunc +(x::LLAcc, y::Array)   y     +ds
+
 
 @dfunc -x                x     -ds
 @dfunc -(x::Real, y)     x     sum(ds)
@@ -91,19 +97,37 @@ end
 @dfunc transpose(x::Array)  x   transpose(ds)
 
 ## Normal distribution
-@dfunc logpdfNormal(mu::Real, sigma, x)    mu     sum((x - mu) ./ (sigma .* sigma)) * ds
-@dfunc logpdfNormal(mu::Array, sigma, x)   mu     (x - mu) ./ (sigma .* sigma) * ds
-@dfunc logpdfNormal(mu, sigma::Real, x)    sigma  sum(((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma) * ds
-@dfunc logpdfNormal(mu, sigma::Array, x)   sigma  ((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma * ds
-@dfunc logpdfNormal(mu, sigma, x::Real)    x      sum((mu - x) ./ (sigma .* sigma)) * ds
-@dfunc logpdfNormal(mu, sigma, x::Array)   x      (mu - x) ./ (sigma .* sigma) * ds
+# @dfunc logpdfNormal(mu::Real, sigma, x)    mu     sum((x - mu) ./ (sigma .* sigma)) * ds
+# @dfunc logpdfNormal(mu::Array, sigma, x)   mu     (x - mu) ./ (sigma .* sigma) * ds
+# @dfunc logpdfNormal(mu, sigma::Real, x)    sigma  sum(((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma) * ds
+# @dfunc logpdfNormal(mu, sigma::Array, x)   sigma  ((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma * ds
+# @dfunc logpdfNormal(mu, sigma, x::Real)    x      sum((mu - x) ./ (sigma .* sigma)) * ds
+# @dfunc logpdfNormal(mu, sigma, x::Array)   x      (mu - x) ./ (sigma .* sigma) * ds
+
+@dfunc Normal(mu::Real, std::Real)  mu  ds[1]
+@dfunc Normal(mu::Real, std::Real)  std ds[2]
+
+@dfunc logpdf(d::Normal, x)  d  ( [ sum((x - d.mean) ./ (d.std * d.std) .* ds),
+									sum(((x - d.mean).*(x - d.mean) ./ (d.std*d.std) - 1.) ./ d.std .* ds) ] )
+@dfunc logpdf(d::Normal, x::Real)    x      (d.mean - x) / (d.std * d.std) * ds
+@dfunc logpdf(d::Normal, x::Array)   x      (d.mean - x) / (d.std * d.std) .* ds
+
 
 ## Uniform distribution
-@dfunc logpdfUniform(a::Real, b, x)      a   sum((a .<= x .<= b) ./ (b - a)) * ds
-@dfunc logpdfUniform(a::Array, b, x)     a   ((a .<= x .<= b) ./ (b - a)) * ds
-@dfunc logpdfUniform(a, b::Real, x)      b   sum((a .<= x .<= b) ./ (a - b)) * ds
-@dfunc logpdfUniform(a, b::Array, x)     b   ((a .<= x .<= b) ./ (a - b)) * ds
-@dfunc logpdfUniform(a, b, x)            x   zero(x)
+# @dfunc logpdfUniform(a::Real, b, x)      a   sum((a .<= x .<= b) ./ (b - a)) * ds
+# @dfunc logpdfUniform(a::Array, b, x)     a   ((a .<= x .<= b) ./ (b - a)) * ds
+# @dfunc logpdfUniform(a, b::Real, x)      b   sum((a .<= x .<= b) ./ (a - b)) * ds
+# @dfunc logpdfUniform(a, b::Array, x)     b   ((a .<= x .<= b) ./ (a - b)) * ds
+# @dfunc logpdfUniform(a, b, x)            x   zero(x)
+
+@dfunc Uniform(a::Real, b::Real)  a   ds[1]
+@dfunc Uniform(a::Real, b::Real)  b   ds[2]
+
+@dfunc logpdf(d::Uniform, x)      d  ( [ sum((d.a .<= x .<= d.b) ./ (d.b - d.a) .* ds),
+									     sum((d.a .<= x .<= d.b) ./ (d.a - d.b) .* ds) ] )
+@dfunc logpdf(d::Uniform, x)      x   zero(x)
+
+
 
 ## Weibull distribution
 @dfunc logpdfWeibull(sh::Real, sc, x)    sh  (r = x./sc ; sum(((1. - r.^sh) .* log(r) + 1./sh)) * ds)
@@ -134,12 +158,21 @@ end
 @dfunc logpdfExponential(sc::Array, x)   sc  (x-sc) ./ (sc.*sc) .* ds
 
 ## Gamma distribution
-@dfunc logpdfGamma(sh, sc, x::Real)    x   sum(-( sc + x - sh.*sc)./(sc.*x)) .* ds
-@dfunc logpdfGamma(sh, sc, x::Array)   x   (-( sc + x - sh.*sc)./(sc.*x)) .* ds
-@dfunc logpdfGamma(sh::Real, sc, x)    sh  sum(log(x) - log(sc) - digamma(sh)) .* ds
-@dfunc logpdfGamma(sh::Array, sc, x)   sh  (log(x) - log(sc) - digamma(sh)) .* ds
-@dfunc logpdfGamma(sh, sc::Real, x)    sc  sum((x - sc.*sh) ./ (sc.*sc)) .* ds
-@dfunc logpdfGamma(sh, sc::Array, x)   sc  ((x - sc.*sh) ./ (sc.*sc)) .* ds
+# @dfunc logpdfGamma(sh, sc, x::Real)    x   sum(-( sc + x - sh.*sc)./(sc.*x)) .* ds
+# @dfunc logpdfGamma(sh, sc, x::Array)   x   (-( sc + x - sh.*sc)./(sc.*x)) .* ds
+# @dfunc logpdfGamma(sh::Real, sc, x)    sh  sum(log(x) - log(sc) - digamma(sh)) .* ds
+# @dfunc logpdfGamma(sh::Array, sc, x)   sh  (log(x) - log(sc) - digamma(sh)) .* ds
+# @dfunc logpdfGamma(sh, sc::Real, x)    sc  sum((x - sc.*sh) ./ (sc.*sc)) .* ds
+# @dfunc logpdfGamma(sh, sc::Array, x)   sc  ((x - sc.*sh) ./ (sc.*sc)) .* ds
+
+@dfunc Gamma(sh, sc)  sh   ds[1]
+@dfunc Gamma(sh, sc)  sc   ds[2]
+
+@dfunc logpdf(d::Gamma, x)      d  ( [ sum((log(x) - log(d.scale) - digamma(d.shape)) .* ds),
+									   sum((x - d.scale.*d.shape) / (d.scale*d.scale) .* ds) ] )
+@dfunc logpdf(d::Gamma, x::Real)       x   sum(-( d.scale + x - d.shape.*d.scale)./(d.scale.*x)) .* ds
+@dfunc logpdf(d::Gamma, x::Array)      x   (-( d.scale + x - d.shape.*d.scale)./(d.scale.*x)) .* ds
+
 
 ## Cauchy distribution
 @dfunc logpdfCauchy(mu, sc, x::Real)    x   sum(2(mu-x) ./ (sc.*sc + (x-mu).*(x-mu))) .* ds
@@ -161,11 +194,7 @@ end
 
 
 
-@dfunc logpdf(d::Normal, x)  d  ( [ sum((x - d.mean) ./ (d.std .* d.std)) * ds,
-									sum(((x - d.mean).*(x - d.mean) ./ (d.std.*d.std) - 1.) ./ d.std) * ds ] )
 
-@dfunc Normal(mu::Real, std::Real)  mu  ds[1]
-@dfunc Normal(mu::Real, std::Real)  std ds[2]
 
 # lsc.*lsc ; ( (lmu.*lmu - tmp2 - log(x).*(2lmu-log(x))) ./ (lsc.*tmp2) ) .* ds )
 

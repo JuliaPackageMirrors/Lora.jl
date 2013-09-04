@@ -1,7 +1,6 @@
 module Abcd
 
 	using Distributions
-
 	
 	const ACC_SYM = :__acc       # name of accumulator variable
 	const PARAM_SYM = :__beta    # name of parameter vector
@@ -76,13 +75,15 @@ module Abcd
 		Set{Symbol}(), Set{Symbol}(), Set{Symbol}())
 
 	#### Log-likelihood accumulator type  ####
-	# this makes the generated function easier to generate compared to a Float64
+	# this makes the model function easier to generate compared to a Float64
 	#   - embeds the error throwing when log-likelihood reaches -Inf
 	#   - calculates the sum when logpdf() returns an Array
+	type OutOfSupportError <: Exception ; end
+
 	immutable LLAcc
 		val::Float64
 		function LLAcc(x::Real)
-			isfinite(x) || error("give up eval")
+			isfinite(x) || throw(OutOfSupportError())
 			new(x)
 		end
 	end
@@ -91,7 +92,6 @@ module Abcd
 
 
 	######### first pass on the model
-	#  - extracts parameters definition
 	#  - rewrite ~ operators  as acc += logpdf..(=)
 	#  - translates x += y into x = x + y, same for -= and *=
 	function parseModel!(m::ParsingStruct, source::Expr)
@@ -109,6 +109,8 @@ module Abcd
 		explore(ex::Exprpequal) = (args = ex.args ; Expr(:(=), args[1], Expr(:call, :+, args...)) )
 		explore(ex::Exprmequal) = (args = ex.args ; Expr(:(=), args[1], Expr(:call, :-, args...)) )
 		explore(ex::Exprtequal) = (args = ex.args ; Expr(:(=), args[1], Expr(:call, :*, args...)) )
+
+		explore(ex::Exprtrans) = explore(Expr(:call, :transpose, ex.args[1]))
 
 		function explore(ex::Exprblock)
 			al = {}
@@ -132,18 +134,21 @@ module Abcd
 			return :($ACC_SYM = $ACC_SYM + logpdf( $(ex.args[3]) , $(ex.args[2])) )
 		end
 
-		assert(source.head==:block && length(source.args)>=1, 
-			"model should be a block with at least 1 statement")
+		# blockify if single expression
+		source.head == :block || ( source = Expr(:block, source) )
+
+		assert(length(source.args)>=1, "model should be a block with at least 1 statement")
 
 		m.source = explore(source)
 
 		# if no distribution expression '~' was found consider that last expr is the variable to be maximized 
 		if !distribFound
-			m.source.args[end] = Expr(:(=) , ACC_SYM, m.source.args[end] )
+			# m.source.args[end] = Expr(:(=) , ACC_SYM, m.source.args[end] )
+			lastex = m.source.args[end]
+			lastex.head == :(=) && (lastex = lastex.args[2]) # if assigment, take rhs only 
+			m.source.args[end] = :( $ACC_SYM = $ACC_SYM + $lastex ) 
 		end
 	end
-
-
 
 	######## unfolds expressions to prepare derivation ###################
 	function unfold!(m::ParsingStruct)
@@ -167,13 +172,13 @@ module Abcd
 				"[unfold] not a symbol on LHS of assigment $ex")
 
 			rhs = ex.args[2]
-			if isa(rhs, Symbol) || isa(rhs, Real)
+			if isa(rhs, Symbol) || isa(rhs, Real) || (isa(rhs, Expr) && rhs.head == :.)
 				push!(m.exprs, Expr(:(=), lhs, rhs))
-			elseif isa(rhs, Expr) # only refs and calls will work
+			elseif isa(rhs, Expr) 
 					ue = explore(toExprH(rhs)) # explore will return something in this case
 					push!(m.exprs, Expr(:(=), lhs, ue))
-			else  # unmanaged kind of lhs
-			 	error("[unfold] can't handle RHS of assignment $ex")
+			else  # unmanaged kind of rhs
+			 	error("[unfold] can't handle RHS of assignment $(toExpr(ex))")
 			end
 			lhs
 		end
@@ -267,10 +272,10 @@ module Abcd
 	        !isempty(intersect(lhs, m.accanc)) && union!(m.accanc, rhs)
 	    end
 
-	    assert(contains(m.pardesc, m.finalacc), "Model parameters do not seem to influence model outcome")
+	    contains(m.pardesc, m.finalacc) || warn("Model parameters do not seem to influence model outcome")
 
 	    local parset2 = setdiff(parset, m.accanc)
-	    assert(isempty(parset2), "Model parameter(s) $(collect(parset2)) do not seem to influence model outcome")
+	    isempty(parset2) || warn("Model parameter(s) $(collect(parset2)) do not seem to influence model outcome")
 
 	end
 
@@ -402,7 +407,7 @@ module Abcd
 		# enclose in a try block to catch zero likelihoods (-Inf log likelihood)
 		body = Expr(:try, Expr(:block, body...),
 				          :e, 
-				          Expr(:block, :(if e == "give up eval"; return(-Inf); else; throw(e); end)))
+				          Expr(:block, :(if isa(e, OutOfSupportError); return(-Inf); else; throw(e); end)))
 
 		# identify external vars and add definitions x = Main.x
 		ev = setdiff(m.accanc, union(m.varsset, Set(ACC_SYM, collect(keys(m.pars))...))) # vars that are external to the model
@@ -461,10 +466,12 @@ module Abcd
 				vh = vhint[v]
 				if isa(vh, Real)
 					push!(body, :($(dsym(v)) = 0.))
-				elseif 	isa(vh, Vector)
+				elseif 	isa(vh, Array{Float64})
 					push!(body, :($(dsym(v)) = zeros(Float64, $(Expr(:tuple,size(vh)...)))) )
 				elseif 	isa(vh, Distribution)  #  TODO : find real equivament vector size
 					push!(body, :($(dsym(v)) = zeros(2)))
+				else
+					error("[generateModelFunction] invalid gradient var type $v $(typeof(v))")
 				end
 			end
 
@@ -514,25 +521,27 @@ module Abcd
 			end
 			push!(body, :( ($(Expr(:., m.finalacc, Expr(:quote, :val))), $gsym) ) )
 
-			# dexp = { :( vec([$(dsym(p))]) ) for p in keys(m.pars)}
-			# dexp = length(m.pars) > 1 ? Expr(:call, :vcat, dexp...) : dexp[1]
-			# push!(body, :(($(m.finalacc), $dexp)))
-
 			# enclose in a try block
 			body = Expr(:try, Expr(:block, body...),
 					          :e, 
-					          Expr(:block, :(if e == "give up eval"; return(-Inf, zero($PARAM_SYM)); else; throw(e); end)))
+					          quote 
+					          	if isa(e, OutOfSupportError)
+					          		return(-Inf, zero($PARAM_SYM))
+					          	else
+					          		throw(e)
+					          	end
+					          end)
 
 		else  # case without gradient
-			body = [ betaAssign(m)...,        # assigments beta vector -> model parameter vars
+			body = [ betaAssign(m)...,         # assigments beta vector -> model parameter vars
 			         :($ACC_SYM = LLAcc(0.)),  # initialize accumulator
-	                 m.source.args...,        # model statements
+	                 m.source.args...,         # model statements
 	                 :(return $( Expr(:., ACC_SYM, Expr(:quote, :val)) )) ]
 
 			# enclose in a try block
 			body = Expr(:try, Expr(:block, body...),
 					          :e, 
-					          Expr(:block, :(if e == "give up eval"; return(-Inf); else; throw(e); end)))
+					          :(if isa(e, OutOfSupportError); return(-Inf); else; throw(e); end) )
 
 			header = Expr[]
 		end
