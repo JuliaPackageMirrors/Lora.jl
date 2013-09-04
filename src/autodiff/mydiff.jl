@@ -104,13 +104,15 @@ end
 # @dfunc logpdfNormal(mu, sigma, x::Real)    x      sum((mu - x) ./ (sigma .* sigma)) * ds
 # @dfunc logpdfNormal(mu, sigma, x::Array)   x      (mu - x) ./ (sigma .* sigma) * ds
 
-@dfunc Normal(mu::Real, std::Real)  mu  ds[1]
-@dfunc Normal(mu::Real, std::Real)  std ds[2]
+@dfunc Normal(x1, x2)  x1  ds[1]
+@dfunc Normal(x1, x2)  x2  ds[2]
 
-@dfunc logpdf(d::Normal, x)  d  ( [ sum((x - d.mean) ./ (d.std * d.std) .* ds),
-									sum(((x - d.mean).*(x - d.mean) ./ (d.std*d.std) - 1.) ./ d.std .* ds) ] )
-@dfunc logpdf(d::Normal, x::Real)    x      (d.mean - x) / (d.std * d.std) * ds
-@dfunc logpdf(d::Normal, x::Array)   x      (d.mean - x) / (d.std * d.std) .* ds
+@dfunc logpdf(d::Normal, x::Array)   d  ( [ sum((x - d.μ) .* ds) / (d.σ*d.σ),
+									        sum(((x - d.μ).*(x - d.μ) ./ (d.σ*d.σ) - 1.) ./ d.σ .* ds) ] )
+@dfunc logpdf(d::Normal, x::Real)    d  ( [ (x - d.μ) * ds / (d.σ*d.σ),
+									        ((x - d.μ)*(x - d.μ) / (d.σ*d.σ) - 1.) / d.σ * ds ] )
+@dfunc logpdf(d::Normal, x::Real)    x      (d.μ - x) / (d.σ * d.σ) * ds
+@dfunc logpdf(d::Normal, x::Array)   x      (d.μ - x) / (d.σ * d.σ) .* ds
 
 
 ## Uniform distribution
@@ -190,18 +192,6 @@ end
 @dfunc logpdfLogNormal(lmu, lsc::Real, x)   lsc  ( tmp2=lsc.*lsc ; sum( (lmu.*lmu - tmp2 - log(x).*(2lmu-log(x))) ./ (lsc.*tmp2) ) .* ds )
 @dfunc logpdfLogNormal(lmu, lsc::Array, x)  lsc  ( tmp2=lsc.*lsc ; ( (lmu.*lmu - tmp2 - log(x).*(2lmu-log(x))) ./ (lsc.*tmp2) ) .* ds )
 
-
-
-
-
-
-
-# lsc.*lsc ; ( (lmu.*lmu - tmp2 - log(x).*(2lmu-log(x))) ./ (lsc.*tmp2) ) .* ds )
-
-# @dfunc logpdfNormal(mu::Real, sigma, x)    mu     sum((x - mu) ./ (sigma .* sigma)) * ds
-# @dfunc logpdfNormal(mu::Array, sigma, x)   mu     (x - mu) ./ (sigma .* sigma) * ds
-# @dfunc logpdfNormal(mu, sigma::Real, x)    sigma  sum(((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma) * ds
-# @dfunc logpdfNormal(mu, sigma::Array, x)   sigma  ((x - mu).*(x - mu) ./ (sigma.*sigma) - 1.) ./ sigma * ds
 
 
 # TODO : find a way to implement multi variate distribs that goes along well with vectorization (Dirichlet, Categorical)
