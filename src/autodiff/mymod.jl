@@ -189,6 +189,7 @@ module Abcd
 
 			# if more than 2 arguments, +, sum and * are converted  to nested expressions
 			#  (easier for derivation)
+			#  TODO : apply to max, min
 			# TODO : apply to other n-ary (n>2) operators ?
 			if contains([:+, :*, :sum], na[1]) 
 				while length(args) > 2
@@ -468,7 +469,7 @@ module Abcd
 					push!(body, :($(dsym(v)) = 0.))
 				elseif 	isa(vh, Array{Float64})
 					push!(body, :($(dsym(v)) = zeros(Float64, $(Expr(:tuple,size(vh)...)))) )
-				elseif 	isa(vh, Distribution)  #  TODO : find real equivament vector size
+				elseif 	isa(vh, Distribution)  #  TODO : find real equivalent vector size
 					push!(body, :($(dsym(v)) = zeros(2)))
 				else
 					error("[generateModelFunction] invalid gradient var type $v $(typeof(v))")
@@ -559,6 +560,22 @@ module Abcd
 	end
 
 
+	function debug(model::Expr; init...)
+		m = ParsingStruct()
+		setInit!(m, init)
+		parseModel!(m, model)
+		unfold!(m)
+		uniqueVars!(m)
+		categorizeVars!(m)
+
+		preCalculate(m)
+		backwardSweep!(m)
+
+		println(Expr(:block, m.exprs...))
+		println()
+		println(Expr(:block, m.dexprs...))
+
+	end
 
 
 	include("mydiff.jl")

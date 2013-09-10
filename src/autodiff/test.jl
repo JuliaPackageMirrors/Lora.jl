@@ -6,7 +6,14 @@ pwd()
 @unix_only include("/home/fredo/devl/MCMC.jl/src/autodiff/mymod.jl")
 
 ######
-	y = 12
+
+
+
+	b = 12
+	Abcd.debug(:( a+b ), a=0)
+	b = [1, 2, 3]
+	Abcd.debug(:( a+b ), a=0)
+
 	Abcd.generateModelFunction(:( x+y ), gradient=true, x=0, debug=true)
 	f, a,b,c = Abcd.generateModelFunction(:( x+y ), gradient=true, x=0)
 	f, a,b,c = Abcd.generateModelFunction(:( a=x ), gradient=true, x=0)

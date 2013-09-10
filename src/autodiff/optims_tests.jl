@@ -233,3 +233,13 @@ _ll2(zeros(nbeta))
 			s += _ll2(t)[1]
 		end
 	end  # 0.23 sec
+
+
+
+##########################################
+
+A = randn(3,2)
+ex = quote sum(A*x) end
+MCMC.generateModelFunction(ex, debug=true, x=zeros(2), gradient=true)
+
+
