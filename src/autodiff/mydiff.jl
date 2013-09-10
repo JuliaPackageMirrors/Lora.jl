@@ -107,13 +107,21 @@ end
 @dfunc Normal(x1, x2)  x1  ds[1]
 @dfunc Normal(x1, x2)  x2  ds[2]
 
-@dfunc logpdf(d::Normal, x::Array)   d  ( [ sum((x - d.μ) .* ds) / (d.σ*d.σ),
-									        sum(((x - d.μ).*(x - d.μ) ./ (d.σ*d.σ) - 1.) ./ d.σ .* ds) ] )
-@dfunc logpdf(d::Normal, x::Real)    d  ( [ (x - d.μ) * ds / (d.σ*d.σ),
-									        ((x - d.μ)*(x - d.μ) / (d.σ*d.σ) - 1.) / d.σ * ds ] )
-@dfunc logpdf(d::Normal, x::Real)    x      (d.μ - x) / (d.σ * d.σ) * ds
-@dfunc logpdf(d::Normal, x::Array)   x      (d.μ - x) / (d.σ * d.σ) .* ds
-
+if OS_NAME == :Windows
+	@dfunc logpdf(d::Normal, x::Real)    d  ( [ (x - d.mean) * ds / (d.std*d.std),
+										        ((x - d.mean)*(x - d.mean) / (d.std*d.std) - 1.) / d.std * ds ] )
+	@dfunc logpdf(d::Normal, x::Array)   d  ( [ sum((x - d.mean) .* ds) / (d.std*d.std),
+										        sum(((x - d.mean).*(x - d.mean) ./ (d.std*d.std) - 1.) ./ d.std .* ds) ] )
+	@dfunc logpdf(d::Normal, x::Real)    x      (d.mean - x) / (d.std * d.std) * ds
+	@dfunc logpdf(d::Normal, x::Array)   x      (d.mean - x) / (d.std * d.std) .* ds
+else
+	@dfunc logpdf(d::Normal, x::Real)    d  ( [ (x - d.μ) * ds / (d.σ*d.σ),
+										        ((x - d.μ)*(x - d.μ) / (d.σ*d.σ) - 1.) / d.σ * ds ] )
+	@dfunc logpdf(d::Normal, x::Array)   d  ( [ sum((x - d.μ) .* ds) / (d.σ*d.σ),
+										        sum(((x - d.μ).*(x - d.μ) ./ (d.σ*d.σ) - 1.) ./ d.σ .* ds) ] )
+	@dfunc logpdf(d::Normal, x::Real)    x      (d.μ - x) / (d.σ * d.σ) * ds
+	@dfunc logpdf(d::Normal, x::Array)   x      (d.μ - x) / (d.σ * d.σ) .* ds
+end
 
 ## Uniform distribution
 # @dfunc logpdfUniform(a::Real, b, x)      a   sum((a .<= x .<= b) ./ (b - a)) * ds

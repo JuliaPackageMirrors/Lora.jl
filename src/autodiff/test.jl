@@ -2,7 +2,8 @@ cd("p:/Documents/julia/MCMC.jl/src/autodiff")
 cd("~/devl/MCMC.jl/src/autodiff")
 pwd()
 
-include("/home/fredo/devl/MCMC.jl/src/autodiff/mymod.jl")
+@windows_only include("p:/Documents/julia/MCMC.jl/src/autodiff/mymod.jl")
+@unix_only include("/home/fredo/devl/MCMC.jl/src/autodiff/mymod.jl")
 
 ######
 	y = 12

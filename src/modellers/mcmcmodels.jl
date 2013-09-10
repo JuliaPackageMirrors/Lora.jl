@@ -9,8 +9,6 @@ export MCMCLikModel, model
 ### Model types hierarchy to allow restrictions on applicable samplers
 abstract Model
 abstract MCMCModel <: Model
-# abstract MCMCModelWithGradient <: MCMCModel
-# abstract MCMCModelWithHessian <: MCMCModelWithGradient
 
 ######### parameters map info  ############
 # These types are used to map scalars in the
