@@ -1,11 +1,6 @@
 ### Constructors for setting up a Monte Carlo job
 
-
-
-
-
-
-function MCJob{M<:MCModel, S<:MCSampler, T<:MCTuner}(m::M, s::S, r::SerialMC, t::T, j::Symbol)
+#=function MCJob{M<:MCModel, S<:MCSampler, T<:MCTuner}(m::M, s::S, r::SerialMC, t::T, j::Symbol)
   mcjob::MCJob
   if j == :plain
     mcjob = PlainMCJob(m, s, r, t)
@@ -15,7 +10,7 @@ function MCJob{M<:MCModel, S<:MCSampler, T<:MCTuner}(m::M, s::S, r::SerialMC, t:
     error("Only :plain and :task jobs are available.")
   end
   mcjob
-end
+end=#
 
 MCJob{M<:MCModel, S<:MCSampler, T<:MCTuner}(m::M, s::S, r::SerialMC; tuner::T=VanillaMCTuner(), job::Symbol=:task) =
   MCJob(m, s, r, tuner, job)

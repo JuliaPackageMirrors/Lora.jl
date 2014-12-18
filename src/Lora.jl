@@ -62,7 +62,7 @@ export
   linearzv,
   quadraticzv
 
-#=include("api/api.jl")
+include("api/api.jl")
 include("api/samples.jl")
 include("api/states.jl")
 include("api/chains.jl")
@@ -77,7 +77,7 @@ include("models/models.jl")
 include("samplers/ARS.jl")
 include("samplers/SliceSampler.jl")
 include("samplers/MH.jl")
-include("samplers/RAM.jl")=#
+include("samplers/RAM.jl")
 # include("samplers/IMH.jl")
 include("samplers/HMC.jl")
 # include("samplers/HMCDA.jl")
@@ -93,7 +93,7 @@ include("tuners/VanillaMCTuner.jl")
 include("tuners/EmpiricalMCTuner.jl")
 include("jobs/PlainMCJob.jl")
 include("jobs/TaskMCJob.jl")
-include("jobs/jobs.jl")
+# include("jobs/jobs.jl")
 include("stats/mean.jl")
 include("stats/var.jl")
 include("stats/zv.jl")

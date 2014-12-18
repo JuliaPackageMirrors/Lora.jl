@@ -36,7 +36,7 @@ function generateModelFunction(model::Expr; gradient=false, debug=false, init...
 	## build function expression
 	if gradient  # case with gradient
 		head, body, outsym = ReverseDiffSource.reversediff(model, 
-			                                               rv, false, MCMC; 
+			                                               rv, false, Lora; 
 			                                               init...)
 
 		body = [ vec2var(;init...),  # assigments beta vector -> model parameter vars
@@ -56,7 +56,7 @@ function generateModelFunction(model::Expr; gradient=false, debug=false, init...
 
 	else  # case without gradient
 		head, body, outsym = ReverseDiffSource.reversediff(model, 
-			                                               rv, true, MCMC; 
+			                                               rv, true, Lora; 
 			                                               init...)
 
 		body = [ vec2var(;init...),  # assigments beta vector -> model parameter vars
