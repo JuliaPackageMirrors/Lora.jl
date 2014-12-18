@@ -1,86 +1,76 @@
-###########################################################################
-#
-#  SerialMC runner: consumes repeatedly a sampler and returns a MCMCChain
-#
-#
-###########################################################################
+### Serial "ordinary" Monte Carlo runner
 
-export SerialMC
-
-println("Loading SerialMC(steps, burnin, thinning) runner")
-
-immutable SerialMC <: MCMCRunner
+immutable SerialMCBaseRunner <: SerialMCRunner
   burnin::Int
   thinning::Int
-  len::Int
-  r::Range
+  nsteps::Int
+  r::Range{Int}
+  storegradlogtarget::Bool # Indicates whether to save the gradient of the log-target in the cases it is available
 
-  function SerialMC(steps::Range{Int})
-    r = steps
-
+  function SerialMCBaseRunner(r::Range{Int}, s::Bool=false)
     burnin = first(r)-1
     thinning = r.step
-    len = last(r)
-
-    @assert burnin >= 0 "Burnin rounds ($burnin) should be >= 0"
-    @assert len > burnin "Total MCMC length ($len) should be > to burnin ($burnin)"
-    @assert thinning >= 1 "Thinning ($thinning) should be >= 1"
-
-    new(burnin, thinning, len, r)
+    nsteps = last(r)
+    @assert burnin >= 0 "Number of burn-in iterations should be non-negative."
+    @assert thinning >= 1 "Thinning should be >= 1."
+    @assert nsteps > burnin "Total number of MCMC iterations should be greater than number of burn-in iterations."
+    new(burnin, thinning, nsteps, r, s)
   end
 end
 
-SerialMC(steps::Range1{Int}) = SerialMC(first(steps):1:last(steps))
+SerialMCBaseRunner(r::Range1{Int}, s::Bool=false) = SerialMCBaseRunner(first(r):1:last(r), s)
 
-SerialMC(; steps::Int=100, burnin::Int=0, thinning::Int=1) = SerialMC((burnin+1):thinning:steps)
+SerialMCBaseRunner(; burnin::Int=0, thinning::Int=1, nsteps::Int=100, storegradlogtarget::Bool=false) =
+  SerialMCBaseRunner((burnin+1):thinning:nsteps, storegradlogtarget)
 
-function run_serialmc(t::MCMCTask)
-  tic() # start timer
+typealias SerialMC SerialMCBaseRunner
 
-  # array allocations to store results
-  samples        = fill(NaN, t.model.size, length(t.runner.r))
-  gradients      = fill(NaN, t.model.size, length(t.runner.r))
-  diags          = {"step" => collect(t.runner.r)}
-  logtargets     = fill(NaN, length(t.runner.r))
+function run(m::MCModel, s::MCSampler, r::SerialMC, t::MCTuner=VanillaMCTuner(), job::Symbol=:task)
+  tic()
 
-  # sampling loop
-  j = 1
-  for i in 1:t.runner.len
-    newprop = consume(t.task)
-    if in(i, t.runner.r)
-      samples[:, j] = newprop.ppars
-      logtargets[j] = newprop.plogtarget
+  mcjob = MCJob(m, s, r; tuner=t, job=job)
 
-      if newprop.pgrads != nothing
-        gradients[:, j] = newprop.pgrads
+  # Pre-allocation for storing results
+  mcchain::MCChain = MCChain(m.size, length(r.r); storegradlogtarget=r.storegradlogtarget)
+  ds = Dict{Any, Any}("step" => collect(r.r))
+
+  # Sampling loop
+  i::Int = 1
+  for j in 1:r.nsteps
+    mcstate = mcjob.receive(1)
+    if in(j, r.r)
+      mcchain.samples[i, :] = mcstate.successive.sample
+      mcchain.logtargets[i] = mcstate.successive.logtarget
+
+      if r.storegradlogtarget
+        mcchain.gradlogtargets[i, :] = mcstate.successive.gradlogtarget
       end
 
-      # save diagnostics
-      for (k,v) in newprop.diagnostics
-        # if diag name not seen before, create column
-        if !haskey(diags, k)
-          diags[k] = Array(typeof(v), length(diags["step"]))          
+      # Save diagnostics
+      for (k,v) in mcstate.diagnostics
+        # If diagnostics name not seen before, create column
+        if !haskey(ds, k)
+          ds[k] = Array(typeof(v), length(ds["step"]))          
         end
         
-        diags[k][j] = v
+        ds[k][i] = v
       end
 
-      j += 1
+      i += 1
     end
   end
 
-  # create Chain
-  MCMCChain(t.runner.r, samples', logtargets, gradients', diags, t, toq())
+  mcchain.diagnostics, mcchain.runtime = ds, toq()
+  mcchain
 end
 
-function run_serialmc_exit(t::MCMCTask)
-  chain = run_serialmc(t)
-  stop!(chain)
-  return chain
+function resume!(m::MCModel, s::MCSampler, r::SerialMC, c::MCChain, t::MCTuner=VanillaMCTuner(), j::Symbol=:task;
+  nsteps::Int=100)
+  m.init = vec(c.samples[end, :])
+  mcrunner::SerialMC = SerialMC(burnin=0, thinning=r.thinning, nsteps=nsteps, storegradlogtarget=r.storegradlogtarget)
+  run(m, s, mcrunner, t, j)
 end
 
-function resume_serialmc(t::MCMCTask; steps::Int=100)
-  @assert typeof(t.runner) == SerialMC
-    "resume_serialmc can not be called on an MCMCTask whose runner is of type $(fieldtype(t, :runner))"
-  run(t.model, t.sampler, SerialMC(steps=steps, thinning=t.runner.thinning))
-end
+resume(m::MCModel, s::MCSampler, r::SerialMC, c::MCChain, t::MCTuner=VanillaMCTuner(), j::Symbol=:task;
+  nsteps::Int=100) =
+  resume!(deepcopy(m), s, r, c, t, j; nsteps=nsteps)
