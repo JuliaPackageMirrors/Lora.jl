@@ -1,6 +1,30 @@
 #######################################################################
 
+reload("ReverseDiffSource")
 reload("Lora") ; m = Lora
+
+fn = :deuivnode
+typ = Range
+typeof(typ)
+
+:( $(Expr(:call, fn, Expr(:(::), :x, symbol("$typ")) )) )
+
+
+using Distributions
+
+Bernoulli(0.26)
+rand(Bernoulli(.32),5)
+
+logpdf( Bernoulli(0.32), 1 )
+logpdf( Bernoulli(0.32), [0,1] )
+logpdf( [Bernoulli(0.32), Bernoulli(0.32)] , [0,1] )
+
+
+logpdf(  )
+
+logpdf2{T<:Distribution}(ds::Array{T}, x::AbstractArray) = map(logpdf, )
+
+methods(logpdf)
 
 #########################################################################
 #    testing script for simple examples 

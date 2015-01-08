@@ -35,12 +35,13 @@ end
 
 
 ####### derivation for Distribution types constructors
-ReverseDiffSource.declareType(Distribution, :Distribution)
+# ReverseDiffSource.declareType(Distribution, :Distribution)
 
-for d in [:Bernoulli, :TDist, :Exponential, :Poisson]  
-	ReverseDiffSource.declareType(eval(d), d)
+for d in [Bernoulli, TDist, Exponential, Poisson]  
+	type_equiv( d, 1)
 
-	ReverseDiffSource.deriv_rule(:( ($d)(p::Real) ), :p, :( dp = ds1 ))
+	deriv_rule( d, [(:p,          Real)], :p, :( ds ) )
+	deriv_rule( d, [(:p, AbstractArray)], :p, :( ds ) )
 	ReverseDiffSource.deriv_rule(:( ($d)(p::AbstractArray) ), :p, :( copy!(dp, ds1) ))
 end
 
