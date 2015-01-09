@@ -38,7 +38,7 @@ n = 1000
 nbeta = 10 
 X = [ones(n) randn((n, nbeta-1))] 
 beta0 = randn((nbeta,))
-Y = rand(n) .< ( 1 ./ (1 .+ exp(X * beta0)))
+Y = rand(n) .< ( 1 ./ (1 .+ exp(X * beta0))) 
 
 # define model
 ex = quote
@@ -46,6 +46,7 @@ ex = quote
 	prob = 1 ./ (1. .+ exp(X * vars)) 
 	Y ~ Bernoulli(prob)
 end
+
 
 mod = m.model(ex, vars=zeros(nbeta), gradient=true)
 
@@ -80,11 +81,59 @@ function generateModelFunction(model::Expr; gradient=false, debug=false, init...
 	vsize, pmap, vinit = m.modelVars(;init...) # model param info
 
 	model = m.translate(model) # rewrite ~ statements
-	rv = symbol("$(m.ACC_SYM)v")  # final result in this variable
 	model = Expr(:block, [ :($(m.ACC_SYM) = LLAcc(0.)), # add log-lik accumulator initialization
 		                   model.args, 
 		                   # :( $ACC_SYM = $(Expr(:., ACC_SYM, Expr(:quote, :val)) ) )]... )
-		                   :( $rv = $(Expr(:., m.ACC_SYM, Expr(:quote, :val)) ) )]... )
+		                   :( $(Expr(:., m.ACC_SYM, Expr(:quote, :val)) ) )]... )
+
+
+g  = m.ReverseDiffSource.drules[(logpdf,1)][(AbstractArray{Bernoulli}, AbstractArray)][1]
+ss = m.ReverseDiffSource.drules[(logpdf,1)][(AbstractArray{Bernoulli}, AbstractArray)][2]
+
+g  = m.ReverseDiffSource.drules[(logpdf,2)][(AbstractArray{Bernoulli}, AbstractArray)][1]
+ss = m.ReverseDiffSource.drules[(logpdf,1)][(AbstractArray{Bernoulli}, AbstractArray)][2]
+
+
+	dmodel = m.rdiff(model, vars=zeros(10))
+quote 
+    _tmp1 = 0.0
+    _tmp2 = Lora.LLAcc(0.0)
+    _tmp3 = Distributions.Normal(0.0,1.0)
+    _tmp4 = X * vars
+    _tmp5 = size(vars)
+    _tmp6 = logpdf(_tmp3,vars)
+    _tmp7 = exp(_tmp4)
+    _tmp8 = zeros(size(Y))
+    _tmp9 = zeros(_tmp5)
+    _tmp10 = 1.0 .+ _tmp7
+    _tmp11 = size(_tmp6)
+    _tmp1 =  1.0
+    _tmp2 = _tmp2 + _tmp6
+    _tmp12 = 1.0 ./ _tmp10
+    _tmp13 = _tmp1
+    _tmp14 = Distributions.Bernoulli(_tmp12)
+    _tmp1 = 0.0
+    _tmp15 = logpdf(_tmp14,Y)
+    _tmp16 = size(_tmp15)
+    _tmp17 = fill(0.0,_tmp11) + fill(_tmp1,_tmp11)
+    _tmp2 = _tmp2 + _tmp15
+    for i = 1.0:length(vars)
+        _tmp9[i] = ((_tmp3.μ - vars[i]) / (_tmp3.σ * _tmp3.σ)) * _tmp17[i]
+    end
+    _tmp18 = fill(0.0,_tmp16) + fill(_tmp13,_tmp16)
+    for i = 1.0:length(Y)
+        _tmp8[i] = (1.0 / ((_tmp14[i].p - 1.0) + Y[i])) * _tmp18[i]
+    end
+    _tmp19 = fill(0.0,size(_tmp14)) + _tmp8
+    _tmp20 = zeros(size(_tmp19))
+    for i = 1.0:length(_tmp19)
+        _tmp20[i] = _tmp19[i]
+    end
+    (_tmp2.val,((fill(0.0,_tmp5) + _tmp9) + X' * (fill(0.0,size(_tmp4)) + _tmp7 .* (fill(0.0,size(_tmp7)) + (fill(0.0,size(_tmp10)) + -((fill(0.0,size(_tmp12)) + _tmp20)) ./ (_tmp10 .* _tmp10)))),))
+end
+
+	vars = zeros(10)
+	m.eval( dmodel )
 
 	## build function expression
 	if gradient  # case with gradient
