@@ -24,16 +24,15 @@ end
 
 ####### derivation rules  ############
 # (note : only additions are possible with LLAcc type )
-# ReverseDiffSource.@deriv_rule getfield(x::LLAcc, f )  x  dx1 = ds
-@deriv_rule LLAcc(x::Real)      x      ds[1]
+
+@deriv_rule LLAcc(x::Real)      x      ds[1]    # constructor
 
 # ReverseDiffSource.@deriv_rule   +(x::LLAcc,   y)                  x   1. * ds
 # ReverseDiffSource.@deriv_rule   +(x::LLAcc,   y::Real)            y   ds[1]
 # ReverseDiffSource.@deriv_rule   +(x::LLAcc,   y::AbstractArray)   y   fill(ds[1], size(y))
 # @deriv_rule +(x::LLAcc, y)                  x   1. * ds
-@deriv_rule +(x::LLAcc, y::Real)            x   0.
-@deriv_rule +(x::LLAcc, y::Real)            y   ds
-@deriv_rule +(x::LLAcc, y::AbstractArray)   x   0.
-@deriv_rule +(x::LLAcc, y::AbstractArray)   y   fill(ds, size(y))
 
-#ReverseDiffSource.@deriv_rule   getfield(x::LLAcc, f)             x   ds[1]
+@deriv_rule +(x::LLAcc, y::Real)            x   ds
+@deriv_rule +(x::LLAcc, y::Real)            y   ds[1]
+@deriv_rule +(x::LLAcc, y::AbstractArray)   x   ds
+@deriv_rule +(x::LLAcc, y::AbstractArray)   y   fill(ds[1], size(y))

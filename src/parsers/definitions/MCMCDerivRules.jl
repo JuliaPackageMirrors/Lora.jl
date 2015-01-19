@@ -9,12 +9,12 @@
 for d in [Bernoulli, TDist, Exponential, Poisson]  
 	typeequiv( d, 1)
 
-	deriv_rule( d, [(:p,          Real)], :p, :( ds ) )
+	deriv_rule( d, [(:p,          Real)], :p, :( ds[1] ) )
 	deriv_rule( d, [(:p, AbstractArray)], :p, 
 					quote
 						res = zeros( size(ds) )
 						for i in 1:length(ds)
-							res[i] = ds[i]
+							res[i] = ds[i][1]
 						end
 						res
 					end )
@@ -95,7 +95,7 @@ macro dlogpdfd1(dist::Symbol, rule)
 	deriv_rule( logpdf, [(:d,    dt), (:xa, AbstractArray)], :d, rule2 )
 
 	rule3 = quote
-			dd = zeros(size(xa))
+			dd = similar(xa, Any)
 			for i in 1:length(xa)
 				x = xa[i]
 				d = da[i]
@@ -122,7 +122,7 @@ macro dlogpdfd2(dist::Symbol, rule)
 	deriv_rule( logpdf, [(:d,    dt), (:xa, AbstractArray)], :d, rule2 )
 
 	rule3 = quote
-			dd = similar(xa, Vector)
+			dd = similar(xa, Any)
 			for i in 1:length(xa)
 				x = xa[i]
 				d = da[i]
@@ -137,7 +137,7 @@ end
 ### Note : ... * ds term ommitted to simplify rule creation
 
 
-#######   Normal distribution
+######   Normal distribution
 @dlogpdfx Normal (d.μ - x) / (d.σ * d.σ)
 @dlogpdfd2 Normal [ 	(x - d.μ) / (d.σ*d.σ) , 
 					((x - d.μ)*(x - d.μ) / (d.σ*d.σ) - 1.) / d.σ ]
@@ -159,11 +159,11 @@ end
 
 ## TDist distribution
 @dlogpdfx TDist		(-(d.df+1)*x / (d.df+x*x))
-@dlogpdfd1 TDist   	((x*x-1)/(x*x + d.df)+log(d.df/(x*x+d.df))+digamma((d.df+1)/2)-digamma(d.df/2))/2
+@dlogpdfd1 TDist   	[ ((x*x-1)/(x*x + d.df)+log(d.df/(x*x+d.df))+digamma((d.df+1)/2)-digamma(d.df/2))/2 ]
 
 ## Exponential distribution
 @dlogpdfx Exponential   -1/d.β
-@dlogpdfd1 Exponential   (x-d.β) / (d.β*d.β)
+@dlogpdfd1 Exponential  [ (x-d.β) / (d.β*d.β) ]
 
 ## Gamma distribution
 @dlogpdfx Gamma   (-( d.β + x - d.α*d.β)/(d.β*x))
@@ -191,14 +191,14 @@ end
 
 ## Bernoulli distribution (Note : no derivation on x parameter as it is an integer)
 @dlogpdfx Bernoulli		0.
-@dlogpdfd1 Bernoulli		1. / (d.p - 1. + x)
+@dlogpdfd1 Bernoulli	[ 1. / (d.p - 1. + x) ]
 
 ## Binomial distribution (Note : no derivation on x and n parameters as they are integers)
 @dlogpdfx Binomial      0.
-@dlogpdfd2 Binomial      [ 0. , (x / d.p - (d.n-x) / (1 - d.p)) ]
+@dlogpdfd2 Binomial     [ 0. , (x / d.p - (d.n-x) / (1 - d.p)) ]
 
 ## Poisson distribution (Note : no derivation on x parameter as it is an integer)
 @dlogpdfx Poisson       0.
-@dlogpdfd1 Poisson       (x / d.λ - 1)
+@dlogpdfd1 Poisson      [ (x / d.λ - 1) ]
 
 
