@@ -4,7 +4,7 @@
 
 using Base.Test
 using Distributions
-using MCMC
+using Lora
 
 # generate a random dataset
 srand(1)

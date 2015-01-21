@@ -1,6 +1,11 @@
+##########################################################################################
+#
+#    Creates vectorized versions of distributions constructors and logpdf
+#
+##########################################################################################
+
 ############# Distribution types vectorizations   ################
 # single parameter distributions
-
 for d in [:Bernoulli, :TDist, :Exponential, :Poisson]  
 	@eval begin
 		function ($d)(ps::Array)
@@ -14,7 +19,6 @@ for d in [:Bernoulli, :TDist, :Exponential, :Poisson]
 end
 
 # two parameter distributions
-
 for d in [:Normal, :Uniform, :Weibull, :Gamma, :Cauchy, :LogNormal, :Binomial, :Beta, :Laplace]
 	@eval begin
 		function ($d)(p1::Array, p2::Array)
@@ -44,7 +48,6 @@ for d in [:Normal, :Uniform, :Weibull, :Gamma, :Cauchy, :LogNormal, :Binomial, :
 end
 
 ############# logpdf vectorization on the distribution argument   ################
-
 function logpdf{T<:Distribution}(ds::Array{T}, x::AbstractArray)
 	res = Array(Float64, size(ds))
 	size(ds) == size(x) || error("x and distributions sizes do not match")

@@ -3,6 +3,16 @@
 reload("ReverseDiffSource")
 reload("Lora") ; m = Lora
 
+pwd()
+
+include("../src/parsers/LoraDSL.jl") ; m = LoraDSL
+
+LoraDSL.LLAcc
+m.LLAcc
+
+Vector = 4.
+
+
 #########################################################################
 #    testing script for simple examples 
 #########################################################################
@@ -24,6 +34,50 @@ reload("Lora") ; m = Lora
 		Y ~ Bernoulli(prob)
 	end
 
+#######
+	fex = m.parsemodel( ex, vars=zeros(10), debug=true)
+
+	dump( fex )
+	dump( fex.args[1].args[2] )
+	eval( fex )
+	dump( :( LoraDSL.LLAcc(0.) ) )
+
+	llf = eval( fex )
+	llf( zeros(10) )
+
+	fex = m.parsemodel( ex, vars=zeros(10) )
+	fex( zeros(10) )
+	LoraDSL.LLAcc
+
+
+	g = m.ReverseDiffSource.tograph( :( LoraDSL.LLAcc(0) ) )
+	typeof(g.nodes[2].main)
+	dump( m.ReverseDiffSource.tocode(g) )
+
+    function ll14981(__beta::Vector{Float64}) # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 38:
+        try  # line 39:
+            begin 
+                _tmp1 = LoraDSL.LLAcc(0.0)
+                _tmp1 = _tmp1 + logpdf(Distributions.Normal(0,1.0),vars)
+                _tmp1 = _tmp1 + logpdf(Distributions.Bernoulli(1 ./ (1.0 .+ exp(X * vars))),Y)
+                (_tmp1.val,)
+            end
+        catch e # line 41:
+            isa(e,LoraDSL.OutOfSupportError) || rethrow(e) # line 42:
+            return tuple([-Inf,zeros(0)]...)
+        end
+    end
+	ll14981(zeros(10))
+	vars
+
+	eval( :( LoraDSL.LLAcc(0) ) )
+	dump( :( LoraDSL.LLAcc(0) ) )
+
+	dump( :( $(fullname(LoraDSL.LLAcc.name.module)).LLAcc(0.) ) )
+
+
+
+	m.translate
 
 	mod = m.model(ex, vars=zeros(nbeta), gradient=true)
 
@@ -73,40 +127,6 @@ reload("Lora") ; m = Lora
 
 		LLAcc = m.LLAcc
 
-		x = 0.5
-		mex2 = 	quote 
-					__acc = LLAcc(0.0)
-					__acc += logpdf(Bernoulli(x), [1, 0])
-					__acc.val
-				end
-		m.rdiff(mex2 , x=0.23)
-
-
-		quote  # x = 0.3
-		    _tmp1 = 0.0
-		    _tmp2 = Lora.LLAcc(0.0)
-		    _tmp3 = Distributions.Bernoulli(x)
-		    _tmp4 = [1,0]
-		    _tmp5 = cell(1)
-		    _tmp6 = cell(1)
-		    _tmp7 = cell(1)
-		    _tmp8 = logpdf(_tmp3,_tmp4)
-		    _tmp5[1] = 0.0
-		    _tmp6[1] = 0.0
-		    _tmp7[1] = 0.0
-		    _tmp9 = size(_tmp8)
-		    _tmp2 = _tmp2 + _tmp8
-		    _tmp7[1] = _tmp7[1] + 1.0
-		    _tmp10 = _tmp6 + _tmp7
-		    _tmp11 = zeros(_tmp9) + fill(_tmp10[1],_tmp9)
-		    for i = 1:length(_tmp4)  # i = 1
-		        _tmp1 = _tmp1 + [1.0 / ((_tmp3.p - 1.0) + _tmp4[i])] * _tmp11[i]
-		    end
-		    _tmp12 = _tmp5 + _tmp1
-		    (_tmp2.val,(_tmp12[1],))
-		end
-
-
 		g = r.tograph(mex2)
 		r.calc!(g, params = Dict(:x    => 1. ) )
 		r.calc!(g, params = Dict(:vars => zeros(10)) )
@@ -119,7 +139,6 @@ reload("Lora") ; m = Lora
 
 		n = g.nodes[22]
 
-		dmodel = m.rdiff(mex2, vars=zeros(10))
 
 
 			quote 
@@ -174,9 +193,11 @@ reload("Lora") ; m = Lora
 
 		## build function expression
 		if gradient  # case with gradient
-			head, body, outsym = ReverseDiffSource.reversediff(model, 
-				                                               rv, false, Lora; 
-				                                               init...)
+			# head, body, outsym = ReverseDiffSource.reversediff(model, 
+			# 	                                               rv, false, Lora; 
+			# 	                                               init...)
+
+			dmodel = m.rdiff(mex2, vars=zeros(10))
 
 			body = [ m.vec2var(;init...),  # assigments beta vector -> model parameter vars
 			         dmodel,
@@ -227,7 +248,7 @@ reload("Lora") ; m = Lora
 
 ### README examples 
 
-	mymodel1 = model(v-> -dot(v,v), init=ones(3))
+	mymodel1 = m.model(v-> -dot(v,v), init=ones(3))
 	mymodel2 = model(v-> -dot(v,v), grad=v->-2v, init=ones(3))   
 
 	modelxpr = quote
@@ -237,9 +258,9 @@ reload("Lora") ; m = Lora
 	mymodel3 = model(modelxpr, v=ones(3))
 	mymodel4 = model(modelxpr, gradient=true, v=ones(3))
 
-	mychain = run(mymodel1, RWM(0.1), SerialMC(steps=1000, burnin=100))
-	mychain = run(mymodel1, RWM(0.1), SerialMC(steps=1000, burnin=100, thinning=5))
-	mychain = run(mymodel1, RWM(0.1), SerialMC(101:5:1000))
+	mychain  = run(mymodel1, m.RWM(0.1), m.SerialMC(steps=1000, burnin=100))
+	mychain  = run(mymodel1, RWM(0.1), SerialMC(steps=1000, burnin=100, thinning=5))
+	mychain  = run(mymodel1, RWM(0.1), SerialMC(101:5:1000))
 	mychain1 = run(mymodel1 * RWM(0.1) * SerialMC(101:5:1000))
 
 	mychain2 = run(mymodel2, HMC(0.75), SerialMC(steps=10000, burnin=1000))
@@ -286,3 +307,92 @@ reload("Lora") ; m = Lora
 
 	# mychain4 = wsample(mychain3.samples, mychain3.diagnostics["weigths"], 1000)
 	# mean(mychain4)
+
+
+
+###################### modules ########################################
+	a
+	module Abcd
+		module Abcd2
+			type Argf ; end
+			function probe()
+				println(current_module())
+				eval( :( a = 1 ))
+				current_module().eval( :( a = 2 ) )
+			end
+			function probe2()
+				println(repr(Argf))
+			end
+		end
+	end
+
+	Abcd.Abcd2.probe()
+
+
+	Abcd.Abcd2.probe2()
+	a
+
+	t = Abcd.Abcd2.Argf
+	tn = t.name
+	tn.module
+	fullname(tn.module)
+
+	t = Abcd.Abcd2.probe2
+	t.module
+
+	fullname(t)
+	methods(fullname)
+
+	dump( :( Abcd.Abcd2.Argf ))
+	zn = symbol("Abcd.Abcd2.Argf")
+	dump( :( $zn ))
+	tn.names
+
+
+	mexpr(ns) = length(ns) == 1 ? ns[1] : Expr(:., mexpr(ns[1:end-1]), QuoteNode(ns[end]) )
+	dump( mexpr( tuple([fullname(tn.module)..., tn.name ]...) ) )
+
+	dump( mexpr( (:A, :B, :C)) )
+	dump( mexpr( (:A,)) )
+
+	ft = sin
+	ft.name
+
+
+	yo = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
+
+	dump( yo )
+	dump( :( $yo ) )
+
+	eval( yo )
+	t = eval( :( $yo ) )
+	x = t()
+	typeof(x)
+
+	repr(t)
+	typeof(t.name)
+	t.module
+
+	methodswith(TypeName)
+
+	Main.repr( Abcd.Abcd2.Argf )
+	Abcd.repr( Abcd.Abcd2.Argf )
+
+	Abcd.Abcd2.repr( Argf )
+
+	help(Base.isvarargtype)
+
+	module Abcd
+		x = 3
+		probe() = println(x)
+	end
+	Abcd.probe()
+
+	LoraDSL.LLAcc
+
+	probe() = LoraDSL.LLAcc(0)
+
+	LoraDSL.LLAcc(0)
+	probe()
+
+	x

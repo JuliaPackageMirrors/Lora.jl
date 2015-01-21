@@ -4,6 +4,9 @@
 #
 ##########################################################################
 
+#### creates expression for names qualified by a module
+mexpr(ns) = length(ns) == 1 ? ns[1] : Expr(:., mexpr(ns[1:end-1]), QuoteNode(ns[end]) )
+
 #### translates ~ into regular syntax
 function translate(ex::Expr)
 	if ex.head == :block 
