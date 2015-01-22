@@ -5,7 +5,8 @@ reload("Lora") ; m = Lora
 
 pwd()
 
-include("../src/parsers/LoraDSL.jl") ; m = LoraDSL
+cd( joinpath( Pkg.dir("Lora"), "src/parsers" ) )
+include("LoraDSL.jl") ; m = LoraDSL
 
 LoraDSL.LLAcc
 m.LLAcc
@@ -35,7 +36,74 @@ Vector = 4.
 	end
 
 #######
-	fex = m.parsemodel( ex, vars=zeros(10), debug=true)
+	fex = m.parsemodel( ex, vars=zeros(10), debug=true )
+	@eval tf(vars) = $fex
+	tf(zeros(10))
+
+	fex = m.parsemodel( ex, vars=zeros(10), order=1, debug=true )
+	tf = eval(tf)
+	tf(zeros(10))
+
+	fex = m.parsemodel( ex, vars=zeros(10), order=2, debug=true )
+
+
+	vec2var(;init...)
+
+	tf2, dummy = m.parsemodel( ex, vars=zeros(10), order=1 )
+	vars = zeros(10)
+	tf2(zeros(10))
+	typeof(tf2)
+	dummy
+vars
+
+	v = LoraDSL.LLAcc(0.)
+	n = m.ReverseDiffSource.NC
+
+	fex = m.parsemodel( ex, vars=zeros(10) )
+
+	m.ReverseDiffSource.rdiff(fex, vars=zeros(10), order=0, debug=true)
+
+
+	dex = m.ReverseDiffSource.rdiff( :( sum(similar(vars, Int64)) ), vars=zeros(10), order=1)
+	eval( :(vars=zeros(2) ; $dex) )
+
+	tex = :( a= LoraDSL.LLAcc(x) ; a.val )
+	dex = m.ReverseDiffSource.rdiff( tex, x=12., order=1, debug=true)
+	m.ReverseDiffSource.tocode(dex)
+	dex
+	eval( :(vars=zeros(2) ; $dex) )
+
+	op = LoraDSL.LLAcc
+	op = sin
+	isconst(:op)
+	isconst(LoraDSL.LLAcc)
+	string(op)
+	dump(op)
+	op.name.name
+	typeof(op.name)
+	methods(show, (IO, Function,))
+
+		mt = 	try
+					mod = fullname(Base.function_module(op))
+				catch e
+					println(g)
+					error("[tocode] cannot spell function $op")
+				end
+
+		(mt == (:Base,)) && ( mt = () ) 
+
+		Expr(:call, mexpr( tuple(mt..., symbol(string(op))) ), Any[ valueof(x,n) for x in n.parents[2:end] ]...)
+
+
+quote  # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 27:
+    __acc = LoraDSL.LLAcc(0.0) # line 28:
+    begin  # none, line 2:
+        __acc += logpdf(Normal(0,1.0),vars) # line 3:
+        prob = 1 ./ (1.0 .+ exp(X * vars)) # line 4:
+        __acc += logpdf(Bernoulli(prob),Y)
+    end # line 29:
+    __acc.val
+end
 
 	dump( fex )
 	dump( fex.args[1].args[2] )
@@ -338,6 +406,7 @@ Vector = 4.
 	fullname(tn.module)
 
 	t = Abcd.Abcd2.probe2
+	string(t)
 	t.module
 
 	fullname(t)

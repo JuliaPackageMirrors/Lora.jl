@@ -9,45 +9,41 @@
 #       of the log-likelihood function 
 
 function parsemodel(mex::Expr; order=0, debug=false, init...)
+    # mex, order, debug, init = ex, 0, false, [(:vars, zeros(nbeta))]
 
-	# mex, order, debug, init = ex, 0, false, [(:vars, zeros(nbeta))]
+    (mex.head != :block)  && (mex = Expr(:block, mex))  # enclose in block if needed
 
-	(mex.head != :block)  && (mex = Expr(:block, mex))  # enclose in block if needed
+    (length(mex.args)==0) && error("model should have at least 1 statement")
 
-	(length(mex.args)==0) && error("model should have at least 1 statement")
+    vsize, pmap, vinit = modelVars(;init...) # model param info
 
-	vsize, pmap, vinit = modelVars(;init...) # model param info
+    mex2 = translate(mex) # rewrite ~ statements
 
-	mex2 = translate(mex) # rewrite ~ statements
+    # insert log lik accumulator in the model expression
+    tn   = LLAcc.name
+    llex = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
+    mex2 =  quote 
+                $(ACC_SYM) = ($llex)(0.)
+                $(mex2)
+                $(ACC_SYM).val
+            end
 
-	tn   = LLAcc.name
-	llex = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
-	mex2 = 	quote 
-				$(ACC_SYM) = ($llex)(0.)
-				$(mex2)
-				$(ACC_SYM).val
-			end
+    dmodel = rdiff(mex2; order=order, evalmod=Main, init...)
 
-	dmodel = rdiff(mex2, order=order, vars=zeros(10), evalmod=Main)
+    tn   = OutOfSupportError.name
+    eex  = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
+    fn   = gensym("ll")
+    fex = quote
+            function ($fn)($(PARAM_SYM)::Vector{Float64})
+                try
+                    $(vec2var(;init...))
+                    $dmodel
+                catch e
+                    isa(e, $eex) || rethrow(e)
+                    return tuple([-Inf, zeros($order)]...)
+                end
+            end
+        end
 
-	return dmodel
-
-	
-
-
-	tn   = OutOfSupportError.name
-	eex  = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
-	fn   = gensym("ll")
-	fex = quote
-			function ($fn)($(PARAM_SYM)::Vector{Float64})
-				try
-					$dmodel
-				catch e
-		          	isa(e, $eex) || rethrow(e)
-		          	return tuple([-Inf, zeros($order)]...)
-		        end
-		    end
-		end
-
-	debug ? fex : ( current_module().eval(fex), vsize, pmap, vinit ) 
+    debug ? fex : ( current_module().eval(fex), vsize, pmap, vinit ) 
 end
