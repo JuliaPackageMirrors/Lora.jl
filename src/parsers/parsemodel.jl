@@ -9,7 +9,6 @@
 #       of the log-likelihood function 
 
 function parsemodel(mex::Expr; order=0, debug=false, init...)
-
 	# mex, order, debug, init = ex, 0, false, [(:vars, zeros(nbeta))]
 
 	(mex.head != :block)  && (mex = Expr(:block, mex))  # enclose in block if needed
@@ -22,18 +21,13 @@ function parsemodel(mex::Expr; order=0, debug=false, init...)
 
 	tn   = LLAcc.name
 	llex = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
-	mex2 = 	quote 
-				$(ACC_SYM) = ($llex)(0.)
-				$(mex2)
-				$(ACC_SYM).val
-			end
+	mex2 = 	Expr(:block, 
+				vec2var(;init...).args...,
+				:( $(ACC_SYM) = ($llex)(0.) ),
+				mex2.args...,
+				:( $(ACC_SYM).val ) )
 
-	dmodel = rdiff(mex2, order=order, vars=zeros(10), evalmod=Main)
-
-	return dmodel
-
-	
-
+	dmodel = rdiff(mex2; order=order, evalmod=Main, [( PARAM_SYM, vinit )]... )
 
 	tn   = OutOfSupportError.name
 	eex  = mexpr( tuple([fullname(tn.module)..., tn.name ]...) )
@@ -44,7 +38,7 @@ function parsemodel(mex::Expr; order=0, debug=false, init...)
 					$dmodel
 				catch e
 		          	isa(e, $eex) || rethrow(e)
-		          	return tuple([-Inf, zeros($order)]...)
+		          	return $(order==0 ? -Inf : Expr(:tuple, [-Inf, zeros(order)]...) )
 		        end
 		    end
 		end
