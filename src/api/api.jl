@@ -50,4 +50,4 @@ abstract MCStash{S<:MCSample}
 
 ### Monte Carlo Jobs (ex plain jobs, jobs using tasks or MPI jobs)
 
-abstract MCJob
+# abstract MCJob  # now a leaftype ?

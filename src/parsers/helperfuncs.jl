@@ -80,7 +80,7 @@ function vec2var(;init...)
 			pos += prod(sz)
 		end
 	end
-	ex
+	Expr(:block, ex...)
 end
 
 ### creates mapping statements from model parameter variables to Vector{Float64}

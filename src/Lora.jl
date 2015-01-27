@@ -1,9 +1,10 @@
 module Lora
 
-# using Base.LinAlg.BLAS
 using Distributions
 using StatsBase
-using ReverseDiffSource
+
+include("parsers/LoraDSL.jl")
+using .LoraDSL
 
 import Base:
   show,
@@ -66,14 +67,10 @@ include("api/api.jl")
 include("api/samples.jl")
 include("api/states.jl")
 include("api/chains.jl")
-include("parsers/expr_funcs.jl")
-include("parsers/modelparser.jl")
-include("parsers/definitions/DistributionsExtensions.jl")
-include("parsers/definitions/AccumulatorDerivRules.jl")
-include("parsers/definitions/MCMCDerivRules.jl")
-include("parsers/expr_funcs.jl")
+
 include("models/MCLikelihood.jl")
 include("models/models.jl")
+
 include("samplers/ARS.jl")
 include("samplers/SliceSampler.jl")
 include("samplers/MH.jl")
@@ -86,11 +83,13 @@ include("samplers/MALA.jl")
 include("samplers/SMMALA.jl")
 # include("samplers/RMHMC.jl")
 # include("samplers/PMALA.jl")
+
 include("runners/SerialMC.jl")
 # include("runners/SerialTempMC.jl")
 # include("runners/SeqMC.jl")
 include("tuners/VanillaMCTuner.jl")
 include("tuners/EmpiricalMCTuner.jl")
+
 include("jobs/PlainMCJob.jl")
 include("jobs/TaskMCJob.jl")
 # include("jobs/jobs.jl")
