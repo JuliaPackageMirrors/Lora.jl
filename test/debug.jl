@@ -54,9 +54,15 @@ include("LoraDSL.jl") ; m = LoraDSL
 	# mod.evalg(zeros(nbeta))
 
 	mj = m._MCJob(:task, mod)
-	run()
+	m.run(mj)
+	c = m.run(mod, m.MH(), m.SerialMC(1:1000))
+	m.acceptance(c[1])
+	c = m.run(mod, m.MH(0.1), m.SerialMC(1:1000))
+	m.acceptance(c[1])
+	c = m.run(mod, m.MH([0.1:0.1:1.0]), m.SerialMC(1:1000))
+	m.acceptance(c[1])
 
-
+	rand(MvNormal(zeros(3), [1., 2., 3]), 4)
 	# isa(mj, m.MCJob{:task, m.SerialMCBaseRunner})
 	# typeof(mj)
 	# isa(mj, m.MCPlainJob)

@@ -72,7 +72,7 @@ reset(    job::MCTaskJob, i, x) = reset(job.task[i], x)
 # creates the MCJob and calls run(job)
 
 run(T::Symbol, args...) = run( _MCJob(T, args...) )
-# run(args...) = run( _MCJob(:task, args...) )
+run(args...) = run( _MCJob(:task, args...) )
 
 ### Functions for resuming jobs
 
