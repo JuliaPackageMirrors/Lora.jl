@@ -22,7 +22,8 @@ MH(r::Function) = MH(true, nothing, r) # Metropolis sampler (symmetric proposal)
 # Random-walk Metropolis, i.e. Metropolis with a normal proposal density
 MH(σ::Vector{Float64}) = MH(x::Vector{Float64} -> rand(DiagNormal(x, σ)))
 MH(σ::Float64) = MH(x::Vector{Float64} -> rand(IsoNormal(x, σ)))
-MH() = MH(x::Vector{Float64} -> rand(IsoNormal(x, 1.)))
+# MH() = MH(x::Vector{Float64} -> rand(IsoNormal(x, 1.)))
+MH() = MH(x::Vector{Float64} -> rand(IsoNormal(zeros(length(x)), Distributions.PDMats.ScalMat(length(x),1.))) )
 
 ### MHStash type holds the internal state ("local variables") of the MH sampler
 

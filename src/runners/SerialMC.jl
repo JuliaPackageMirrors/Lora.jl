@@ -25,43 +25,52 @@ SerialMCBaseRunner(; burnin::Int=0, thinning::Int=1, nsteps::Int=100, storegradl
 
 typealias SerialMC SerialMCBaseRunner
 
-function run(m::MCModel, s::MCSampler, r::SerialMC, t::MCTuner=VanillaMCTuner(), job::Symbol=:task)
-  tic()
+# function run(m::MCModel, s::MCSampler, r::SerialMC, t::MCTuner=VanillaMCTuner(), job::Symbol=:task)
+function run(mcjob::Union(MCTaskJob{SerialMC}, MCPlainJob{SerialMC}))
+  # mcjob = MCJob(m, s, r; tuner=t, job=job)
+  r = mcjob.runner[1]  # The runner is unique, so we'll take the first one
 
-  mcjob = MCJob(m, s, r; tuner=t, job=job)
+  chains = MCChain[]
+  for ijob in 1:mcjob.dim
+    tic()
+    m = mcjob.model[ijob]
+    s = mcjob.sampler[ijob]
+    t = mcjob.tuner[ijob]
 
-  # Pre-allocation for storing results
-  mcchain::MCChain = MCChain(m.size, length(r.r); storegradlogtarget=r.storegradlogtarget)
-  ds = Dict{Any, Any}("step" => collect(r.r))
+    # Pre-allocation for storing results
+    mcchain::MCChain = MCChain(m.size, length(r.r); storegradlogtarget=r.storegradlogtarget)
+    ds = Dict{Any, Any}("step" => collect(r.r))
 
-  # Sampling loop
-  i::Int = 1
-  for j in 1:r.nsteps
-    mcstate = mcjob.receive(1)
-    if in(j, r.r)
-      mcchain.samples[i, :] = mcstate.successive.sample
-      mcchain.logtargets[i] = mcstate.successive.logtarget
+    # Sampling loop
+    i::Int = 1
+    for j in 1:r.nsteps
+      mcstate = receive(mcjob, ijob)
+      if in(j, r.r)
+        mcchain.samples[i, :] = mcstate.successive.sample
+        mcchain.logtargets[i] = mcstate.successive.logtarget
 
-      if r.storegradlogtarget
-        mcchain.gradlogtargets[i, :] = mcstate.successive.gradlogtarget
-      end
-
-      # Save diagnostics
-      for (k,v) in mcstate.diagnostics
-        # If diagnostics name not seen before, create column
-        if !haskey(ds, k)
-          ds[k] = Array(typeof(v), length(ds["step"]))          
+        if r.storegradlogtarget
+          mcchain.gradlogtargets[i, :] = mcstate.successive.gradlogtarget
         end
-        
-        ds[k][i] = v
+
+        # Save diagnostics
+        for (k,v) in mcstate.diagnostics
+          # If diagnostics name not seen before, create column
+          if !haskey(ds, k)
+            ds[k] = Array(typeof(v), length(ds["step"]))          
+          end
+          
+          ds[k][i] = v
+        end
+
+        i += 1
       end
-
-      i += 1
     end
-  end
 
-  mcchain.diagnostics, mcchain.runtime = ds, toq()
-  mcchain
+    mcchain.diagnostics, mcchain.runtime = ds, toq()
+    push!(chains, mcchain)
+  end
+  chains
 end
 
 function resume!(m::MCModel, s::MCSampler, r::SerialMC, c::MCChain, t::MCTuner=VanillaMCTuner(), j::Symbol=:task;

@@ -1,21 +1,10 @@
 #######################################################################
 
 reload("Lora") ; m = Lora
-pwd()
 
-<<<<<<< HEAD
+reload("ReverseDiffSource")
 cd( joinpath( Pkg.dir("Lora"), "src/parsers" ) )
 include("LoraDSL.jl") ; m = LoraDSL
-=======
-reload("ReverseDiffSource")
-include("../src/parsers/LoraDSL.jl") ; m = LoraDSL
->>>>>>> b0ffd86ec666aa923a886b1530aa7c1c23ef2426
-
-LoraDSL.LLAcc
-m.LLAcc
-
-Vector = 4.
-
 
 #########################################################################
 #    testing script for simple examples 
@@ -39,84 +28,14 @@ Vector = 4.
 	end
 
 #######
-<<<<<<< HEAD
-	fex = m.parsemodel( ex, vars=zeros(10), debug=true )
-	@eval tf(vars) = $fex
-	tf(zeros(10))
-
-	fex = m.parsemodel( ex, vars=zeros(10), order=1, debug=true )
-	tf = eval(tf)
-	tf(zeros(10))
-
-	fex = m.parsemodel( ex, vars=zeros(10), order=2, debug=true )
-
-
-	vec2var(;init...)
-
-	tf2, dummy = m.parsemodel( ex, vars=zeros(10), order=1 )
-	vars = zeros(10)
-	tf2(zeros(10))
-	typeof(tf2)
-	dummy
-vars
-
-	v = LoraDSL.LLAcc(0.)
-	n = m.ReverseDiffSource.NC
-
-	fex = m.parsemodel( ex, vars=zeros(10) )
-
-	m.ReverseDiffSource.rdiff(fex, vars=zeros(10), order=0, debug=true)
-
-
-	dex = m.ReverseDiffSource.rdiff( :( sum(similar(vars, Int64)) ), vars=zeros(10), order=1)
-	eval( :(vars=zeros(2) ; $dex) )
-
-	tex = :( a= LoraDSL.LLAcc(x) ; a.val )
-	dex = m.ReverseDiffSource.rdiff( tex, x=12., order=1, debug=true)
-	m.ReverseDiffSource.tocode(dex)
-	dex
-	eval( :(vars=zeros(2) ; $dex) )
-
-	op = LoraDSL.LLAcc
-	op = sin
-	isconst(:op)
-	isconst(LoraDSL.LLAcc)
-	string(op)
-	dump(op)
-	op.name.name
-	typeof(op.name)
-	methods(show, (IO, Function,))
-
-		mt = 	try
-					mod = fullname(Base.function_module(op))
-				catch e
-					println(g)
-					error("[tocode] cannot spell function $op")
-				end
-
-		(mt == (:Base,)) && ( mt = () ) 
-
-		Expr(:call, mexpr( tuple(mt..., symbol(string(op))) ), Any[ valueof(x,n) for x in n.parents[2:end] ]...)
-
-
-quote  # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 27:
-    __acc = LoraDSL.LLAcc(0.0) # line 28:
-    begin  # none, line 2:
-        __acc += logpdf(Normal(0,1.0),vars) # line 3:
-        prob = 1 ./ (1.0 .+ exp(X * vars)) # line 4:
-        __acc += logpdf(Bernoulli(prob),Y)
-    end # line 29:
-    __acc.val
-end
-=======
 	fex = m.parsemodel( ex, vars=zeros(10), debug=true)
 	fex = m.parsemodel( ex, vars=zeros(10), debug=true, order=1)
 	fex, dummy = m.parsemodel( ex, vars=zeros(10))
-	fex, dummy = m.parsemodel( ex, vars=zeros(10), order=1, debug=true )
+	fex, dummy = m.parsemodel( ex, vars=zeros(10), order=1)
 	fex, dummy = m.parsemodel( ex, vars=zeros(10), order=2, debug=true)
 
 	fex(zeros(10))
->>>>>>> b0ffd86ec666aa923a886b1530aa7c1c23ef2426
+
 
 	dump( fex )
 	dump( fex.args[1].args[2] )
@@ -126,61 +45,71 @@ end
 	llf = eval( fex )
 	llf( zeros(10) )
 
-	fex = m.parsemodel( ex, vars=zeros(10) )
+	fex, psize, pmap, pinit = m.parsemodel( ex, vars=zeros(10), order=1 )
 	fex( zeros(10) )
-	LoraDSL.LLAcc
+
+############
+	mod = m.model(ex, vars=zeros(nbeta), order=1)
+	# mod.eval(zeros(nbeta))
+	# mod.evalg(zeros(nbeta))
+
+	mj = m._MCJob(:task, mod)
+	run()
 
 
-	g = m.ReverseDiffSource.tograph( :( LoraDSL.LLAcc(0) ) )
-	typeof(g.nodes[2].main)
-	dump( m.ReverseDiffSource.tocode(g) )
+	# isa(mj, m.MCJob{:task, m.SerialMCBaseRunner})
+	# typeof(mj)
+	# isa(mj, m.MCPlainJob)
+	# isa(mj, m.MCTaskJob)
+	# isa(mj, m.MCTaskJob{m.SerialMC})
 
-    function ll14981(__beta::Vector{Float64}) # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 38:
-        try  # line 39:
-            begin 
-                _tmp1 = LoraDSL.LLAcc(0.0)
-                _tmp1 = _tmp1 + logpdf(Distributions.Normal(0,1.0),vars)
-                _tmp1 = _tmp1 + logpdf(Distributions.Bernoulli(1 ./ (1.0 .+ exp(X * vars))),Y)
-                (_tmp1.val,)
-            end
-        catch e # line 41:
-            isa(e,LoraDSL.OutOfSupportError) || rethrow(e) # line 42:
-            return tuple([-Inf,zeros(0)]...)
-        end
-    end
-	ll14981(zeros(10))
-	vars
+	m.run(mj)
 
-	eval( :( LoraDSL.LLAcc(0) ) )
-	dump( :( LoraDSL.LLAcc(0) ) )
+	methods(run)
 
-	dump( :( $(fullname(LoraDSL.LLAcc.name.module)).LLAcc(0.) ) )
+	mj2 = m._MCJob(:plain, mod)
+	m.run(mj2)
+
+	s = m.MH()
+	s.randproposal
+	s.randproposal([4.])
+	rand(IsoNormal(mean=[4.], 1.))
+	methods(IsoNormal)
+ call{Cov<:PDMats.AbstractPDMat,
+ 	  Mean<:Union(Array{Float64,1},
+ 	  Distributions.ZeroVector{Float64})}
+ 	(::Type{ Distributions.MvNormal{Cov<:PDMats.AbstractPDMat,Mean<:Union(Array{Float64,1},Distributions.ZeroVector{Float64})} },
+ 	 μ,Σ)
+ 	IsoNormal(zeros(2),eye(2))
+
+ 	methods(PDMats.ScalMat)
+ 	typeof(PDMats.ScalMat)
+ 	PDMats.ScalMat(2,1.)
+
+ 	IsoNormal(zeros(2), PDMats.ScalMat(2,1.))
+
+	methods(m._MCJob, (Symbol, m.MCModel))
+	methods(m.run, (m.MCModel))
+
+	res = m.run(mod, m.MH(), m.SerialMC(1:1000))
+
+	res = m.run(m._MCJob(:task, mod))
+	, m.MH(), m.SerialMC(1:1000))
 
 
+	m.MCJob(mod, m.MH(), m.SerialMC(1:1000))
 
-	m.translate
-
-	mod = m.model(ex, vars=zeros(nbeta), gradient=true)
-
-	mod.eval(zeros(nbeta))
-	mod.evalg(zeros(nbeta))
-
-	names(mod)
-
-	m.model(ex, vars=zeros(nbeta), gradient=true, debug=true)
-	m.generateModelFunction(ex, vars=zeros(nbeta), gradient=true, debug=true)
-
-	# different samplers
-	res = m.run(m * m.MH(0.05) * m.SerialMC(100:1000))
-	res = run(m * HMC(2, 0.1) * SerialMC(100:1000))
-	res = run(m * NUTS() * SerialMC(100:1000))
-	res = run(m * MALA(0.001) * SerialMC(100:1000))
-	# TODO : add other samplers here
-
-	# different syntax
-	res = run(m, RWM(), SerialMC(steps=1000, thinning=10, burnin=0))
+methods(run)	
 	res = run(m, HMC(2,0.1), SerialMC(thinning=10, burnin=0))
 	res = run(m, HMC(2,0.1), SerialMC(burnin=20))
+
+
+	broadcast(+, [0, 1], [2 3])
+	broadcast(+, [0, 1], [2 3], 4)
+	broadcast(vcat, [0, 1], [2 3])
+
+	tuple(1,2)
+
 
 
 ###############  
@@ -343,3 +272,59 @@ end
 	quote
        	return $(order==0 ? -Inf : Expr(:tuple, [-Inf, zeros(order)]...) )
 	end
+
+
+
+	type Abcd2{T, S}
+		x::T
+		t::Type(S)
+	end
+
+	Abcd2(2.5)
+	Abcd2{:test}(2.5)
+
+	Abcd{Float64, :test}(2.5)
+
+
+abstract PlainJob
+abstract TaskJob
+
+### Generic MCJob type is used for Monte Carlo jobs based on coroutines or not 
+module Sandbox
+	type Typ{T, R}    
+	  x::R
+	end
+
+	typealias Typa{R}  Typ{:a, R}
+	typealias Typb{R}  Typ{:b, R}
+
+	sum(x::Typa) = 0.
+	sum(x::Typb) = 1.
+end
+
+x = Sandbox.Typa(2)
+x = Sandbox.Typa{Float64}(2)
+
+isa(x, Sandbox.Typa)
+Sandbox.sum(x)
+
+Abcd3a{T}(x::T) = Abcd3{:a, T}(x)
+
+Abcd3{:a, Real}(2.5)
+
+Abcd3aa(2.5)
+
+
+sum(t::Abcd3a{Real}) = 2
+sum(t::Abcd3a{Int}) = 3
+
+sum(Abcd3a(2.5))
+
+MCPlainJob(m::MCModel, s::MCSampler, r::MCRunner, t::MCTuner) = MCPlainJob([m], [s], [r], [t])
+MCTaskJob( m::MCModel, s::MCSampler, r::MCRunner, t::MCTuner) = MCTaskJob( [m], [s], [r], [t])
+
+
+
+broadcast( (args...) -> vcat(args...), Any[1,2], Any[3 4])
+
+broadcast_shape()
