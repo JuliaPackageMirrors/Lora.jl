@@ -23,13 +23,13 @@ type MCLikelihood <: MCModel
   init::Vector{Float64}        # parameter vector initial values
   scale::Vector{Float64}       # scaling hint on parameters
 
-  MCLikelihood(f::Function, 
-               g::FunctionOrNothing, ag::FunctionOrNothing,
-               t::FunctionOrNothing, at::FunctionOrNothing,
-               dt::FunctionOrNothing, adt::FunctionOrNothing,
-               init::Vector{Float64}, 
-               sc::Vector{Float64}, 
-               pmap::Dict) = begin
+  function MCLikelihood(f::Function, 
+                        g::FunctionOrNothing, ag::FunctionOrNothing,
+                        t::FunctionOrNothing, at::FunctionOrNothing,
+                        dt::FunctionOrNothing, adt::FunctionOrNothing,
+                        init::Vector{Float64}, 
+                        sc::Vector{Float64}, 
+                        pmap::Dict)
 
     s = size(init, 1)
 

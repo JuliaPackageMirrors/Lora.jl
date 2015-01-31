@@ -6,11 +6,6 @@ type MCJob{T, R<:MCRunner}      # T is a symbol for job type, :plain or :task
   runner::Vector{R}
   tuner::Vector{MCTuner}
 
-  # send::Function       # these are now methods on MCJob
-  # receive::Function
-  # reset::Function
-  # jobtype::Symbol  # now a parameter of the type
-
   stash::Vector{MCStash}
   dim::Int
   task::Vector{Task}  # will be empty if plain job
@@ -36,11 +31,15 @@ typealias MCPlainJob{R} MCJob{:plain, R}
 typealias MCTaskJob{R}  MCJob{:task, R}
 
 ### Generic constructor
-function _MCJob(T::Symbol, m, s=MH(), r=SerialMC(), t=VanillaMCTuner())
+function MCJob(T, 
+               m::MCModel, 
+               s::MCSampler=MH(),
+               r::MCRunner=SerialMC(nsteps=100), 
+               t::MCTuner=VanillaMCTuner())
   rtyp = typeof(r)
   ls   = map(x -> isa(x, AbstractArray) ? length(x) : 1, [m, s, r, t])
   maxn = maximum(ls)
-  println("$maxn, $ls")
+
   all((ls .== 1) | (ls .== maxn)) || error("incompatible size of arguments $(unique(ls))")
 
   ms =   MCModel[ ls[1]==1 ? deepcopy(m) : m[i] for i in 1:maxn ]  # not sure a deepcopy is needed here
@@ -52,7 +51,7 @@ function _MCJob(T::Symbol, m, s=MH(), r=SerialMC(), t=VanillaMCTuner())
 end
 
 
-send(    job::MCPlainJob)       = nothing   # not sure what it is supposed to do
+send(    job::MCPlainJob)       = nothing   
 receive( job::MCPlainJob, i)    = iterate!(job.stash[i], 
                                            job.model[i], 
                                            job.sampler[i], 
@@ -68,7 +67,7 @@ reset(    job::MCTaskJob, i, x) = reset(job.task[i], x)
 
 ### Functions for running jobs
 # each runner defines a run(job::MCJob{Symbol, runnertype}) method
-# here is a shortcut method run(type::Symbol, m, s, r, t) that 
+# here is only a shortcut method run(type::Symbol, m, s, r, t) that 
 # creates the MCJob and calls run(job)
 
 run(T::Symbol, args...) = run( _MCJob(T, args...) )

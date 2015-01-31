@@ -28,35 +28,18 @@ include("LoraDSL.jl") ; m = LoraDSL
 	end
 
 #######
-	fex = m.parsemodel( ex, vars=zeros(10), debug=true)
-	fex = m.parsemodel( ex, vars=zeros(10), debug=true, order=1)
-	fex, dummy = m.parsemodel( ex, vars=zeros(10))
-	fex, dummy = m.parsemodel( ex, vars=zeros(10), order=1)
-	fex, dummy = m.parsemodel( ex, vars=zeros(10), order=2, debug=true)
-
-	fex(zeros(10))
-
-
-	dump( fex )
-	dump( fex.args[1].args[2] )
-	eval( fex )
-	dump( :( LoraDSL.LLAcc(0.) ) )
-
-	llf = eval( fex )
-	llf( zeros(10) )
-
-	fex, psize, pmap, pinit = m.parsemodel( ex, vars=zeros(10), order=1 )
-	fex( zeros(10) )
-
-############
 	mod = m.model(ex, vars=zeros(nbeta), order=1)
 	# mod.eval(zeros(nbeta))
 	# mod.evalg(zeros(nbeta))
 
-	mj = m._MCJob(:task, mod)
-	m.run(mj)
-	c = m.run(mod, m.MH(), m.SerialMC(1:1000))
+	job = m.MCJob(:task, mod, m.MH(), m.SerialMC(1:1000))
+	c = m.run(job)
+	c = m.resume(job, c, 1000)
 	m.acceptance(c[1])
+	c = m.resume(job, c, 1000, keep=false)
+
+
+
 	c = m.run(mod, m.MH(0.1), m.SerialMC(1:1000))
 	m.acceptance(c[1])
 	c = m.run(mod, m.MH([0.1:0.1:1.0]), m.SerialMC(1:1000))
