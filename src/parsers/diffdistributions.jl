@@ -7,8 +7,6 @@
 ####### derivation rules for Distribution constructors
 
 for d in [Bernoulli, TDist, Exponential, Poisson]  
-	typeequiv( d, 1)
-
 	deriv_rule( d, [(:p,          Real)], :p, :( ds[1] ) )
 	deriv_rule( d, [(:p, AbstractArray)], :p, 
 					quote
@@ -21,8 +19,6 @@ for d in [Bernoulli, TDist, Exponential, Poisson]
 end
 
 for d in [ Normal, Uniform, Weibull, Gamma, Cauchy, LogNormal, Binomial, Beta, Laplace]
-	typeequiv( d, 2)
-
 	deriv_rule( d, [(:p1,          Real), (:p2,          Real)], :p1, :( ds[1] ) )
 	deriv_rule( d, [(:p1,          Real), (:p2,          Real)], :p2, :( ds[2] ) )
 

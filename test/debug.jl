@@ -1,8 +1,8 @@
 #######################################################################
 
-reload("Lora") ; m = Lora
 
 reload("ReverseDiffSource")
+reload("Lora") ; m = Lora
 cd( joinpath( Pkg.dir("Lora"), "src/parsers" ) )
 include("LoraDSL.jl") ; m = LoraDSL
 
@@ -10,16 +10,15 @@ include("LoraDSL.jl") ; m = LoraDSL
 #    testing script for simple examples 
 #########################################################################
 
-	using Distributions
+	# using Distributions
 
 	# generate a random dataset
 	srand(1)
-	n = 1000
+	n = 10
 	nbeta = 10 
 	X = [ones(n) randn((n, nbeta-1))] 
 	beta0 = randn((nbeta,))
 	Y = rand(n) .< ( 1 ./ (1 .+ exp(X * beta0))) 
-
 	# define model
 	ex = quote
 		vars ~ Normal(0, 1.0)  
@@ -29,6 +28,266 @@ include("LoraDSL.jl") ; m = LoraDSL
 
 #######
 	mod = m.model(ex, vars=zeros(nbeta), order=1)
+	mod.eval( zeros(nbeta) )
+    mod.evalg( zeros(nbeta) )
+	mod = m.parsemodel(ex, vars=zeros(nbeta), order=1, debug=true)
+
+            let __beta = zeros(nbeta) 
+                _tmp1 = 1:10
+                _tmp2 = Distributions.Normal(0,1.0)
+                _tmp3 = Lora.LoraDSL.LLAcc(0.0)
+                _tmp4 = cell(1)
+                _tmp5 = cell(1)
+                _tmp6 = cell(1)
+                _tmp7 = similar(Y,Any)
+                _tmp8 = zeros(size(__beta))
+                _tmp4[1] = 0.0
+                _tmp5[1] = 0.0
+                _tmp6[1] = 0.0
+                _tmp9 = Distributions.logpdf(_tmp2,__beta[_tmp1])
+                _tmp10 = X * __beta[_tmp1]
+                _tmp11 = size(__beta[_tmp1])
+                _tmp12 = exp(_tmp10)
+                _tmp13 = zeros(_tmp11)
+                _tmp3 = _tmp3 + _tmp9
+                _tmp14 = 1.0 .+ _tmp12
+                _tmp6[1] = _tmp6[1] + 1.0
+                _tmp15 = 1 ./ _tmp14
+                _tmp16 = _tmp5 + _tmp6
+                _tmp17 = Distributions.Bernoulli(_tmp15)
+                _tmp6 = 0.0
+                _tmp18 = Distributions.logpdf(_tmp17,Y)
+                _tmp19 = cell(size(_tmp17))
+                _tmp3 = _tmp3 + _tmp18
+                _tmp20 = zeros(size(_tmp9)) + (_tmp4 + (_tmp6 + _tmp16))
+                _tmp21 = zeros(size(_tmp18)) + _tmp16
+                for i = 1:length(__beta[_tmp1])
+                    _tmp13[i] = ((_tmp2.μ - (__beta[_tmp1])[i]) / (_tmp2.σ * _tmp2.σ)) * _tmp20[i]
+                end
+                for i = 1:length(_tmp19)
+                    _tmp22 = cell(1)
+                    _tmp22[1] = 0.0
+                    _tmp19[i] = _tmp22
+                end
+                for i = 1:length(Y)
+                    _tmp7[i] = [1.0 / ((_tmp17[i].p - 1.0) + Y[i])] * _tmp21[i]
+                end
+                _tmp23 = _tmp19 + _tmp7
+                _tmp24 = zeros(size(_tmp23))
+                for i = 1:length(_tmp23)
+                    _tmp24[i] = (_tmp23[i])[1]
+                end
+                _tmp8[_tmp1] = _tmp8[_tmp1] + ((zeros(_tmp11) + X' * (zeros(size(_tmp10)) + _tmp12 .* (zeros(size(_tmp12)) + (zeros(size(_tmp14)) + -((zeros(size(_tmp15)) + _tmp24)) ./ (_tmp14 .* _tmp14))))) + _tmp13)
+                (_tmp3.val,_tmp8)
+            end
+
+
+    mod = m.model(ex, vars=zeros(nbeta), order=2)
+    mod.eval( zeros(nbeta) )
+    mod.evalg( zeros(nbeta) )
+
+
+
+    function ##ll#80083(__beta::Vector{Float64}) # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 37:
+        try  # line 38:
+        	__beta = zeros(nbeta)
+            begin 
+                _tmp1 = 1:10
+                _tmp2 = Distributions.Normal(0,1.0)
+                _tmp3 = Lora.LoraDSL.LLAcc(0.0)
+                _tmp4 = cell(1)
+                _tmp5 = cell(1)
+                _tmp6 = cell(1)
+                _tmp7 = similar(Y,Any)
+                _tmp8 = X'
+                _tmp9 = length(__beta)
+                _tmp10 = zeros(size(__beta))
+                _tmp4[1] = 0.0
+                _tmp5[1] = 0.0
+                _tmp6[1] = 0.0
+                _tmp11 = 1:length(Y)
+                _tmp12 = Distributions.logpdf(_tmp2,__beta[_tmp1])
+                _tmp13 = X * __beta[_tmp1]
+                _tmp14 = size(__beta[_tmp1])
+                _tmp15 = zeros((_tmp9,_tmp9))
+                _tmp16 = exp(_tmp13)
+                _tmp17 = size(_tmp12)
+                _tmp18 = zeros(_tmp14)
+                _tmp19 = 1:length(__beta[_tmp1])
+                _tmp3 = _tmp3 + _tmp12
+                _tmp20 = 1.0 .+ _tmp16
+                _tmp6[1] = _tmp6[1] + 1.0
+                _tmp21 = 1 ./ _tmp20
+                _tmp22 = _tmp5 + _tmp6
+                _tmp23 = _tmp20 .* _tmp20
+                _tmp24 = Distributions.Bernoulli(_tmp21)
+                _tmp6 = 0.0
+                _tmp25 = Distributions.logpdf(_tmp24,Y)
+                _tmp26 = cell(size(_tmp24))
+                _tmp27 = size(_tmp25)
+                _tmp28 = _tmp4 + (_tmp6 + _tmp22)
+                _tmp3 = _tmp3 + _tmp25
+                _tmp29 = zeros(_tmp27) + Base.Graphics.fill(_tmp22[1],_tmp27)
+                for i = 1:length(_tmp26)
+                    _tmp30 = cell(1)
+                    _tmp30[1] = 0.0
+                    _tmp26[i] = _tmp30
+                end
+                for i = _tmp11
+                    _tmp7[i] = [1.0 / ((_tmp24[i].p - 1.0) + Y[i])] * _tmp29[i]
+                end
+                _tmp31 = zeros(_tmp17) + Base.Graphics.fill(_tmp28[1],_tmp17)
+                _tmp32 = _tmp7
+                for i = _tmp19
+                    _tmp18[i] = ((_tmp2.μ - (__beta[_tmp1])[i]) / (_tmp2.σ * _tmp2.σ)) * _tmp31[i]
+                end
+                _tmp33 = _tmp26 + _tmp32
+                _tmp34 = _tmp18
+                _tmp35 = zeros(size(_tmp33))
+                _tmp36 = 1:length(_tmp33)
+                for i = _tmp36
+                    _tmp35[i] = (_tmp33[i])[1]
+                end
+                _tmp37 = _tmp35
+                _tmp38 = zeros(size(_tmp21)) + _tmp37
+                _tmp39 = -_tmp38
+                _tmp40 = _tmp39 ./ _tmp23
+                _tmp41 = zeros(size(_tmp20)) + _tmp40
+                _tmp42 = zeros(size(_tmp16)) + _tmp41
+                _tmp43 = _tmp16 .* _tmp42
+                _tmp44 = zeros(size(_tmp13)) + _tmp43
+                _tmp45 = _tmp8 * _tmp44
+                _tmp46 = zeros(_tmp14) + _tmp45
+                _tmp47 = _tmp46 + _tmp34
+                _tmp48 = _tmp10[_tmp1] + _tmp47
+                _tmp10[_tmp1] = _tmp48
+                for _idx1 = 1:_tmp9  # _idx1 = 1
+                    _tmp49 = size(__beta[_tmp1])
+                    _tmp50 = size(_tmp12)
+                    _tmp51 = cell(1)
+                    _tmp52 = size(_tmp25)
+                    _tmp53 = cell(1)
+                    _tmp54 = cell(1)
+                    _tmp55 = cell(10)
+                    _tmp56 = cell(10)
+                    _tmp57 = cell(1)
+                    _tmp58 = cell(1)
+                    _tmp59 = cell(1)
+                    _tmp60 = cell(1)
+                    _tmp61 = cell(1)
+                    _tmp62 = cell(1)
+                    _tmp63 = cell(1)
+                    _tmp64 = cell(1)
+                    _tmp65 = cell(1)
+                    _tmp66 = cell(1)
+                    _tmp67 = similar(Y,Any)
+                    _tmp68 = zeros(size(__beta))
+                    _tmp69 = zeros(_tmp49)
+                    _tmp51[1] = 0.0
+                    _tmp70 = cell(size(_tmp24))
+                    _tmp53[1] = 0.0
+                    _tmp54[1] = 0.0
+                    _tmp57[1] = 0.0
+                    _tmp58[1] = 0.0
+                    _tmp59[1] = 0.0
+                    _tmp60[1] = 0.0
+                    _tmp61[1] = 0.0
+                    _tmp62[1] = 0.0
+                    _tmp63[1] = 0.0
+                    _tmp64[1] = 0.0
+                    _tmp65[1] = 0.0
+                    _tmp66[1] = 0.0
+                    _tmp71 = zeros(size(_tmp10))
+                    _tmp72 = zeros(_tmp49)
+                    _tmp56[1] = _tmp57
+                    _tmp73 = _tmp53 + _tmp54
+                    _tmp55[1] = zeros(size(_tmp32[1]))
+                    _tmp56[2] = _tmp58
+                    _tmp54 = 0.0
+                    for i = 1:length(_tmp70)
+                        _tmp74 = cell(1)
+                        _tmp74[1] = 0.0
+                        _tmp70[i] = _tmp74
+                    end
+                    _tmp55[2] = zeros(size(_tmp32[2]))
+                    _tmp56[3] = _tmp59
+                    _tmp71[_idx1] = _tmp71[_idx1] + 1.0
+                    _tmp75 = _tmp70
+                    _tmp55[3] = zeros(size(_tmp32[3]))
+                    _tmp56[4] = _tmp60
+                    _tmp76 = zeros(_tmp52) + Base.Graphics.fill(_tmp73[1],_tmp52)
+                    _tmp77 = _tmp51 + (_tmp54 + _tmp73)
+                    _tmp55[4] = zeros(size(_tmp32[4]))
+                    _tmp56[5] = _tmp61
+                    for i = 1:length(Y)
+                        _tmp67[i] = [1.0 / ((_tmp24[i].p - 1.0) + Y[i])] * _tmp76[i]
+                    end
+                    _tmp55[5] = zeros(size(_tmp32[5]))
+                    _tmp56[6] = _tmp62
+                    _tmp78 = zeros(size(_tmp47)) + (zeros(size(_tmp48)) + _tmp71[_tmp1])
+                    _tmp55[6] = zeros(size(_tmp32[6]))
+                    _tmp56[7] = _tmp63
+                    _tmp79 = zeros(size(_tmp34)) + _tmp78
+                    _tmp80 = zeros(_tmp50) + Base.Graphics.fill(_tmp77[1],_tmp50)
+                    _tmp55[7] = zeros(size(_tmp32[7]))
+                    _tmp56[8] = _tmp64
+                    for i = reverse(_tmp19)
+                        _tmp81 = _tmp79[i]
+                        _tmp79[i] = 0.0
+                        _tmp69[i] = _tmp69[i] + -((_tmp31[i] * _tmp81) / (_tmp2.σ * _tmp2.σ))
+                    end
+                    for i = 1:length(__beta[_tmp1])
+                        _tmp72[i] = ((_tmp2.μ - (__beta[_tmp1])[i]) / (_tmp2.σ * _tmp2.σ)) * _tmp80[i]
+                    end
+                    _tmp55[8] = zeros(size(_tmp32[8]))
+                    _tmp56[9] = _tmp65
+                    _tmp55[9] = zeros(size(_tmp32[9]))
+                    _tmp56[10] = _tmp66
+                    _tmp55[10] = zeros(size(_tmp32[10]))
+                    _tmp82 = zeros(size(_tmp43)) + (zeros(size(_tmp44)) + _tmp8' * (zeros(size(_tmp45)) + (zeros(size(_tmp46)) + _tmp78)))
+                    _tmp83 = zeros(size(_tmp40)) + (zeros(size(_tmp41)) + (zeros(size(_tmp42)) + _tmp16 .* _tmp82))
+                    _tmp84 = _tmp20 .* (zeros(size(_tmp23)) + (-_tmp39 .* _tmp83) ./ (_tmp23 .* _tmp23))
+                    _tmp85 = zeros(size(_tmp37)) + (zeros(size(_tmp38)) + -((zeros(size(_tmp39)) + _tmp83 ./ _tmp23)))
+                    for i = reverse(_tmp36)
+                        _tmp86 = cell(1)
+                        _tmp87 = _tmp85[i]
+                        _tmp86[1] = 0.0
+                        _tmp85[i] = 0.0
+                        _tmp86[1] = _tmp86[1] + _tmp87
+                        _tmp56[i] = _tmp56[i] + _tmp86
+                    end
+                    _tmp88 = _tmp55 + _tmp56
+                    for i = reverse(_tmp11)
+                        _tmp89 = cell(1)
+                        _tmp90 = _tmp88[i]
+                        _tmp89[1] = 0.0
+                        _tmp88[i] = 0.0
+                        _tmp91 = (_tmp24[i].p - 1.0) + Y[i]
+                        _tmp92 = [1.0 / _tmp91]
+                        _tmp93 = zeros(size(_tmp92)) + _tmp29[i] .* (zeros(size(_tmp92 * _tmp29[i])) + _tmp90)
+                        _tmp89[1] = _tmp89[1] + -(_tmp93[1]) / (_tmp91 * _tmp91)
+                        _tmp75[i] = _tmp75[i] + _tmp89
+                    end
+                    _tmp94 = _tmp75 + _tmp67
+                    _tmp95 = zeros(size(_tmp94))
+                    for i = 1:length(_tmp94)
+                        _tmp95[i] = (_tmp94[i])[1]
+                    end
+                    _tmp68[_tmp1] = _tmp68[_tmp1] + ((_tmp69 + X' * (zeros(size(_tmp13)) + exp(_tmp13) .* ((zeros(size(_tmp16)) + _tmp42 .* _tmp82) + (((zeros(size(_tmp20)) + _tmp84) + _tmp84) + -((zeros(size(_tmp21)) + _tmp95)) ./ (_tmp20 .* _tmp20))))) + _tmp72)
+                    _tmp15[(_idx1 - 1) * _tmp9 + 1:_idx1 * _tmp9] = _tmp68
+                end
+                (_tmp3.val,_tmp10,_tmp15)
+            end
+        catch e # line 40:
+            isa(e,Lora.LoraDSL.OutOfSupportError) || rethrow(e) # line 41:
+            return (-Inf,0.0,0.0)
+        end
+    end
+end
+
+
+
+#################################################################################
 	# mod.eval(zeros(nbeta))
 	# mod.evalg(zeros(nbeta))
 
