@@ -10,87 +10,72 @@ include("LoraDSL.jl") ; m = LoraDSL
 #    testing script for simple examples 
 #########################################################################
 
-	# using Distributions
 
-	# generate a random dataset
-	srand(1)
-	n = 10
-	nbeta = 10 
-	X = [ones(n) randn((n, nbeta-1))] 
-	beta0 = randn((nbeta,))
-	Y = rand(n) .< ( 1 ./ (1 .+ exp(X * beta0))) 
-	# define model
-	ex = quote
-		vars ~ Normal(0, 1.0)  
-		prob = 1 ./ (1. .+ exp(X * vars)) 
-		Y ~ Bernoulli(prob)
-	end
+    # generate a random dataset
+    srand(1)
+    n = 100
+    nbeta = 10 
+    X = [ones(n) randn((n, nbeta-1))] 
+    beta0 = randn((nbeta,))
+    Y = rand(n) .< ( 1 ./ (1 .+ exp(X * beta0))) 
+    # define model
+    ex = quote
+        vars ~ Normal(0, 1.0)  
+        prob = 1 ./ (1. .+ exp(X * vars)) 
+        Y ~ Bernoulli(prob)
+    end
 
 #######
+	using Distributions
+
 	mod = m.model(ex, vars=zeros(nbeta), order=1)
-	mod.eval( zeros(nbeta) )
-    mod.evalg( zeros(nbeta) )
-	mod = m.parsemodel(ex, vars=zeros(nbeta), order=1, debug=true)
+	dfunc = m.parsemodel(ex, vars=zeros(nbeta), order=1)
 
-            let __beta = zeros(nbeta) 
-                _tmp1 = 1:10
-                _tmp2 = Distributions.Normal(0,1.0)
-                _tmp3 = Lora.LoraDSL.LLAcc(0.0)
-                _tmp4 = cell(1)
-                _tmp5 = cell(1)
-                _tmp6 = cell(1)
-                _tmp7 = similar(Y,Any)
-                _tmp8 = zeros(size(__beta))
-                _tmp4[1] = 0.0
-                _tmp5[1] = 0.0
-                _tmp6[1] = 0.0
-                _tmp9 = Distributions.logpdf(_tmp2,__beta[_tmp1])
-                _tmp10 = X * __beta[_tmp1]
-                _tmp11 = size(__beta[_tmp1])
-                _tmp12 = exp(_tmp10)
-                _tmp13 = zeros(_tmp11)
-                _tmp3 = _tmp3 + _tmp9
-                _tmp14 = 1.0 .+ _tmp12
-                _tmp6[1] = _tmp6[1] + 1.0
-                _tmp15 = 1 ./ _tmp14
-                _tmp16 = _tmp5 + _tmp6
-                _tmp17 = Distributions.Bernoulli(_tmp15)
-                _tmp6 = 0.0
-                _tmp18 = Distributions.logpdf(_tmp17,Y)
-                _tmp19 = cell(size(_tmp17))
-                _tmp3 = _tmp3 + _tmp18
-                _tmp20 = zeros(size(_tmp9)) + (_tmp4 + (_tmp6 + _tmp16))
-                _tmp21 = zeros(size(_tmp18)) + _tmp16
-                for i = 1:length(__beta[_tmp1])
-                    _tmp13[i] = ((_tmp2.μ - (__beta[_tmp1])[i]) / (_tmp2.σ * _tmp2.σ)) * _tmp20[i]
-                end
-                for i = 1:length(_tmp19)
-                    _tmp22 = cell(1)
-                    _tmp22[1] = 0.0
-                    _tmp19[i] = _tmp22
-                end
-                for i = 1:length(Y)
-                    _tmp7[i] = [1.0 / ((_tmp17[i].p - 1.0) + Y[i])] * _tmp21[i]
-                end
-                _tmp23 = _tmp19 + _tmp7
-                _tmp24 = zeros(size(_tmp23))
-                for i = 1:length(_tmp23)
-                    _tmp24[i] = (_tmp23[i])[1]
-                end
-                _tmp8[_tmp1] = _tmp8[_tmp1] + ((zeros(_tmp11) + X' * (zeros(size(_tmp10)) + _tmp12 .* (zeros(size(_tmp12)) + (zeros(size(_tmp14)) + -((zeros(size(_tmp15)) + _tmp24)) ./ (_tmp14 .* _tmp14))))) + _tmp13)
-                (_tmp3.val,_tmp8)
-            end
-
-
-    mod = m.model(ex, vars=zeros(nbeta), order=2)
     mod.eval( zeros(nbeta) )
     mod.evalg( zeros(nbeta) )
 
+    @time mod = m.model(ex, vars=zeros(nbeta), order=1)
+    # n=10   : 0.26s
+    # n=100  : 0.27s
+    # n=1000 : 0.27s
+    # n=10^5 : 0.30s
+    # n=10^6 : 0.35s
 
 
-    function ##ll#80083(__beta::Vector{Float64}) # D:\frtestar\.julia\v0.4\Lora\src\parsers\parsemodel.jl, line 37:
+    mod = m.model(ex, vars=zeros(nbeta), order=2)
+    dummy = m.parsemodel(ex, vars=zeros(nbeta), order=2)
+    mod.eval( zeros(nbeta) )
+    mod.evalg( zeros(nbeta) )  # plante
+
+    @time mod = m.model(ex, vars=zeros(nbeta), order=2)
+    # n=10   : 1.9s  / / 1.10s / 1.02s
+    # n=100  : 21s  / 17.8s / 9.9s / 8.3s
+    # n=1000 : .
+    # n=10^5 : .
+    # n=10^6 : .
+
+    Profile.clear()
+    @profile mod = m.model(ex, vars=zeros(nbeta), order=2)
+    dat, dd = Profile.retrieve()
+    dat
+    using StatsBase
+    sc = countmap(dat)
+    worst=sort(collect(sc), by= t -> t[2], rev=true)[1:10]
+
+    dd[worst[1][1]]
+
+    a = sin
+    b = sin
+    is(a,b)
+    a,b = 1., 1
+    is(a,b) # false
+    a,b = 4+5im, 4+5im
+    is(a,b) # true
+
+    Profile.print()
+
+    function fmod(__beta::Vector{Float64}) 
         try  # line 38:
-        	__beta = zeros(nbeta)
             begin 
                 _tmp1 = 1:10
                 _tmp2 = Distributions.Normal(0,1.0)
@@ -161,7 +146,7 @@ include("LoraDSL.jl") ; m = LoraDSL
                 _tmp47 = _tmp46 + _tmp34
                 _tmp48 = _tmp10[_tmp1] + _tmp47
                 _tmp10[_tmp1] = _tmp48
-                for _idx1 = 1:_tmp9  # _idx1 = 1
+                for _idx1 = 1:_tmp9
                     _tmp49 = size(__beta[_tmp1])
                     _tmp50 = size(_tmp12)
                     _tmp51 = cell(1)
@@ -283,8 +268,8 @@ include("LoraDSL.jl") ; m = LoraDSL
             return (-Inf,0.0,0.0)
         end
     end
-end
 
+    fmod(zeros(nbeta))
 
 
 #################################################################################
