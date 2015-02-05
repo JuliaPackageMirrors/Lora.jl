@@ -9,11 +9,9 @@ reload("Lora") ; m = Lora
 #########################################################################
 #    testing script for simple examples 
 #########################################################################
-
-
     # generate a random dataset
     srand(1)
-    n = 100
+    n = 200
     nbeta = 10 
     X = [ones(n) randn((n, nbeta-1))] 
     beta0 = randn((nbeta,))
@@ -30,26 +28,26 @@ reload("Lora") ; m = Lora
 
 	mod = m.model(ex, vars=zeros(nbeta), order=1)
 	dfunc = m.parsemodel(ex, vars=zeros(nbeta), order=1)
-
     mod.eval( zeros(nbeta) )
     mod.evalg( zeros(nbeta) )
 
     @time mod = m.model(ex, vars=zeros(nbeta), order=1)
     # n=10   : 0.26s
-    # n=100  : 0.27s
+    # n=100  : 0.27s  /// 0.08s
     # n=1000 : 0.27s
-    # n=10^5 : 0.30s
+    # n=10^5 : 0.30s  /// 0.12s
     # n=10^6 : 0.35s
 
-
     mod = m.model(ex, vars=zeros(nbeta), order=2)
+
     dummy = m.parsemodel(ex, vars=zeros(nbeta), order=2)
     mod.eval( zeros(nbeta) )
     mod.evalg( zeros(nbeta) )  # plante
 
     @time mod = m.model(ex, vars=zeros(nbeta), order=2)
     # n=10   : 1.9s  / / 1.10s / 1.02s
-    # n=100  : 21s  / 17.8s / 9.9s / 8.3s
+    # n=100  : 21s  / 17.8s / 9.9s / 8.3s / 6.3s / 3.8s / 3.4s / 2.8s
+    # n=200  : /// 11s / 8.3s / 7.2s
     # n=1000 : .
     # n=10^5 : .
     # n=10^6 : .
@@ -59,7 +57,9 @@ reload("Lora") ; m = Lora
 
     Profile.clear()
     @profile mod = m.model(ex, vars=zeros(nbeta), order=2)
-    Profile.print()
+    fd = open("c:/temp/trace.txt", "w")
+    Profile.print(fd, C=true, cols=500)
+    close(fd)
     Profile.print(format=:flat)
     # dat, dd = Profile.retrieve()
     # dat
