@@ -11,7 +11,7 @@ reload("Lora") ; m = Lora
 #########################################################################
     # generate a random dataset
     srand(1)
-    n = 200
+    n = 100
     nbeta = 10 
     X = [ones(n) randn((n, nbeta-1))] 
     beta0 = randn((nbeta,))
@@ -27,9 +27,22 @@ reload("Lora") ; m = Lora
 	using Distributions
 
 	mod = m.model(ex, vars=zeros(nbeta), order=1)
-	dfunc = m.parsemodel(ex, vars=zeros(nbeta), order=1)
+	dump(mod)
+	mod = m.model(ex, vars=zeros(nbeta), order=2)
+	dump(mod)
+
+
+	dfunc, vsize, pmap, vinit = m.parsemodel(ex, vars=zeros(nbeta), order=1)
+
+	m.parsemodel(ex, vars=zeros(nbeta), order=1, debug=true)
+	m.parsemodel(ex, vars=zeros(nbeta), order=2, debug=true)
+	dfunc = m.parsemodel(ex, vars=zeros(nbeta), order=2)
+
+	dfunc(zeros(10))
+
     mod.eval( zeros(nbeta) )
     mod.evalg( zeros(nbeta) )
+    mod.evalallg( zeros(nbeta) )
 
     @time mod = m.model(ex, vars=zeros(nbeta), order=1)
     # n=10   : 0.26s
@@ -39,10 +52,14 @@ reload("Lora") ; m = Lora
     # n=10^6 : 0.35s
 
     mod = m.model(ex, vars=zeros(nbeta), order=2)
-
     dummy = m.parsemodel(ex, vars=zeros(nbeta), order=2)
     mod.eval( zeros(nbeta) )
     mod.evalg( zeros(nbeta) )  # plante
+    mod.evalallg( zeros(nbeta) )  # plante
+    mod.evalt( zeros(nbeta) )  # marche
+    mod.evalallt( zeros(nbeta) )  # marche
+
+    dump(mod)
 
     @time mod = m.model(ex, vars=zeros(nbeta), order=2)
     # n=10   : 1.9s  / / 1.10s / 1.02s

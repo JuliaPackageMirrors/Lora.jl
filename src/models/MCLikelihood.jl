@@ -87,11 +87,17 @@ function MCLikelihood(m::Expr; order=0, scale=1.0, args...)
   else
     f2, s, p, i = parsemodel(m; order=order, args...)
     if order==1
-      return MCLikelihood(f , allgrad=f2    , init=i , pmap=p , scale=scale)
+      return MCLikelihood(f, 
+                          allgrad=f2, 
+                          init=i, pmap=p, scale=scale)
     elseif order==2
-      return MCLikelihood(f , alltensor=f2  , init=i , pmap=p , scale=scale)
+      return MCLikelihood(f, 
+                          alltensor=f2, 
+                          init=i, pmap=p, scale=scale)
     else
-      return MCLikelihood(f , alldtensor=f2 , init=i , pmap=p , scale=scale)
+      return MCLikelihood(f, 
+                          alldtensor=f2, 
+                          init=i, pmap=p, scale=scale)
     end
   end
 end
@@ -123,16 +129,20 @@ function MCLikelihood(lik::Function;
   fmat = Any[ grad allgrad ; tensor alltensor ; dtensor alldtensor]
   for i in 1:3
     f1, f2 = fmat[i,1], fmat[i,2]
-    if f1==nothing && f2!=nothing # only the tuple version is supplied
+    if (f1==nothing) && (f2!=nothing) # only the 'all' version is supplied
       fmat[i,1] = (v) -> f2(v)[end] 
-    elseif f1!=nothing && f2==nothing # only the single version is supplied
+    end
+  end
+
+  for i in 3:1
+    f1, f2 = fmat[i,1], fmat[i,2]
+    if (f1!=nothing) && (f2==nothing) # only the single version is supplied
       if i == 1
         fmat[i,2] = (v) -> (lik(v), f1(v))
       else
         @assert isa(fmat[i-1,2], Function) "missing function !"
         fmat[i,2] = (v) -> tuple(fmat[i-1,2](v)..., f1(v))
       end
-    end
   end
 
   MCLikelihood(lik, 
