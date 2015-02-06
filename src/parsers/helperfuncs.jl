@@ -12,6 +12,10 @@ function translate(ex::Expr)
 	if ex.head == :block 
 		return Expr(:block, translate(ex.args)...)
 
+	elseif ex.head == :for
+		ne =  translate(ex.args[2])
+		return Expr(:for, ex.args[1], ne)
+
 	#  handles ~ for julia 0.2
 	elseif :(a ~ b).head == :call &&  # test if < julia 0.3 (cf. #4882)
 		ex.head == :call && ex.args[1] == :~

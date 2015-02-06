@@ -123,7 +123,7 @@ function MCLikelihood(lik::Function;
   scale = isa(scale, Float64) ? scale * ones(length(init)) : scale
 
   # all parameters named "pars" by default
-  if pmap == nothing ; pmap = Dict(zip([:pars], [(1, size(init))])) ; end 
+  (pmap==nothing) && (pmap = Dict(zip([:pars], [(1, size(init))])) )
 
   # now build missing functions, if any
   fmat = Any[ grad allgrad ; tensor alltensor ; dtensor alldtensor]
@@ -143,6 +143,7 @@ function MCLikelihood(lik::Function;
         @assert isa(fmat[i-1,2], Function) "missing function !"
         fmat[i,2] = (v) -> tuple(fmat[i-1,2](v)..., f1(v))
       end
+    end
   end
 
   MCLikelihood(lik, 
