@@ -1,6 +1,7 @@
 typealias Parameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Random}
 
 immutable UnivariateParameter{S<:ValueSupport} <: Parameter{Univariate, S}
+  index::Int
   key::Symbol
   distribution::Union(UnivariateDistribution{S}, Nothing)
   loglikelihood::Union(Function, Nothing)
@@ -8,7 +9,8 @@ immutable UnivariateParameter{S<:ValueSupport} <: Parameter{Univariate, S}
   logtarget::Union(Function, Nothing)
 end
 
-type MultivariateParameter{S<:ValueSupport} <: Parameter{Multivariate, S}
+immutable MultivariateParameter{S<:ValueSupport} <: Parameter{Multivariate, S}
+  index::Int
   key::Symbol
   distribution::Union(MultivariateDistribution{S}, Nothing)
   loglikelihood::Union(Function, Nothing)
