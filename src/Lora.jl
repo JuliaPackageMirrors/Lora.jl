@@ -2,6 +2,7 @@ module Lora
 
 using Base.LinAlg.BLAS
 using Distributions
+using Docile
 using StatsBase
 using ReverseDiffSource
 
@@ -32,6 +33,17 @@ import Distributions:
 
 export
   ### types
+  Sampleability,
+  Constant,
+  Deterministic,
+  Random,
+  Variable,
+  Data,
+  Hyperparameter,
+  Transformation,
+  Parameter,
+  UnivariateParameter,
+  MultivariateParameter,
   MCLikelihood,
   MCChain,
   ARS,
@@ -62,6 +74,8 @@ export
   linearzv,
   quadraticzv
 
+include("variables/variables.jl")
+include("variables/parameters.jl")
 include("api/api.jl")
 include("api/samples.jl")
 include("api/states.jl")
