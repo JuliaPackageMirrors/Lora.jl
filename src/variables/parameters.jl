@@ -1,5 +1,3 @@
-typealias Parameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Random}
-
 immutable UnivariateParameter{S<:ValueSupport} <: Parameter{Univariate, S}
   index::Int
   key::Symbol

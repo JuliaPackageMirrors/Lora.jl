@@ -3,6 +3,7 @@ module Lora
 using Base.LinAlg.BLAS
 using Distributions
 using Docile
+using Graphs
 using StatsBase
 using ReverseDiffSource
 
@@ -42,8 +43,10 @@ export
   Hyperparameter,
   Transformation,
   Parameter,
+  Dependence,
   UnivariateParameter,
   MultivariateParameter,
+  Model,
   MCLikelihood,
   MCChain,
   ARS,
@@ -86,6 +89,7 @@ include("parsers/definitions/DistributionsExtensions.jl")
 include("parsers/definitions/AccumulatorDerivRules.jl")
 include("parsers/definitions/MCMCDerivRules.jl")
 include("parsers/expr_funcs.jl")
+include("models/model.jl")
 include("models/MCLikelihood.jl")
 include("models/models.jl")
 include("samplers/ARS.jl")

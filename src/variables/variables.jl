@@ -48,3 +48,7 @@ typealias Data{F<:VariateForm, S<:ValueSupport} Variable{F, S, Constant}
 typealias Hyperparameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Constant}
 
 typealias Transformation{F<:VariateForm, S<:ValueSupport} Variable{F, S, Deterministic}
+
+typealias Parameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Random}
+
+typealias Dependence Edge{Variable}
