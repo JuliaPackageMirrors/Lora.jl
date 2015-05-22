@@ -33,7 +33,7 @@ A *Model* can be seen as a graph, whose vertices are instances of *Variable* and
 nodes. In fact, it is possible to convert a *Model* to a graph as an instance of the *GenericGraph* type of the
 *Graphs* package.
 
-A *Model* is a parametric type parameterized by:
+A *Variable* is a parametric type parameterized by:
 
 * *VaritateForm*: Abstract type with sub-types *Univariate*, *Multivariate* and *Matrixvariate*. See *Distributions*
 package.
@@ -50,5 +50,9 @@ typealias Hyperparameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Constan
 typealias Transformation{F<:VariateForm, S<:ValueSupport} Variable{F, S, Deterministic}
 
 typealias Parameter{F<:VariateForm, S<:ValueSupport} Variable{F, S, Random}
+
+# It may be needed to define a hybrid variable that, depending in the context, can be deterministic or random
+
+# A Domain type may be introduced for Variable types
 
 typealias Dependence Edge{Variable}

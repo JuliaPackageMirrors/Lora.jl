@@ -9,6 +9,8 @@
 #
 #################################################################
 
+# Once finished, the init field of MCLikelihood will be come an integral part of sampler types
+
 # The likelihood Model type
 type MCLikelihood <: MCModel
 	eval::Function              # log-likelihood evaluation function
