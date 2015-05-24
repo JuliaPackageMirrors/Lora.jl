@@ -17,6 +17,9 @@ immutable UnivariateParameter{S<:ValueSupport} <: Parameter{Univariate, S}
   dtensorloglikelihood::Union(Function, Nothing)
   dtensorlogprior::Union(Function, Nothing)
   dtensorlogtarget::Union(Function, Nothing)
+  uptogradlogtarget::Union(Function, Nothing)
+  uptotensorlogtarget::Union(Function, Nothing)
+  uptodtensorlogtarget::Union(Function, Nothing)
 end
 
 # Do not forget to force input argument types for function fields, as in x::Float64->f(x)  
@@ -38,4 +41,7 @@ immutable MultivariateParameter{S<:ValueSupport} <: Parameter{Multivariate, S}
   dtensorloglikelihood::Union(Function, Nothing)
   dtensorlogprior::Union(Function, Nothing)
   dtensorlogtarget::Union(Function, Nothing)
+  uptogradlogtarget::Union(Function, Nothing)
+  uptotensorlogtarget::Union(Function, Nothing)
+  uptodtensorlogtarget::Union(Function, Nothing)
 end
