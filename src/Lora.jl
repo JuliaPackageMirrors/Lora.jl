@@ -35,17 +35,31 @@ import Distributions:
 export
   ### types
   Sampleability,
-  Constant,
   Deterministic,
   Random,
+  VariableState,
   Variable,
-  Data,
-  Hyperparameter,
-  Transformation,
-  Parameter,
   Dependence,
-  UnivariateParameter,
-  MultivariateParameter,
+  Data,
+  Transformation,
+  ConstantState,
+  UnivariateConstantState,
+  MultivariateConstantState,
+  Constant,
+  UnivariateConstant,
+  MultivariateConstant,
+  HyperparameterState,
+  UnivariateHyperparameterState,
+  MultivariateHyperparameterState,
+  Hyperparameter,
+  UnivariateHyperparameter,
+  MultivariateHyperparameter,
+  ParameterState,
+  ContinuousUnivariateParameterState,
+  ContinuousMultivariateParameterState,
+  Parameter,
+  ContinuousUnivariateParameter,
+  ContinuousMultivariateParameter,
   Model,
   MCLikelihood,
   MCChain,
@@ -78,6 +92,7 @@ export
   quadraticzv
 
 include("variables/variables.jl")
+include("variables/constants.jl")
 include("variables/parameters.jl")
 include("api/api.jl")
 include("api/samples.jl")
