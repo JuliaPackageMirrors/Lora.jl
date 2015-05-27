@@ -1,3 +1,13 @@
+Ongoing TODO List
+==================================================
+
+01) Test if execution speed is affected by size of user-defined type (see if additional fields affect speed)
+02) zero(Int) in parameter-related constructors
+03) Find out if is possible to define parameteric type by passing the parameter as an argument (as in ::Type{N})
+
+Older (Pending) TODO List
+==================================================
+
 01) Write up readthedocs package documentation (and then point README to the new documentation)
 02) Write up travis test suite (this partly depends on (06) below)
 03) Organize examples directory (and possibly migrate some examples to the documentation)
