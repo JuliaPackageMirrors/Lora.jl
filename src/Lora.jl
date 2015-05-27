@@ -7,6 +7,8 @@ using Graphs
 # using StatsBase
 # using ReverseDiffSource
 
+import Base: convert
+
 # import Base:
 #   show,
 #   run,
@@ -60,7 +62,8 @@ export
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   GenericModel,
-  GibbsModel
+  GibbsModel,
+  convert
   # MCLikelihood,
   # MCChain,
   # ARS,

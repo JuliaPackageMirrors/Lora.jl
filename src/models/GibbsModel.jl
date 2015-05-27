@@ -1,10 +1,10 @@
-type GibbsModel{V, E, VList, EList, IncList} <: AbstractGraph{V, E}
+type GibbsModel{Variable, Dependence} <: AbstractGraph{Variable, Dependence}
   is_directed::Bool
-  vertices::VList                        # An indexable container of vertices (variables)
-  edges::EList                           # An indexable container of edges (dependencies)
-  finclist::IncList                      # Forward incidence list
-  binclist::IncList                      # Nackward incidence list
-  indexof::Dict{V, Int}                  # Dictionary storing index for vertex (variable)
+  vertices::Vector{Variable}             # An indexable container of vertices (variables)
+  edges::Vector{Dependence}              # An indexable container of edges (dependencies)
+  finclist::Vector{Vector{Dependence}}   # Forward incidence list
+  binclist::Vector{Vector{Dependence}}   # Nackward incidence list
+  indexof::Dict{Variable, Int}           # Dictionary storing index for vertex (variable)
   stateof::Dict{Variable, VariableState} # Dictionary storing state for vertex (variable)
 end
 
