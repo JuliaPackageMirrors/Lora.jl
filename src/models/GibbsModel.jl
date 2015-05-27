@@ -1,4 +1,4 @@
-type GibbsModel{Variable, Dependence} <: AbstractGraph{Variable, Dependence}
+type GibbsModel <: AbstractGraph{Variable, Dependence}
   is_directed::Bool
   vertices::Vector{Variable}             # An indexable container of vertices (variables)
   edges::Vector{Dependence}              # An indexable container of edges (dependencies)

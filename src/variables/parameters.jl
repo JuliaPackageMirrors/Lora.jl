@@ -10,6 +10,19 @@ type ContinuousUnivariateParameterState{N<:Number} <: ParameterState{Continuous,
   dtensorlogtarget::N
 end
 
+ContinuousUnivariateParameterState{N<:Number}(value::N) =
+  ContinuousUnivariateParameterState{N}(
+    value,
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN)
+  )
+
+ContinuousUnivariateParameterState() = ContinuousUnivariateParameterState(NaN, NaN, NaN, NaN, NaN, NaN, NaN)
+
 type ContinuousMultivariateParameterState{N<:Number} <: ParameterState{Continuous, Multivariate, N}
   value::Vector{N}
   loglikelihood::N
@@ -21,9 +34,45 @@ type ContinuousMultivariateParameterState{N<:Number} <: ParameterState{Continuou
   size::Int
 end
 
+ContinuousMultivariateParameterState{N<:Number}(value::Vector{N}) =
+  ContinuousMultivariateParameterState{N}(
+    value,
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    Array(N, 0),
+    Array(N, 0, 0),
+    Array(N, 0, 0, 0),
+    length(value)
+  )
+
+ContinuousMultivariateParameterState() =
+  ContinuousMultivariateParameterState(
+    Array(Float64, 0),
+    NaN,
+    NaN,
+    NaN,
+    Array(Float64, 0),
+    Array(Float64, 0, 0),
+    Array(Float64, 0, 0, 0),
+    0
+  )
+
+ContinuousMultivariateParameterState(size::Int) =
+  ContinuousMultivariateParameterState(
+    Array(Float64, size),
+    NaN,
+    NaN,
+    NaN,
+    Array(Float64, size),
+    Array(Float64, size, size),
+    Array(Float64, size, size, size),
+    size
+  )
+
 typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, Random}
 
-immutable ContinuousUnivariateParameter{N<:Number} <: Parameter{Continuous, Univariate, N}
+type ContinuousUnivariateParameter{N<:Number} <: Parameter{Continuous, Univariate, N}
   index::Int
   key::Symbol
   distribution::Union(ContinuousUnivariateDistribution, Nothing)
@@ -45,7 +94,7 @@ immutable ContinuousUnivariateParameter{N<:Number} <: Parameter{Continuous, Univ
   state::ContinuousUnivariateParameterState{N}
 end
 
-immutable ContinuousMultivariateParameter{N<:Number} <: Parameter{Continuous, Multivariate, N}
+type ContinuousMultivariateParameter{N<:Number} <: Parameter{Continuous, Multivariate, N}
   index::Int
   key::Symbol
   distribution::Union(ContinuousMultivariateDistribution, Nothing)

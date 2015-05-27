@@ -9,6 +9,8 @@ immutable MultivariateConstantState{N<:Number} <: ConstantState{Multivariate, N}
   size::Int
 end
 
+MultivariateConstantState{N<:Number}(value::Vector{N}) = MultivariateConstantState{N}(value, length(value))
+
 abstract Constant{F<:VariateForm, N<:Number} <: Variable{F, N, Deterministic}
 
 immutable UnivariateConstant{N<:Number} <: Constant{Univariate, N}
