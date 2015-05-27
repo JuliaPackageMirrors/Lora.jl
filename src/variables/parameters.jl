@@ -21,7 +21,16 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
     convert(N, NaN)
   )
 
-ContinuousUnivariateParameterState() = ContinuousUnivariateParameterState(NaN, NaN, NaN, NaN, NaN, NaN, NaN)
+ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}) = 
+  ContinuousUnivariateParameterState(
+    convert(N, NaN),    
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN)
+  )
 
 type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Multivariate, N}
   value::Vector{N}
@@ -46,27 +55,15 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}) =
     length(value)
   )
 
-ContinuousMultivariateParameterState() =
+ContinuousMultivariateParameterState{N<:FloatingPoint}(::Type{N}, size::Int=0) =
   ContinuousMultivariateParameterState(
-    Array(Float64, 0),
-    NaN,
-    NaN,
-    NaN,
-    Array(Float64, 0),
-    Array(Float64, 0, 0),
-    Array(Float64, 0, 0, 0),
-    0
-  )
-
-ContinuousMultivariateParameterState(size::Int) =
-  ContinuousMultivariateParameterState(
-    Array(Float64, size),
-    NaN,
-    NaN,
-    NaN,
-    Array(Float64, size),
-    Array(Float64, size, size),
-    Array(Float64, size, size, size),
+    Array(N, size),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    Array(N, size),
+    Array(N, size, size),
+    Array(N, size, size, size),
     size
   )
 
