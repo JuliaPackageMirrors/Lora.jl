@@ -1,6 +1,6 @@
 abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableState{F, N, Random}
 
-type ContinuousUnivariateParameterState{N<:Number} <: ParameterState{Continuous, Univariate, N}
+type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Univariate, N}
   value::N
   loglikelihood::N
   logprior::N
@@ -10,7 +10,7 @@ type ContinuousUnivariateParameterState{N<:Number} <: ParameterState{Continuous,
   dtensorlogtarget::N
 end
 
-ContinuousUnivariateParameterState{N<:Number}(value::N) =
+ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
   ContinuousUnivariateParameterState{N}(
     value,
     convert(N, NaN),
@@ -23,7 +23,7 @@ ContinuousUnivariateParameterState{N<:Number}(value::N) =
 
 ContinuousUnivariateParameterState() = ContinuousUnivariateParameterState(NaN, NaN, NaN, NaN, NaN, NaN, NaN)
 
-type ContinuousMultivariateParameterState{N<:Number} <: ParameterState{Continuous, Multivariate, N}
+type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Multivariate, N}
   value::Vector{N}
   loglikelihood::N
   logprior::N
@@ -34,7 +34,7 @@ type ContinuousMultivariateParameterState{N<:Number} <: ParameterState{Continuou
   size::Int
 end
 
-ContinuousMultivariateParameterState{N<:Number}(value::Vector{N}) =
+ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}) =
   ContinuousMultivariateParameterState{N}(
     value,
     convert(N, NaN),
@@ -72,7 +72,7 @@ ContinuousMultivariateParameterState(size::Int) =
 
 typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, Random}
 
-type ContinuousUnivariateParameter{N<:Number} <: Parameter{Continuous, Univariate, N}
+type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Univariate, N}
   index::Int
   key::Symbol
   distribution::Union(ContinuousUnivariateDistribution, Nothing)
@@ -94,7 +94,7 @@ type ContinuousUnivariateParameter{N<:Number} <: Parameter{Continuous, Univariat
   state::ContinuousUnivariateParameterState{N}
 end
 
-type ContinuousMultivariateParameter{N<:Number} <: Parameter{Continuous, Multivariate, N}
+type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Multivariate, N}
   index::Int
   key::Symbol
   distribution::Union(ContinuousMultivariateDistribution, Nothing)
