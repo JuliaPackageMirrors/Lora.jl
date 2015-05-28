@@ -76,7 +76,7 @@ end
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N},
   size::Int=0,
-  monitor::Vector{Bool}=Bool[true, fill(false, 6)]
+  monitor::Vector{Bool}=[true, fill(false, 6)]
   )
 
   l::Vector{Int} = Array(Int, 6)

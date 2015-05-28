@@ -55,6 +55,21 @@ export
   Hyperparameter,
   UnivariateHyperparameter,
   MultivariateHyperparameter,
+  DataState,
+  UnivariateDataState,
+  MultivariateDataState,
+  MatrixvariateDataState,
+  Data,
+  UnivariateData,
+  MultivariateData,
+  MatrixvariateData,
+  TransformationState,
+  UnivariateTransformationState,
+  MultivariateTransformationState,
+  Transformation,
+  UnivariateTransformation,
+  MultivariateTransformation,
+  MatrixvariateTransformation,
   ParameterState,
   ContinuousUnivariateParameterState,
   ContinuousMultivariateParameterState,
@@ -95,6 +110,8 @@ export
 
 include("variables/variables.jl")
 include("variables/constants.jl")
+include("variables/data.jl")
+include("variables/transformations.jl")
 include("variables/parameters.jl")
 include("models/GenericModel.jl")
 include("models/GibbsModel.jl")

@@ -39,9 +39,5 @@ abstract Variable{F<:VariateForm, N<:Number, S<:Sampleability}
 
 typealias Dependence Edge{Variable}
 
-typealias Data{F<:VariateForm, N<:Number} Variable{F, N, Deterministic}
-
-typealias Transformation{F<:VariateForm, N<:Number} Variable{F, N, Deterministic}
-
 # Note 1: It may be needed to define a hybrid variable that, depending in the context, can be deterministic or random
 # Note 2: A Domain type may be introduced for Variable types
