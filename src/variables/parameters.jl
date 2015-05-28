@@ -5,6 +5,8 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Cont
   loglikelihood::N
   logprior::N
   logtarget::N
+  gradloglikelihood::N
+  gradlogprior::N
   gradlogtarget::N
   tensorlogtarget::N
   dtensorlogtarget::N
@@ -13,6 +15,8 @@ end
 ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
   ContinuousUnivariateParameterState{N}(
     value,
+    convert(N, NaN),
+    convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
@@ -29,6 +33,8 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}) =
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
     convert(N, NaN)
   )
 
@@ -37,35 +43,60 @@ type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Co
   loglikelihood::N
   logprior::N
   logtarget::N
+  gradloglikelihood::Vector{N}
+  gradlogprior::Vector{N}
   gradlogtarget::Vector{N}
   tensorlogtarget::Matrix{N}
   dtensorlogtarget::Array{N, 3}
   size::Int
 end
 
-ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}) =
+function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}, monitor::Vector{Bool}=fill(false, 5))
+  size::Int = length(value)
+
+  l::Vector{Int} = Array(Int, 5)
+  for i in 1:5
+    l[i] = (monitor[i] == false ? zero(Int) : size)
+  end
+
   ContinuousMultivariateParameterState{N}(
     value,
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
-    Array(N, 0),
-    Array(N, 0, 0),
-    Array(N, 0, 0, 0),
-    length(value)
-  )
-
-ContinuousMultivariateParameterState{N<:FloatingPoint}(::Type{N}, size::Int=0) =
-  ContinuousMultivariateParameterState(
-    Array(N, size),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    Array(N, size),
-    Array(N, size, size),
-    Array(N, size, size, size),
+    Array(N, l[1]),
+    Array(N, l[2]),
+    Array(N, l[3]),
+    Array(N, l[4], l[4]),
+    Array(N, l[5], l[5], l[5]),
     size
   )
+end
+
+function ContinuousMultivariateParameterState{N<:FloatingPoint}(
+  ::Type{N},
+  size::Int=0,
+  monitor::Vector{Bool}=Bool[true, fill(false, 6)]
+  )
+
+  l::Vector{Int} = Array(Int, 6)
+  for i in 1:6
+    l[i] = (monitor[i] == false ? zero(Int) : size)
+  end
+
+  ContinuousMultivariateParameterState{N}(
+    Array(N, l[1]),
+    convert(N, NaN),
+    convert(N, NaN),
+    convert(N, NaN),
+    Array(N, l[2]),
+    Array(N, l[3]),
+    Array(N, l[4]),
+    Array(N, l[5], l[5]),
+    Array(N, l[6], l[6], l[6]),
+    l[1]
+  )
+end
 
 typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, Random}
 

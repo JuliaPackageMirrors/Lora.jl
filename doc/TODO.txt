@@ -1,14 +1,51 @@
 Ongoing TODO List
 ==================================================
 
-01) Test if execution speed is affected by size of user-defined type (see if additional fields affect speed)
-Answer: Try
+Done: 01) Test if execution speed is affected by size of user-defined type (see if additional fields affect speed)
+
+Answer to 01):
+
+There doesn't seem to be any difference in speed. Try for example:
+
+```
+type T01{N<:Number}
+  g::Vector{N}
+end
+
+type T02{N<:Number}
+  a::Vector{N}
+  b::Vector{N}
+  c::Vector{N}
+  d::Vector{N}
+  f::Vector{N}
+  g::Vector{N}
+  h::Vector{N}
+  l::Vector{N}
+  m::Vector{N}
+  n::Vector{N}
+end
+
+g = rand(10000)
+t01 = T01(g)
+t02 = T02(rand(10000), rand(10000), rand(10000), rand(10000), rand(10000), g, rand(10000), rand(10000), rand(10000), rand(10000))
+
+sum01 = 0.
+@time for i in 1:10000
+  sum01 += t01.g[i]
+end
+
+sum02 = 0.
+@time for i in 1:10000
+  sum02 += t02.g[i]
+end
+```
 
 Done: 02) zero(Int) in parameter-related constructors
 
 Done: 03) Find out if is possible to define parameteric type by passing the parameter as an argument (as in ::Type{N})
 
 Answer to 03):
+
 ```
 type State{T<:Number}
   x::Number
