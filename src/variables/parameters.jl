@@ -2,6 +2,7 @@ abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableS
 
 type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Univariate, N}
   value::N
+  pdf::Union(ContinuousUnivariateDistribution, Nothing)
   loglikelihood::N
   logprior::N
   logtarget::N
@@ -12,9 +13,13 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Cont
   dtensorlogtarget::N
 end
 
-ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
+ContinuousUnivariateParameterState{N<:FloatingPoint}(
+    value::N,
+    pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing
+  ) =
   ContinuousUnivariateParameterState{N}(
     value,
+    pdf,
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
@@ -25,9 +30,13 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
     convert(N, NaN)
   )
 
-ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}) =
+ContinuousUnivariateParameterState{N<:FloatingPoint}(
+    ::Type{N},
+    pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing
+  ) =
   ContinuousUnivariateParameterState(
     convert(N, NaN),
+    pdf,
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
@@ -101,14 +110,14 @@ end
 typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, Random}
 
 # Guidelines for usage of inner constructors of continuous parameter types:
-# 1) Function fields have higher priority than implicitly derived definitions via the distribution field
+# 1) Function fields have higher priority than implicitly derived definitions via the pdf field
 # 2) Target-related fields have higher priority than implicitly derived likelihood+prior fields
 # 3) Uplto-related fields have higher priority than implicitly derived Function tuples
 
 type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Univariate, N}
   index::Int
   key::Symbol
-  distribution::Union(ContinuousUnivariateDistribution, Nothing)
+  setpdf!::Union(Function, Nothing)
   loglikelihood::Union(Function, Nothing)
   logprior::Union(Function, Nothing)
   logtarget::Union(Function, Nothing)
@@ -129,7 +138,7 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
   ContinuousUnivariateParameter{N}(
     index::Int,
     key::Symbol,
-    distribution::Union(ContinuousUnivariateDistribution, Nothing),
+    setpdf!::Union(Function, Nothing),
     ll::Union(Function, Nothing),
     lp::Union(Function, Nothing),
     lt::Union(Function, Nothing),
@@ -147,8 +156,9 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     uptodtlt::Union(Function, Nothing),
     state::ContinuousUnivariateParameterState{N}
   )
-    fin = (ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptdtlt)
-    fnames = (
+    fin = tuple(setpdf!, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptdtlt)
+    fnames = tuple(
+      "setpdf!",
       "loglikelihood",
       "logprior",
       "logtarget",
@@ -165,10 +175,10 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
       "uptotensorlogtarget",
       "uptodtensorlogtarget"
     )
-    nf = 15
+    nf = 16
     fout = Array(Union(Function, Nothing), nf)
 
-    # Copy generic or anonymous functions to fout
+    # Copy generic and anonymous functions to fout
     for i = 1:nf
       if isa(fin[i], Function)
         if isgeneric(fin[i])
@@ -184,16 +194,58 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
       end
     end
 
-    #
-    if fin[3] == nothing
-      fout[3] =
-        if isa(fin[1], Function) && isa(fin[2], Function)
+    # Define logtarget function
+    if fin[4] == nothing
+      fout[4] =
+        if isa(fin[2], Function) && isa(fin[3], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-            fin[1](pstate, nstate)+fin[2](pstate, nstate)
-        elseif isa(distribution, ContinuousUnivariateDistribution) && method_exists(logpdf, (typeof(distribution), N))
+            fin[2](pstate, nstate)+fin[3](pstate, nstate)
+        elseif isa(fin[1], Function)
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-            logpdf(distribution, pstate.value)
+            logpdf(setpdf!(pstate, nstate), pstate.value)
+        elseif isa(pstate.pdf, ContinuousUnivariateDistribution) && method_exists(logpdf, (typeof(pstate.pdf), N))
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            logpdf(pstate.pdf, pstate.value)
+        else
+          nothing
+        end
+    end
+
+    # Define gradlogtarget function
+    if fin[7] == nothing
+      fout[7] =
+        if isa(fin[5], Function) && isa(fin[6], Function)
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            fin[5](pstate, nstate)+fin[6](pstate, nstate)
+        elseif isa(fin[1], Function)
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            gradlogpdf(setpdf!(pstate, nstate), pstate.value)
+        elseif isa(pstate.pdf, ContinuousUnivariateDistribution) && method_exists(logpdf, (typeof(pstate.pdf), N))
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            gradlogpdf(pstate.pdf, pstate.value)
+        else
+          nothing
+        end
+    end
+
+    # Define tensorlogtarget function
+    if fin[10] == nothing
+      fout[10] =
+        if isa(fin[8], Function) && isa(fin[9], Function)
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            fin[8](pstate, nstate)+fin[9](pstate, nstate)
+        else
+          nothing
+        end
+    end
+
+    # Define dtensorlogtarget function
+    if fin[13] == nothing
+      fout[13] =
+        if isa(fin[11], Function) && isa(fin[12], Function)
+          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            fin[11](pstate, nstate)+fin[12](pstate, nstate)
         else
           nothing
         end
