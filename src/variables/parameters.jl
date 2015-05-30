@@ -283,7 +283,6 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
       end
   end
 
-  println(fout)
   ContinuousUnivariateParameter{N}(
     index,
     key,

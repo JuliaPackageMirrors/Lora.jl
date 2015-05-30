@@ -1,8 +1,7 @@
 tests =
-  ["test_empmctuner",
-  "test_ARS1",
-  "test_ARS2",
-  "test_slice_sampler"]
+  [
+    "parameters"
+  ]
 
 println("Running tests:")
 
