@@ -7,5 +7,10 @@ GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed::Bool=fal
 
 GenericModel(is_directed::Bool=false) = graph(Variable[], Dependence[], is_directed=is_directed)
 
-# Note 1: Create Dict{Symbol, KeyVertex{Symbol}} as an auxiliary dictionary to build the Model in the parsing stage
-# Note 2: Later create Dict{KeyVertex{Symbol}, VariableState}(), to store value in VariableState.value
+function add_vertex!(m::GenericModel, v::Variable)
+    push!(m.vertices, v)
+    push!(m.finclist, Int[])
+    push!(m.binclist, Int[])
+    m.indexof[v] = length(m.vertices)
+    v
+end

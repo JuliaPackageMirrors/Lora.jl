@@ -9,6 +9,8 @@ using Graphs
 
 import Base: convert
 
+import Graphs: add_vertex!
+
 # import Base:
 #   show,
 #   run,
@@ -78,7 +80,8 @@ export
   ContinuousMultivariateParameter,
   GenericModel,
   GibbsModel,
-  convert
+  convert,
+  add_vertex!
   # MCLikelihood,
   # MCChain,
   # ARS,

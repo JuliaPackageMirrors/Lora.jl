@@ -11,4 +11,19 @@ end
 convert(::Type{GenericModel}, m::GibbsModel) =
   GenericModel(m.is_directed, m.vertices, m.edges, m.finclist, m.binclist, m.indexof)
 
-# Note: More importantly, define the inverse conversion, once the relevant constructors are in place
+function convert(::Type{GibbsModel}, m::GenericModel)
+  s = Dict{Variable, VariableState}()
+  for v in m.vertices
+    s[v] = v.state
+  end
+
+  GibbsModel(m.is_directed, m.vertices, m.edges, m.finclist, m.binclist, m.indexof, s)
+end
+
+function add_vertex!(m::GibbsModel, v::Variable)
+    push!(m.vertices, v)
+    push!(m.finclist, Int[])
+    push!(m.binclist, Int[])
+    m.indexof[v] = length(m.vertices)
+    v
+end
