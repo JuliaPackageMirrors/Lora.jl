@@ -89,3 +89,18 @@ end
 
 GenericModel(is_directed::Bool=false) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
 
+function convert(::Type{GenericGraph}, m::GenericModel)
+  dict = Dict{KeyVertex{Symbol}, Int}()
+  for (k, v) in m.indexof
+    dict[convert(KeyVertex, k)] = v
+  end
+
+  Graph{KeyVertex{Symbol}, Edge{Symbol}}(
+    m.is_directed,
+    convert(Vector{KeyVertex}, m.vertices),
+    convert(Vector{Edge}, m.edges),
+    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.finclist],
+    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.finclist],
+    dict
+  )
+end

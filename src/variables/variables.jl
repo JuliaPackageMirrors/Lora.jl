@@ -37,4 +37,8 @@ package.
 """->
 abstract Variable{F<:VariateForm, N<:Number, S<:Sampleability}
 
-vertex_index{V<:Variable}(v::V) = v.index
+vertex_index(v::Variable) = v.index
+
+convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
+
+convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
