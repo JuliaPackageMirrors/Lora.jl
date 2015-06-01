@@ -3,7 +3,7 @@ type GenericModel <: AbstractGraph{Variable, Dependence}
   vertices::Vector{Variable}             # An indexable container of vertices (variables)
   edges::Vector{Dependence}              # An indexable container of edges (dependencies)
   finclist::Vector{Vector{Dependence}}   # Forward incidence list
-  binclist::Vector{Vector{Dependence}}   # Nackward incidence list
+  binclist::Vector{Vector{Dependence}}   # Backward incidence list
   indexof::Dict{Variable, Int}           # Dictionary storing index for vertex (variable)
   stateof::Dict{Variable, VariableState} # Dictionary storing state for vertex (variable)
 end

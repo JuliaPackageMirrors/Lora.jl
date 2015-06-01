@@ -7,7 +7,9 @@ using Graphs
 # using StatsBase
 # using ReverseDiffSource
 
-import Base: convert
+import Base:
+  convert,
+  show
 
 import Graphs: 
   vertex_index,
@@ -99,6 +101,8 @@ export
   ContinuousMultivariateParameter,
   GenericModel,
   vertex_index,
+  convert,
+  show,
   edge_index,
   revedge,
   source,
