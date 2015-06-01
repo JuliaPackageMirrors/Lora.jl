@@ -9,7 +9,24 @@ using Graphs
 
 import Base: convert
 
-import Graphs: add_vertex!
+import Graphs: 
+  is_directed,
+  num_vertices,
+  vertices,
+  num_edges,
+  edges,
+  vertex_index,
+  edge_index,
+  make_edge,
+  revedge,
+  out_edges,
+  out_degree,
+  out_neighbors,
+  in_edges,
+  in_degree,
+  in_neighbors,
+  add_vertex!,
+  add_edge!
 
 # import Base:
 #   show,
@@ -79,9 +96,23 @@ export
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   GenericModel,
-  GibbsModel,
-  convert,
-  add_vertex!
+  is_directed,
+  num_vertices,
+  vertices,
+  num_edges,
+  edges,
+  vertex_index,
+  edge_index,
+  make_edge,
+  revedge,
+  out_edges,
+  out_degree,
+  out_neighbors,
+  in_edges,
+  in_degree,
+  in_neighbors,
+  add_vertex!,
+  add_edge!
   # MCLikelihood,
   # MCChain,
   # ARS,
@@ -117,7 +148,6 @@ include("variables/data.jl")
 include("variables/transformations.jl")
 include("variables/parameters.jl")
 include("models/GenericModel.jl")
-include("models/GibbsModel.jl")
 # include("api/api.jl")
 # include("api/samples.jl")
 # include("api/states.jl")

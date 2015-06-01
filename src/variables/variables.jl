@@ -37,7 +37,15 @@ package.
 """->
 abstract Variable{F<:VariateForm, N<:Number, S<:Sampleability}
 
-typealias Dependence Edge{Variable}
+vertex_index{V<:Variable}(v::V) = v.index
+
+# ztypealias Dependence Edge{Variable}
+
+immutable Dependence{S<:Variable, T<:Variable}
+  index::Int
+  source::S
+  target::T
+end
 
 # Note 1: It may be needed to define a hybrid variable that, depending in the context, can be deterministic or random
 # Note 2: A Domain type may be introduced for Variable types
