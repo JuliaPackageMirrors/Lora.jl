@@ -20,18 +20,18 @@ vertex_index(v::Integer, m::GenericModel) = (v <= m.vertices[end] ? v : 0)
 vertex_index(v::Variable, m::GenericModel) = vertex_index(v)
 
 edge_index(d::Dependence, m::GenericModel) = edge_index(d)
+source(d::Dependence, m::GenericModel) = d.source
+target(d::Dependence, m::GenericModel) = d.target
 
 make_edge(m::GenericModel, s::Variable, t::Variable) = Dependence(num_edges(m)+1, s, t)
 
-revedge{S<:Variable, T<:Variable}(d::Dependence{S, T}) = Dependence(d.index, d.target, d.source)
-
 out_edges(v::Variable, m::GenericModel) = m.finclist[vertex_index(v, m)]
 out_degree(v::Variable, m::GenericModel) = length(out_edges(v, m))
-out_neighbors(v::Variable, m::GenericModel) = TargetIterator(m, out_edges(v, m))
+out_neighbors(v::Variable, m::GenericModel) = Graphs.TargetIterator(m, out_edges(v, m))
 
 in_edges(v::Variable, m::GenericModel) = m.binclist[vertex_index(v, m)]
 in_degree(v::Variable, m::GenericModel) = length(in_edges(v, m))
-in_neighbors(v::Variable, m::GenericModel) = SourceIterator(m, in_edges(v, m))
+in_neighbors(v::Variable, m::GenericModel) = Graphs.SourceIterator(m, in_edges(v, m))
 
 function add_vertex!(m::GenericModel, v::Variable)
     push!(m.vertices, v)
@@ -88,3 +88,4 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
 end
 
 GenericModel(is_directed::Bool=false) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
+

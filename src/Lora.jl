@@ -10,15 +10,17 @@ using Graphs
 import Base: convert
 
 import Graphs: 
+  vertex_index,
+  edge_index,
+  revedge,
+  source,
+  target,
   is_directed,
   num_vertices,
   vertices,
   num_edges,
   edges,
-  vertex_index,
-  edge_index,
   make_edge,
-  revedge,
   out_edges,
   out_degree,
   out_neighbors,
@@ -96,15 +98,17 @@ export
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   GenericModel,
+  vertex_index,
+  edge_index,
+  revedge,
+  source,
+  target,
   is_directed,
   num_vertices,
   vertices,
   num_edges,
   edges,
-  vertex_index,
-  edge_index,
   make_edge,
-  revedge,
   out_edges,
   out_degree,
   out_neighbors,
@@ -143,6 +147,7 @@ export
   # quadraticzv
 
 include("variables/variables.jl")
+include("variables/dependencies.jl")
 include("variables/constants.jl")
 include("variables/data.jl")
 include("variables/transformations.jl")
