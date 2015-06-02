@@ -100,7 +100,7 @@ function convert(::Type{GenericGraph}, m::GenericModel)
     convert(Vector{KeyVertex}, m.vertices),
     convert(Vector{Edge}, m.edges),
     Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.finclist],
-    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.finclist],
+    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.binclist],
     dict
   )
 end
