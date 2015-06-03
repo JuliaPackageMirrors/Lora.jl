@@ -34,3 +34,5 @@ ContinuousUnivariateParameter(
   nothing,
   ContinuousUnivariateParameterState(Float32)
 )
+
+ContinuousUnivariateParameter(1, :p)

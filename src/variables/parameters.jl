@@ -31,7 +31,7 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(
   )
 
 ContinuousUnivariateParameterState{N<:FloatingPoint}(
-    ::Type{N},
+    ::Type{N}=Float64,
     pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing
   ) =
   ContinuousUnivariateParameterState(
@@ -83,7 +83,7 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}
 end
 
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(
-  ::Type{N},
+  ::Type{N}=Float64,
   size::Int=0,
   monitor::Vector{Bool}=[true, fill(false, 6)]
   )
@@ -280,6 +280,52 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
     fout[15],
     fout[16],
     fout[17],
+    state
+  )
+end
+
+function ContinuousUnivariateParameter{N<:FloatingPoint}(
+  index::Int,
+  key::Symbol;
+  setpdf!::Union(Function, Nothing)=nothing,
+  loglikelihood::Union(Function, Nothing)=nothing,
+  logprior::Union(Function, Nothing)=nothing,
+  logtarget::Union(Function, Nothing)=nothing,
+  gradloglikelihood::Union(Function, Nothing)=nothing,
+  gradlogprior::Union(Function, Nothing)=nothing,
+  gradlogtarget::Union(Function, Nothing)=nothing,
+  tensorloglikelihood::Union(Function, Nothing)=nothing,
+  tensorlogprior::Union(Function, Nothing)=nothing,
+  tensorlogtarget::Union(Function, Nothing)=nothing,
+  dtensorloglikelihood::Union(Function, Nothing)=nothing,
+  dtensorlogprior::Union(Function, Nothing)=nothing,
+  dtensorlogtarget::Union(Function, Nothing)=nothing,
+  uptogradlogtarget::Union(Function, Nothing)=nothing,
+  uptotensorlogtarget::Union(Function, Nothing)=nothing,
+  uptodtensorlogtarget::Union(Function, Nothing)=nothing,
+  rand::Union(Function, Nothing)=nothing,
+  state::ContinuousUnivariateParameterState{N}=ContinuousUnivariateParameterState(Float64)
+)
+  ContinuousUnivariateParameter{N}(
+    index,
+    key,
+    setpdf!,
+    loglikelihood,
+    logprior,
+    logtarget,
+    gradloglikelihood,
+    gradlogprior,
+    gradlogtarget,
+    tensorloglikelihood,
+    tensorlogprior,
+    tensorlogtarget,
+    dtensorloglikelihood,
+    dtensorlogprior,
+    dtensorlogtarget,
+    uptogradlogtarget,
+    uptotensorlogtarget,
+    uptodtensorlogtarget,
+    rand,
     state
   )
 end
