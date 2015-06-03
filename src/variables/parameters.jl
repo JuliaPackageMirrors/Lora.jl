@@ -159,115 +159,102 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   sample::Union(Function, Nothing),
   state::ContinuousUnivariateParameterState{N}
 )
-  functions = [
-    :setpdf! => setpdf!,
-    :loglikelihood => ll,
-    :logprior => lp,
-    :logtarget => lt,
-    :gradloglikelihood => gll,
-    :gradlogprior => glp,
-    :gradlogtarget => glt,
-    :tensorloglikelihood => tll,
-    :tensorlogprior => tlp,
-    :tensorlogtarget => tlt,
-    :dtensorloglikelihood => dtll,
-    :dtensorlogprior => dtlp,
-    :dtensorlogtarget => dtlt,
-    :uptogradlogtarget => uptoglt,
-    :uptotensorlogtarget => uptotlt,
-    :uptodtensorlogtarget => uptodtlt,
-    :rand => sample
-  ]
+  fin = (setpdf!, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt, sample)
+  fnames = (
+    "setpdf!",
+    "loglikelihood",
+    "logprior",
+    "logtarget",
+    "gradloglikelihood",
+    "gradlogprior",
+    "gradlogtarget",
+    "tensorloglikelihood",
+    "tensorlogprior",
+    "tensorlogtarget",
+    "dtensorloglikelihood",
+    "dtensorlogprior",
+    "dtensorlogtarget",
+    "uptogradlogtarget",
+    "uptotensorlogtarget",
+    "uptodtensorlogtarget",
+    "rand"
+  )
+  nf = 17
 
   # Check that all generic functions have correct signature
-  for (k, f) in functions
-    if isgeneric(f) && !method_exists(f, (ContinuousUnivariateParameterState{N}, Dict{Variable, VariableState}))
-      error("$k has wrong signature")
+  for i = 1:nf
+    if isa(fin[i], Function) &&
+      isgeneric(fin[i]) &&
+      !method_exists(fin[i], (ContinuousUnivariateParameterState{N}, Dict{Variable, VariableState}))
+      error("$(fnames[i]) has wrong signature")
     end
   end
 
-  # Define logtarget and gradlogtarget
-  for (kt, kl, kp, f) in (
-    (:logtarget, :loglikelihood, :logprior, logpdf),
-    (:gradlogtarget, :gradloglikelihood, :gradlogprior, gradlogpdf)
-  )
-    if functions[kt] == nothing
-      if isa(functions[kl], Function) && isa(functions[kp], Function)
+  # Initialize output vector of functions fout by copying into it contents of fin
+  fout = Union(Function, Nothing)[fin[i] for i in 1:nf]
+
+  # Define logtarget (i = 4) and gradlogtarget (i = 7)
+  for (i , f) in ((4, logpdf), (7, gradlogpdf))
+    if fin[i] == nothing
+      if isa(fin[i-2], Function) && isa(fin[i-1], Function)
         # pstate and nstate stand for parameter state and neighbors' state respectively
-        functions[kt] = 
+        fout[i] =
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-          functions[kl](pstate, nstate)+functions[kp](pstate, nstate)
-      elseif isa(functions[:setpdf!], Function)
-        functions[kt] =
+          fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
+      elseif isa(fin[1], Function)
+        fout[i] =
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
           f(setpdf!(pstate, nstate), pstate.value)
       elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(state.pdf), N))
-        functions[kt] =
+        fout[i] =
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-            f(pstate.pdf, pstate.value)
+          f(pstate.pdf, pstate.value)
       end
     end
   end
 
-  # Define tensorlogtarget and dtensorlogtarget
-  for (kt, kl, kp) in (
-    (:tensorlogtarget, :tensorloglikelihood, :tensorlogprior),
-    (:dtensorlogtarget, :dtensorloglikelihood, :dtensorlogprior)
-  )
-    if functions[kt] == nothing && isa(functions[kl], Function) && isa(functions[kp], Function)
-      functions[kt] =
+  # Define tensorlogtarget (i = 10) and dtensorlogtarget (i = 13)
+  for i in (10, 13)
+    if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
+      fout[i] =
         (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-        functions[kl](pstate, nstate)+functions[kp](pstate, nstate)
+        fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
     end
   end
 
   # Define uptogradlogtarget
-  if functions[:uptogradlogtarget] == nothing &&
-    isa(functions[:logtarget], Function) &&
-    isa(functions[:gradlogtarget], Function)
-    functions[:uptogradlogtarget] =
+  if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
+    fout[14] =
       (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-      (functions[:logtarget](pstate, nstate), functions[:gradlogtarget](pstate, nstate))
+      (fout[4](pstate, nstate), fout[7](pstate, nstate))
   end
 
   # Define uptotensorlogtarget
-  if functions[:uptotensorlogtarget] == nothing &&
-    isa(functions[:logtarget], Function) &&
-    isa(functions[:gradlogtarget], Function) &&
-    isa(functions[:tensorlogtarget], Function)   
-    functions[:uptotensorlogtarget] =
+  if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
+    fout[15] =
       (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-      (
-        functions[:logtarget](pstate, nstate),
-        functions[:gradlogtarget](pstate, nstate),
-        functions[:tensorlogtarget](pstate, nstate)
-      )
+      (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
   end
 
   # Define uptodtensorlogtarget
-  if functions[:uptodtensorlogtarget] == nothing &&
-    isa(functions[:logtarget], Function) &&
-    isa(functions[:gradlogtarget], Function) &&
-    isa(functions[:tensorlogtarget], Function) &&
-    isa(functions[:dtensorlogtarget], Function)
-    functions[:uptodtensorlogtarget] =
+  if fin[16] == nothing &&
+    isa(fout[4], Function) &&
+    isa(fout[7], Function) &&
+    isa(fout[10], Function) &&
+    isa(fout[13], Function)
+    fout[16] =
       (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-      (
-        functions[:logtarget](pstate, nstate),
-        functions[:gradlogtarget](pstate, nstate),
-        functions[:tensorlogtarget](pstate, nstate),
-        functions[:dtensorlogtarget](pstate, nstate)
-      )
+      (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
   end
 
   # Define rand
-  if functions[:rand] == nothing
-    if isa(functions[:setpdf!], Function)
-      functions[:rand] = 
+  if fin[17] == nothing
+    if isa(fin[1], Function)
+      fout[17] =
         (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
         rand(setpdf!(pstate, nstate))
     elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(rand, (typeof(state.pdf),))
-      functions[:rand] = 
+      fout[17] =
         (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}, n::Int) ->
         rand(pstate.pdf)
     end
@@ -276,23 +263,23 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   ContinuousUnivariateParameter{N}(
     index,
     key,
-    functions[:setpdf!],
-    functions[:loglikelihood],
-    functions[:logprior],
-    functions[:logtarget],
-    functions[:gradloglikelihood],
-    functions[:gradlogprior],
-    functions[:gradlogtarget],
-    functions[:tensorloglikelihood],
-    functions[:tensorlogprior],
-    functions[:tensorlogtarget],
-    functions[:dtensorloglikelihood],
-    functions[:dtensorlogprior],
-    functions[:dtensorlogtarget],
-    functions[:uptogradlogtarget],
-    functions[:uptotensorlogtarget],
-    functions[:uptodtensorlogtarget],
-    functions[:rand],
+    fout[1],
+    fout[2],
+    fout[3],
+    fout[4],
+    fout[5],
+    fout[6],
+    fout[7],
+    fout[8],
+    fout[9],
+    fout[10],
+    fout[11],
+    fout[12],
+    fout[13],
+    fout[14],
+    fout[15],
+    fout[16],
+    fout[17],
     state
   )
 end
