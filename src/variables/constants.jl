@@ -13,13 +13,13 @@ MultivariateConstantState{N<:Number}(value::Vector{N}) = MultivariateConstantSta
 
 abstract Constant{F<:VariateForm, N<:Number} <: Variable{F, N, Deterministic}
 
-immutable UnivariateConstant{N<:Number} <: Constant{Univariate, N}
+type UnivariateConstant{N<:Number} <: Constant{Univariate, N}
   index::Int
   key::Symbol
   state::UnivariateConstantState{N}
 end
 
-immutable MultivariateConstant{N<:Number} <: Constant{Multivariate, N}
+type MultivariateConstant{N<:Number} <: Constant{Multivariate, N}
   index::Int
   key::Symbol
   state::MultivariateConstantState{N}
