@@ -2,7 +2,6 @@ abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableS
 
 type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Univariate, N}
   value::N
-  pdf::Union(ContinuousUnivariateDistribution, Nothing)
   loglikelihood::N
   logprior::N
   logtarget::N
@@ -13,13 +12,9 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Cont
   dtensorlogtarget::N
 end
 
-ContinuousUnivariateParameterState{N<:FloatingPoint}(
-    value::N,
-    pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing
-  ) =
+ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
   ContinuousUnivariateParameterState{N}(
     value,
-    pdf,
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
@@ -30,13 +25,9 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(
     convert(N, NaN)
   )
 
-ContinuousUnivariateParameterState{N<:FloatingPoint}(
-    ::Type{N}=Float64,
-    pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing
-  ) =
+ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}=Float64) =
   ContinuousUnivariateParameterState(
     convert(N, NaN),
-    pdf,
     convert(N, NaN),
     convert(N, NaN),
     convert(N, NaN),
@@ -125,6 +116,7 @@ typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, R
 type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Univariate, N}
   index::Int
   key::Symbol
+  pdf::Union(ContinuousUnivariateDistribution, Nothing)
   setpdf!::Union(Function, Nothing)
   loglikelihood::Union(Function, Nothing)
   logprior::Union(Function, Nothing)
@@ -143,11 +135,11 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
   uptodtensorlogtarget::Union(Function, Nothing)
   rand::Union(Function, Nothing)
   state::ContinuousUnivariateParameterState{N}
-end
 
-function ContinuousUnivariateParameter{N<:FloatingPoint}(
+  ContinuousUnivariateParameter(
   index::Int,
   key::Symbol,
+  pdf::Union(ContinuousUnivariateDistribution, Nothing),
   setpdf!::Union(Function, Nothing),
   ll::Union(Function, Nothing),
   lp::Union(Function, Nothing),
@@ -166,7 +158,12 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   uptodtlt::Union(Function, Nothing),
   rand::Union(Function, Nothing),
   state::ContinuousUnivariateParameterState{N}
-)
+  ) = begin
+  instance = new()
+  instance.index = index
+  instance.key = key
+  instance.pdf = pdf
+
   fin = (setpdf!, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt, rand)
   fnames = (
     "setpdf!",
@@ -213,10 +210,10 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
         fout[i] =
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
           f(setpdf!(pstate, nstate), pstate.value)
-      elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(state.pdf), N))
+      elseif isa(instance.pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(instance.pdf), N))
         fout[i] =
           (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
-          f(pstate.pdf, pstate.value)
+          f(instance.pdf, pstate.value)
       end
     end
   end
@@ -259,42 +256,45 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   if fin[17] == nothing
     if isa(fin[1], Function)
       fout[17] =
-        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}, n::Int) ->
-        Distributions.rand(setpdf!(pstate, nstate), n)
-    elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(rand, (typeof(state.pdf),))
+        function (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState})
+        instance.pdf = setpdf!(pstate, nstate)
+        Distributions.rand(instance.pdf)
+      end
+    elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
+      method_exists(Distributions.rand, (typeof(instance.pdf),))
       fout[17] =
-        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}, n::Int) ->
-        Distributions.rand(pstate.pdf, n)
+        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        Distributions.rand(pdf)
     end
   end
 
-  ContinuousUnivariateParameter{N}(
-    index,
-    key,
-    fout[1],
-    fout[2],
-    fout[3],
-    fout[4],
-    fout[5],
-    fout[6],
-    fout[7],
-    fout[8],
-    fout[9],
-    fout[10],
-    fout[11],
-    fout[12],
-    fout[13],
-    fout[14],
-    fout[15],
-    fout[16],
-    fout[17],
-    state
-  )
+  instance.setpdf! = fout[1]
+  instance.loglikelihood = fout[2]
+  instance.logprior = fout[3]
+  instance.logtarget = fout[4]
+  instance.gradloglikelihood = fout[5]
+  instance.gradlogprior = fout[6]
+  instance.gradlogtarget = fout[7]
+  instance.tensorloglikelihood = fout[8]
+  instance.tensorlogprior = fout[9]
+  instance.tensorlogtarget = fout[10]
+  instance.dtensorloglikelihood = fout[11]
+  instance.dtensorlogprior = fout[12]
+  instance.dtensorlogtarget = fout[13]
+  instance.uptogradlogtarget = fout[14]
+  instance.uptotensorlogtarget = fout[15]
+  instance.uptodtensorlogtarget = fout[16]
+  instance.rand = fout[17]
+  instance.state = state
+
+  instance
+  end
 end
 
 function ContinuousUnivariateParameter{N<:FloatingPoint}(
   index::Int,
   key::Symbol;
+  pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
   setpdf!::Union(Function, Nothing)=nothing,
   loglikelihood::Union(Function, Nothing)=nothing,
   logprior::Union(Function, Nothing)=nothing,
@@ -317,6 +317,7 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   ContinuousUnivariateParameter{N}(
     index,
     key,
+    pdf,
     setpdf!,
     loglikelihood,
     logprior,
@@ -477,7 +478,7 @@ function ContinuousMultivariateParameter{N<:FloatingPoint}(
       fout[17] =
         (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}, n::Int) ->
         Distributions.rand(setpdf!(pstate, nstate), n)
-    elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(rand, (typeof(state.pdf),))
+    elseif isa(state.pdf, ContinuousUnivariateDistribution) && method_exists(Distributions.rand, (typeof(state.pdf),))
       fout[17] =
         (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}, n::Int) ->
         Distributions.rand(pstate.pdf, n)
