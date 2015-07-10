@@ -1,6 +1,5 @@
 julia 0.3 0.4-
 Distributions 0.4.7
-Docile
 Graphs
 StatsBase 0.3.5
 ReverseDiffSource 0.0.4 0.1.0

@@ -1,111 +1,11 @@
-abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableState{F, N, Random}
-
-type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Univariate, N}
-  value::N
-  loglikelihood::N
-  logprior::N
-  logtarget::N
-  gradloglikelihood::N
-  gradlogprior::N
-  gradlogtarget::N
-  tensorlogtarget::N
-  dtensorlogtarget::N
-end
-
-ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
-  ContinuousUnivariateParameterState{N}(
-    value,
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN)
-  )
-
-ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}=Float64) =
-  ContinuousUnivariateParameterState(
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN)
-  )
-
-type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Continuous, Multivariate, N}
-  value::Vector{N}
-  loglikelihood::N
-  logprior::N
-  logtarget::N
-  gradloglikelihood::Vector{N}
-  gradlogprior::Vector{N}
-  gradlogtarget::Vector{N}
-  tensorlogtarget::Matrix{N}
-  dtensorlogtarget::Array{N, 3}
-  size::Int
-end
-
-function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}, monitor::Vector{Bool}=fill(false, 5))
-  size::Int = length(value)
-
-  l::Vector{Int} = Array(Int, 5)
-  for i in 1:5
-    l[i] = (monitor[i] == false ? zero(Int) : size)
-  end
-
-  ContinuousMultivariateParameterState{N}(
-    value,
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    Array(N, l[1]),
-    Array(N, l[2]),
-    Array(N, l[3]),
-    Array(N, l[4], l[4]),
-    Array(N, l[5], l[5], l[5]),
-    size
-  )
-end
-
-function ContinuousMultivariateParameterState{N<:FloatingPoint}(
-  ::Type{N}=Float64,
-  size::Int=0,
-  monitor::Vector{Bool}=[true, fill(false, 6)]
-  )
-
-  l::Vector{Int} = Array(Int, 6)
-  for i in 1:6
-    l[i] = (monitor[i] == false ? zero(Int) : size)
-  end
-
-  ContinuousMultivariateParameterState{N}(
-    Array(N, l[1]),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    Array(N, l[2]),
-    Array(N, l[3]),
-    Array(N, l[4]),
-    Array(N, l[5], l[5]),
-    Array(N, l[6], l[6], l[6]),
-    l[1]
-  )
-end
-
-typealias Parameter{S<:ValueSupport, F<:VariateForm, N<:Number} Variable{F, N, Random}
+abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 
 # Guidelines for usage of inner constructors of continuous parameter types:
 # 1) Function fields have higher priority than implicitly derived definitions via the pdf field
 # 2) Target-related fields have higher priority than implicitly derived likelihood+prior fields
 # 3) Upto-related fields have higher priority than implicitly derived Function tuples
 
-type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Univariate, N}
+type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
   index::Int
   key::Symbol
   pdf::Union(ContinuousUnivariateDistribution, Nothing)
@@ -126,7 +26,6 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
   uptotensorlogtarget::Union(Function, Nothing)
   uptodtensorlogtarget::Union(Function, Nothing)
   rand::Union(Function, Nothing)
-  state::ContinuousUnivariateParameterState{N}
 
   ContinuousUnivariateParameter(
     index::Int,
@@ -148,8 +47,7 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     uptoglt::Union(Function, Nothing),
     uptotlt::Union(Function, Nothing),
     uptodtlt::Union(Function, Nothing),
-    rand::Union(Function, Nothing),
-    state::ContinuousUnivariateParameterState{N}
+    rand::Union(Function, Nothing)
   ) = begin
     instance = new()
     instance.index = index
@@ -182,7 +80,7 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     for i = 1:nf
       if isa(fin[i], Function) &&
         isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousUnivariateParameterState{N}, Dict{Variable, VariableState}))
+        !method_exists(fin[i], (ContinuousUnivariateParameterState, Dict{Variable, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -196,15 +94,16 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
         if isa(fin[i-2], Function) && isa(fin[i-1], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
         elseif isa(fin[1], Function)
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             f(setpdf(pstate, nstate), pstate.value)
-        elseif isa(instance.pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(instance.pdf), N))
+        elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
+          method_exists(f, (typeof(instance.pdf), FloatingPoint))
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             f(instance.pdf, pstate.value)
         end
       end
@@ -214,7 +113,7 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     for i in (10, 13)
       if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
         fout[i] =
-          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
           fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
       end
     end
@@ -222,14 +121,14 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     # Define uptogradlogtarget
     if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
       fout[14] =
-        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate))
     end
 
     # Define uptotensorlogtarget
     if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
       fout[15] =
-        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
     end
 
@@ -240,7 +139,7 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
       isa(fout[10], Function) &&
       isa(fout[13], Function)
       fout[16] =
-        (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
     end
 
@@ -248,14 +147,14 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     if fin[17] == nothing
       if isa(fin[1], Function)
         fout[17] =
-          function (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState})
+          function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState})
           instance.pdf = setpdf(pstate, nstate)
           Distributions.rand(instance.pdf)
         end
       elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
-          (pstate::ContinuousUnivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
           Distributions.rand(pdf)
       end
     end
@@ -277,61 +176,12 @@ type ContinuousUnivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Un
     instance.uptotensorlogtarget = fout[15]
     instance.uptodtensorlogtarget = fout[16]
     instance.rand = fout[17]
-    instance.state = state
 
     instance
   end
 end
 
-function ContinuousUnivariateParameter{N<:FloatingPoint}(
-  index::Int,
-  key::Symbol,
-  pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
-  setpdf::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
-  logprior::Union(Function, Nothing)=nothing,
-  logtarget::Union(Function, Nothing)=nothing,
-  gradloglikelihood::Union(Function, Nothing)=nothing,
-  gradlogprior::Union(Function, Nothing)=nothing,
-  gradlogtarget::Union(Function, Nothing)=nothing,
-  tensorloglikelihood::Union(Function, Nothing)=nothing,
-  tensorlogprior::Union(Function, Nothing)=nothing,
-  tensorlogtarget::Union(Function, Nothing)=nothing,
-  dtensorloglikelihood::Union(Function, Nothing)=nothing,
-  dtensorlogprior::Union(Function, Nothing)=nothing,
-  dtensorlogtarget::Union(Function, Nothing)=nothing,
-  uptogradlogtarget::Union(Function, Nothing)=nothing,
-  uptotensorlogtarget::Union(Function, Nothing)=nothing,
-  uptodtensorlogtarget::Union(Function, Nothing)=nothing,
-  rand::Union(Function, Nothing)=nothing,
-  state::ContinuousUnivariateParameterState{N}=ContinuousUnivariateParameterState(Float64)
-)
-  ContinuousUnivariateParameter{N}(
-    index,
-    key,
-    pdf,
-    setpdf,
-    loglikelihood,
-    logprior,
-    logtarget,
-    gradloglikelihood,
-    gradlogprior,
-    gradlogtarget,
-    tensorloglikelihood,
-    tensorlogprior,
-    tensorlogtarget,
-    dtensorloglikelihood,
-    dtensorlogprior,
-    dtensorlogtarget,
-    uptogradlogtarget,
-    uptotensorlogtarget,
-    uptodtensorlogtarget,
-    rand,
-    state
-  )
-end
-
-function ContinuousUnivariateParameter{N<:FloatingPoint}(
+function ContinuousUnivariateParameter(
   index::Int,
   key::Symbol;
   pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
@@ -351,10 +201,9 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
   uptogradlogtarget::Union(Function, Nothing)=nothing,
   uptotensorlogtarget::Union(Function, Nothing)=nothing,
   uptodtensorlogtarget::Union(Function, Nothing)=nothing,
-  rand::Union(Function, Nothing)=nothing,
-  state::ContinuousUnivariateParameterState{N}=ContinuousUnivariateParameterState(Float64)
+  rand::Union(Function, Nothing)=nothing
 )
-  ContinuousUnivariateParameter{N}(
+  ContinuousUnivariateParameter(
     index,
     key,
     pdf,
@@ -374,12 +223,11 @@ function ContinuousUnivariateParameter{N<:FloatingPoint}(
     uptogradlogtarget,
     uptotensorlogtarget,
     uptodtensorlogtarget,
-    rand,
-    state
+    rand
   )
 end
 
-type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, Multivariate, N}
+type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
   index::Int
   key::Symbol
   pdf::Union(ContinuousMultivariateDistribution, Nothing)
@@ -400,7 +248,6 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
   uptotensorlogtarget::Union(Function, Nothing)
   uptodtensorlogtarget::Union(Function, Nothing)
   rand::Union(Function, Nothing)
-  state::ContinuousMultivariateParameterState{N}
 
   ContinuousMultivariateParameter(
     index::Int,
@@ -422,8 +269,7 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     uptoglt::Union(Function, Nothing),
     uptotlt::Union(Function, Nothing),
     uptodtlt::Union(Function, Nothing),
-    rand::Union(Function, Nothing),
-    state::ContinuousMultivariateParameterState{N}
+    rand::Union(Function, Nothing)
   ) = begin
     instance = new()
     instance.index = index
@@ -456,7 +302,7 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     for i = 1:nf
       if isa(fin[i], Function) &&
         isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousMultivariateParameterState{N}, Dict{Variable, VariableState}))
+        !method_exists(fin[i], (ContinuousMultivariateParameterState, Dict{Variable, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -470,15 +316,16 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
         if isa(fin[i-2], Function) && isa(fin[i-1], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
         elseif isa(fin[1], Function)
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             f(setpdf(pstate, nstate), pstate.value)
-        elseif isa(instance.pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(instance.pdf), N))
+        elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
+          method_exists(f, (typeof(instance.pdf), FloatingPoint))
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
             f(instance.pdf, pstate.value)
         end
       end
@@ -488,7 +335,7 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     for i in (10, 13)
       if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
         fout[i] =
-          (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
           fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
       end
     end
@@ -496,14 +343,14 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     # Define uptogradlogtarget
     if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
       fout[14] =
-        (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate))
     end
 
     # Define uptotensorlogtarget
     if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
       fout[15] =
-        (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
     end
 
@@ -514,7 +361,7 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
       isa(fout[10], Function) &&
       isa(fout[13], Function)
       fout[16] =
-        (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
     end
 
@@ -522,14 +369,14 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     if fin[17] == nothing
       if isa(fin[1], Function)
         fout[17] =
-          function (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState})
+          function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState})
           instance.pdf = setpdf(pstate, nstate)
           Distributions.rand(instance.pdf)
         end
       elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
-          (pstate::ContinuousMultivariateParameterState{N}, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
           Distributions.rand(pdf)
       end
     end
@@ -551,61 +398,12 @@ type ContinuousMultivariateParameter{N<:FloatingPoint} <: Parameter{Continuous, 
     instance.uptotensorlogtarget = fout[15]
     instance.uptodtensorlogtarget = fout[16]
     instance.rand = fout[17]
-    instance.state = state
 
     instance
   end
 end
 
-function ContinuousMultivariateParameter{N<:FloatingPoint}(
-  index::Int,
-  key::Symbol,
-  pdf::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
-  setpdf::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
-  logprior::Union(Function, Nothing)=nothing,
-  logtarget::Union(Function, Nothing)=nothing,
-  gradloglikelihood::Union(Function, Nothing)=nothing,
-  gradlogprior::Union(Function, Nothing)=nothing,
-  gradlogtarget::Union(Function, Nothing)=nothing,
-  tensorloglikelihood::Union(Function, Nothing)=nothing,
-  tensorlogprior::Union(Function, Nothing)=nothing,
-  tensorlogtarget::Union(Function, Nothing)=nothing,
-  dtensorloglikelihood::Union(Function, Nothing)=nothing,
-  dtensorlogprior::Union(Function, Nothing)=nothing,
-  dtensorlogtarget::Union(Function, Nothing)=nothing,
-  uptogradlogtarget::Union(Function, Nothing)=nothing,
-  uptotensorlogtarget::Union(Function, Nothing)=nothing,
-  uptodtensorlogtarget::Union(Function, Nothing)=nothing,
-  rand::Union(Function, Nothing)=nothing,
-  state::ContinuousMultivariateParameterState{N}=ContinuousMultivariateParameterState(Float64)
-)
-  ContinuousMultivariateParameter{N}(
-    index,
-    key,
-    pdf,
-    setpdf,
-    loglikelihood,
-    logprior,
-    logtarget,
-    gradloglikelihood,
-    gradlogprior,
-    gradlogtarget,
-    tensorloglikelihood,
-    tensorlogprior,
-    tensorlogtarget,
-    dtensorloglikelihood,
-    dtensorlogprior,
-    dtensorlogtarget,
-    uptogradlogtarget,
-    uptotensorlogtarget,
-    uptodtensorlogtarget,
-    rand,
-    state
-  )
-end
-
-function ContinuousMultivariateParameter{N<:FloatingPoint}(
+function ContinuousMultivariateParameter(
   index::Int,
   key::Symbol;
   pdf::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
@@ -625,10 +423,9 @@ function ContinuousMultivariateParameter{N<:FloatingPoint}(
   uptogradlogtarget::Union(Function, Nothing)=nothing,
   uptotensorlogtarget::Union(Function, Nothing)=nothing,
   uptodtensorlogtarget::Union(Function, Nothing)=nothing,
-  rand::Union(Function, Nothing)=nothing,
-  state::ContinuousMultivariateParameterState{N}=ContinuousMultivariateParameterState(Float64)
+  rand::Union(Function, Nothing)=nothing
 )
-  ContinuousMultivariateParameter{N}(
+  ContinuousMultivariateParameter(
     index,
     key,
     pdf,
@@ -648,7 +445,6 @@ function ContinuousMultivariateParameter{N<:FloatingPoint}(
     uptogradlogtarget,
     uptotensorlogtarget,
     uptodtensorlogtarget,
-    rand,
-    state
+    rand
   )
 end

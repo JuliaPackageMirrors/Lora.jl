@@ -11,7 +11,7 @@ ContinuousUnivariateParameterState(BigFloat)
 println("    Testing basic ContinuousUnivariateParameter constructors...")
 
 ContinuousUnivariateParameter(1, :p)
-ContinuousUnivariateParameter(1, :p, pdf=Normal(), state=ContinuousUnivariateParameterState(Float32))
+ContinuousUnivariateParameter(1, :p, pdf=Normal())
 
 
 println("    Testing basic ContinuousMultivariateParameterState constructors...")
@@ -24,5 +24,4 @@ ContinuousMultivariateParameterState(BigFloat)
 println("    Testing basic ContinuousMultivariateParameter constructors...")
 
 ContinuousMultivariateParameter(1, :p)
-ContinuousMultivariateParameter(1, :p, pdf=MvNormal(ones(2)), state=ContinuousMultivariateParameterState(Float32))
-
+ContinuousMultivariateParameter(1, :p, pdf=MvNormal(ones(2)))

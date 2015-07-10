@@ -1,3 +1,5 @@
+### Dependence
+
 immutable Dependence{S<:Variable, T<:Variable}
   index::Int
   source::S

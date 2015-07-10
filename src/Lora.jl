@@ -14,9 +14,9 @@ import Base:
 import Graphs: 
   vertex_index,
   edge_index,
-  revedge,
   source,
   target,
+  revedge,
   is_directed,
   num_vertices,
   vertices,
@@ -58,55 +58,35 @@ import Graphs:
 #   logccdf
 
 export
+  ### Types
   Sampleability,
   Deterministic,
   Random,
-  VariableState,
   Variable,
-  Dependence,
-  Data,
-  Transformation,
-  ConstantState,
-  UnivariateConstantState,
-  MultivariateConstantState,
   Constant,
-  UnivariateConstant,
-  MultivariateConstant,
-  HyperparameterState,
-  UnivariateHyperparameterState,
-  MultivariateHyperparameterState,
   Hyperparameter,
-  UnivariateHyperparameter,
-  MultivariateHyperparameter,
-  DataState,
-  UnivariateDataState,
-  MultivariateDataState,
-  MatrixvariateDataState,
   Data,
-  UnivariateData,
-  MultivariateData,
-  MatrixvariateData,
-  TransformationState,
-  UnivariateTransformationState,
-  MultivariateTransformationState,
   Transformation,
-  UnivariateTransformation,
-  MultivariateTransformation,
-  MatrixvariateTransformation,
+  ContinuousUnivariateParameter,
+  ContinuousMultivariateParameter,
+  Dependence,
+  VariableState,
+  GenericVariableState,
+  UnivariateGenericVariableState,
+  MultivariateGenericVariableState,
+  MatrixvariateGenericVariableState,
   ParameterState,
   ContinuousUnivariateParameterState,
   ContinuousMultivariateParameterState,
-  Parameter,
-  ContinuousUnivariateParameter,
-  ContinuousMultivariateParameter,
   GenericModel,
+  ### Functions
   vertex_index,
   convert,
   show,
   edge_index,
-  revedge,
   source,
   target,
+  revedge,
   is_directed,
   num_vertices,
   vertices,
@@ -151,11 +131,9 @@ export
   # quadraticzv
 
 include("variables/variables.jl")
-include("variables/dependencies.jl")
-include("variables/constants.jl")
-include("variables/data.jl")
-include("variables/transformations.jl")
 include("variables/parameters.jl")
+include("variables/dependencies.jl")
+include("variables/states.jl")
 include("models/GenericModel.jl")
 # include("api/api.jl")
 # include("api/samples.jl")
