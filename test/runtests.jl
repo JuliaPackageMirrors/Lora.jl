@@ -1,6 +1,7 @@
 tests =
   [
-    "parameters"
+    "parameters",
+    "GenericModel"
   ]
 
 println("Running tests:")

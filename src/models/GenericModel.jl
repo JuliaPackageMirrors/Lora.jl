@@ -5,8 +5,10 @@ type GenericModel <: AbstractGraph{Variable, Dependence}
   finclist::Vector{Vector{Dependence}}   # Forward incidence list
   binclist::Vector{Vector{Dependence}}   # Backward incidence list
   indexof::Dict{Variable, Int}           # Dictionary storing index for vertex (variable)
-  stateof::Dict{Variable, VariableState} # Dictionary storing state for vertex (variable)
+  # stateof::Dict{Variable, VariableState} # Dictionary storing state for vertex (variable)
 end
+
+@graph_implements GenericModel vertex_list edge_list
 
 is_directed(m::GenericModel) = m.is_directed
 
@@ -38,7 +40,7 @@ function add_vertex!(m::GenericModel, v::Variable)
     push!(m.finclist, Int[])
     push!(m.binclist, Int[])
     m.indexof[v] = length(m.vertices)
-    m.stateof[v] = v.state
+    # m.stateof[v] = v.state
     v
 end
 
@@ -70,14 +72,14 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
     Dependence[],
     Graphs.multivecs(Dependence, n),
     Graphs.multivecs(Dependence, n),
-    Dict{Variable, Int}(),
-    Dict{Variable, VariableState}()
+    Dict{Variable, Int}()# ,
+    # Dict{Variable, VariableState}()
   )
 
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
-    m.stateof[v] = v.state
+    # m.stateof[v] = v.state
   end
   
   for d in ds
@@ -95,12 +97,12 @@ function convert(::Type{GenericGraph}, m::GenericModel)
     dict[convert(KeyVertex, k)] = v
   end
 
-  Graph{KeyVertex{Symbol}, Edge{Symbol}}(
+  Graph{KeyVertex{Symbol}, Edge{KeyVertex{Symbol}}}(
     m.is_directed,
     convert(Vector{KeyVertex}, m.vertices),
     convert(Vector{Edge}, m.edges),
-    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.finclist],
-    Vector{Edge{Symbol}}[convert(Vector{Edge}, i) for i in m.binclist],
+    Vector{Edge{KeyVertex{Symbol}}}[convert(Vector{Edge}, i) for i in m.finclist],
+    Vector{Edge{KeyVertex{Symbol}}}[convert(Vector{Edge}, i) for i in m.binclist],
     dict
   )
 end
