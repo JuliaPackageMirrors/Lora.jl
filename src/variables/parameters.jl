@@ -80,7 +80,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     for i = 1:nf
       if isa(fin[i], Function) &&
         isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousUnivariateParameterState, Dict{Variable, VariableState}))
+        !method_exists(fin[i], (ContinuousUnivariateParameterState, Dict{Symbol, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -94,16 +94,16 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         if isa(fin[i-2], Function) && isa(fin[i-1], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
         elseif isa(fin[1], Function)
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(setpdf(pstate, nstate), pstate.value)
         elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
           method_exists(f, (typeof(instance.pdf), FloatingPoint))
           fout[i] =
-            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(instance.pdf, pstate.value)
         end
       end
@@ -113,7 +113,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     for i in (10, 13)
       if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
         fout[i] =
-          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
           fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
       end
     end
@@ -121,14 +121,14 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     # Define uptogradlogtarget
     if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
       fout[14] =
-        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate))
     end
 
     # Define uptotensorlogtarget
     if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
       fout[15] =
-        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
     end
 
@@ -139,7 +139,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       isa(fout[10], Function) &&
       isa(fout[13], Function)
       fout[16] =
-        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
     end
 
@@ -147,15 +147,14 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     if fin[17] == nothing
       if isa(fin[1], Function)
         fout[17] =
-          function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState})
+          function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
           instance.pdf = setpdf(pstate, nstate)
           Distributions.rand(instance.pdf)
         end
       elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
-          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Variable, VariableState}) ->
-          Distributions.rand(pdf)
+          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) -> Distributions.rand(pdf)
       end
     end
 
@@ -302,7 +301,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     for i = 1:nf
       if isa(fin[i], Function) &&
         isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousMultivariateParameterState, Dict{Variable, VariableState}))
+        !method_exists(fin[i], (ContinuousMultivariateParameterState, Dict{Symbol, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -316,16 +315,16 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         if isa(fin[i-2], Function) && isa(fin[i-1], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
         elseif isa(fin[1], Function)
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(setpdf(pstate, nstate), pstate.value)
         elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
           method_exists(f, (typeof(instance.pdf), FloatingPoint))
           fout[i] =
-            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(instance.pdf, pstate.value)
         end
       end
@@ -335,7 +334,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     for i in (10, 13)
       if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
         fout[i] =
-          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
           fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
       end
     end
@@ -343,14 +342,14 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     # Define uptogradlogtarget
     if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
       fout[14] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate))
     end
 
     # Define uptotensorlogtarget
     if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
       fout[15] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
     end
 
@@ -361,7 +360,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       isa(fout[10], Function) &&
       isa(fout[13], Function)
       fout[16] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
     end
 
@@ -369,15 +368,14 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     if fin[17] == nothing
       if isa(fin[1], Function)
         fout[17] =
-          function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState})
+          function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
           instance.pdf = setpdf(pstate, nstate)
           Distributions.rand(instance.pdf)
         end
       elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
-          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Variable, VariableState}) ->
-          Distributions.rand(pdf)
+          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) -> Distributions.rand(pdf)
       end
     end
 
