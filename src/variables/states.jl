@@ -70,9 +70,9 @@ type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Mu
 end
 
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}, monitor::Vector{Bool}=fill(false, 5))
-  size::Int = length(value)
+  size = length(value)
 
-  l::Vector{Int} = Array(Int, 5)
+  l = Array(Int, 5)
   for i in 1:5
     l[i] = (monitor[i] == false ? zero(Int) : size)
   end
@@ -91,13 +91,21 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}
   )
 end
 
+function ContinuousMultivariateParameterState{N<:FloatingPoint}(value::Vector{N}, monitor::Dict{Symbol, Bool})
+  fields =  (:gradloglikelihood, :gradlogprior, :gradlogtarget, :tensorlogtarget, :dtensorlogtarget)
+  ContinuousMultivariateParameterState(
+    value, 
+    Bool[haskey(monitor, fields[i]) ? monitor[fields[i]] : false for i in 1:5]
+  )
+end
+
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N}=Float64,
   size::Int=0,
   monitor::Vector{Bool}=[true, fill(false, 6)]
   )
 
-  l::Vector{Int} = Array(Int, 6)
+  l = Array(Int, 6)
   for i in 1:6
     l[i] = (monitor[i] == false ? zero(Int) : size)
   end
