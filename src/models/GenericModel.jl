@@ -64,7 +64,7 @@ end
 add_edge!(m::GenericModel, d::Dependence) = add_edge!(m, source(d, m), target(d, m), d)
 add_edge!(m::GenericModel, u::Variable, v::Variable) = add_edge!(m, u, v, make_edge(m, u, v))
 
-function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed::Bool=false)
+function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed::Bool=true)
   n = length(vs)
   m = GenericModel(
     is_directed,
@@ -89,7 +89,7 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
   return m
 end
 
-GenericModel(is_directed::Bool=false) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
+GenericModel(is_directed::Bool=true) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
 
 function convert(::Type{GenericGraph}, m::GenericModel)
   dict = Dict{KeyVertex{Symbol}, Int}()

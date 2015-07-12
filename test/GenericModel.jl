@@ -16,3 +16,5 @@ add_edge!(m, λ, θ)
 g = convert(GenericGraph, m)
 
 topological_sort_by_dfs(g)
+
+# plot(g)
