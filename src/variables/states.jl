@@ -1,22 +1,42 @@
+### Abstract variable states
+
 abstract VariableState{F<:VariateForm, N<:Number}
 
 abstract GenericVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
+abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
+
+### Generic variable state subtypes
+
+## UnivariateGenericVariableState
+
 type UnivariateGenericVariableState{N<:Number} <: GenericVariableState{Univariate, N}
   value::N
 end
+
+## MultivariateGenericVariableState
 
 type MultivariateGenericVariableState{N<:Number} <: GenericVariableState{Multivariate, N}
   value::Vector{N}
   size::Int
 end
 
+MultivariateGenericVariableState{N<:Number}(value::Vector{N}) =
+  MultivariateGenericVariableState{N}(value, length(value))
+
+## MatrixvariateGenericVariableState
+
 type MatrixvariateGenericVariableState{N<:Number} <: GenericVariableState{Matrixvariate, N}
   value::Matrix{N}
   size::Tuple
 end
 
-abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
+MatrixvariateGenericVariableState{N<:Number}(value::Matrix{N}) =
+  MatrixvariateGenericVariableState{N}(value, size(value))
+
+### Parameter state subtypes
+
+## ContinuousUnivariateParameterState
 
 type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Univariate, N}
   value::N
@@ -44,17 +64,9 @@ ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N) =
   )
 
 ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}=Float64) =
-  ContinuousUnivariateParameterState(
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN)
-  )
+  ContinuousUnivariateParameterState(convert(N, NaN))
+
+## ContinuousMultivariateParameterState
 
 type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Multivariate, N}
   value::Vector{N}
@@ -102,24 +114,15 @@ end
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N}=Float64,
   size::Int=0,
-  monitor::Vector{Bool}=[true, fill(false, 6)]
+  monitor::Vector{Bool}=fill(false, 5)
   )
+  ContinuousMultivariateParameterState(Array(N, size), monitor)
+end
 
-  l = Array(Int, 6)
-  for i in 1:6
-    l[i] = (monitor[i] == false ? zero(Int) : size)
-  end
-
-  ContinuousMultivariateParameterState{N}(
-    Array(N, l[1]),
-    convert(N, NaN),
-    convert(N, NaN),
-    convert(N, NaN),
-    Array(N, l[2]),
-    Array(N, l[3]),
-    Array(N, l[4]),
-    Array(N, l[5], l[5]),
-    Array(N, l[6], l[6], l[6]),
-    l[1]
+function ContinuousMultivariateParameterState{N<:FloatingPoint}(
+  ::Type{N}=Float64,
+  size::Int=0,
+  monitor::Dict{Symbol, Bool}=Dict{Symbol, Bool}()
   )
+  ContinuousMultivariateParameterState(Array(N, size), monitor)
 end

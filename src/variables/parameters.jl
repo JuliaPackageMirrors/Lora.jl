@@ -1,4 +1,10 @@
+### Astract Parameter types
+
 abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
+
+### Parameter subtypes
+
+## ContinuousUnivariateParameter
 
 # Guidelines for usage of inner constructors of continuous parameter types:
 # 1) Function fields have higher priority than implicitly derived definitions via the pdf field
@@ -225,6 +231,8 @@ function ContinuousUnivariateParameter(
     rand
   )
 end
+
+## ContinuousMultivariateParameter
 
 type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
   index::Int

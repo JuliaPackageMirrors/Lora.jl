@@ -1,6 +1,7 @@
 tests =
   [
     "parameters",
+    "states",
     "GenericModel"
   ]
 
