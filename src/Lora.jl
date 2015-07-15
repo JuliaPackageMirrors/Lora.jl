@@ -30,6 +30,14 @@ import Graphs:
 
 export
   ### Types
+  VariableState,
+  GenericVariableState,
+  UnivariateGenericVariableState,
+  MultivariateGenericVariableState,
+  MatrixvariateGenericVariableState,
+  ParameterState,
+  ContinuousUnivariateParameterState,
+  ContinuousMultivariateParameterState,
   Sampleability,
   Deterministic,
   Random,
@@ -41,14 +49,6 @@ export
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   Dependence,
-  VariableState,
-  GenericVariableState,
-  UnivariateGenericVariableState,
-  MultivariateGenericVariableState,
-  MatrixvariateGenericVariableState,
-  ParameterState,
-  ContinuousUnivariateParameterState,
-  ContinuousMultivariateParameterState,
   GenericModel,
   ### Functions
   vertex_index,
@@ -73,10 +73,10 @@ export
   add_vertex!,
   add_edge!
 
+include("variables/states.jl")
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")
-include("variables/states.jl")
 include("models/GenericModel.jl")
 
 end

@@ -29,11 +29,13 @@ s = ContinuousMultivariateParameterState([1., 1.5])
 
 monitor = Dict{Symbol, Bool}()
 monitor[:gradlogtarget] = true
-s = ContinuousMultivariateParameterState([1., 1.5], monitor, {:accept=>true})
+s = ContinuousMultivariateParameterState([1., 1.5], monitor, {:accept=>false})
 @test s.value == [1., 1.5]
 @test isnan(s.logtarget)
 @test length(s.gradloglikelihood) == 0
 @test length(s.gradlogtarget) == 2
+@test s.size == 2
+@test s.diagnostics[:accept] == false
 
 s = ContinuousMultivariateParameterState(BigFloat)
 @test isa(s.value, Vector{BigFloat})
