@@ -154,9 +154,9 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       if isa(fin[1], Function)
         fout[17] =
           function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.pdf = setpdf(pstate, nstate)
-          Distributions.rand(instance.pdf)
-        end
+            instance.pdf = setpdf(pstate, nstate)
+            Distributions.rand(instance.pdf)
+          end
       elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
@@ -377,9 +377,9 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       if isa(fin[1], Function)
         fout[17] =
           function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.pdf = setpdf(pstate, nstate)
-          Distributions.rand(instance.pdf)
-        end
+            instance.pdf = setpdf(pstate, nstate)
+            Distributions.rand(instance.pdf)
+          end
       elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
         method_exists(Distributions.rand, (typeof(instance.pdf),))
         fout[17] =
