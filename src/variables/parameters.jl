@@ -94,6 +94,13 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     # Initialize output vector of functions fout by copying into it contents of fin
     fout = Union(Function, Nothing)[fin[i] for i in 1:nf]
 
+    # Define setpdf
+    if isa(fin[1], Function)
+      fout[1] = 
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
+        instance.pdf = fin[1](pstate, nstate)
+    end
+
     # Define logtarget (i = 4) and gradlogtarget (i = 7)
     for (i , f) in ((4, logpdf), (7, gradlogpdf))
       if fin[i] == nothing
@@ -102,12 +109,8 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
           fout[i] =
             (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
-        elseif isa(fin[1], Function)
-          fout[i] =
-            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            f(setpdf(pstate, nstate), pstate.value)
-        elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
-          method_exists(f, (typeof(instance.pdf), FloatingPoint))
+        elseif isa(fin[1], Function) || 
+          (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), FloatingPoint)))
           fout[i] =
             (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(instance.pdf, pstate.value)
@@ -150,18 +153,12 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     end
 
     # Define rand
-    if fin[17] == nothing
-      if isa(fin[1], Function)
-        fout[17] =
-          function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-            instance.pdf = setpdf(pstate, nstate)
-            Distributions.rand(instance.pdf)
-          end
-      elseif isa(instance.pdf, ContinuousUnivariateDistribution) &&
-        method_exists(Distributions.rand, (typeof(instance.pdf),))
-        fout[17] =
-          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) -> Distributions.rand(pdf)
-      end
+    if fin[17] == nothing &&
+      (isa(fin[1], Function) || 
+      (isa(pdf, ContinuousUnivariateDistribution) && method_exists(Distributions.rand, (typeof(pdf), FloatingPoint))))
+      fout[17] =
+        (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
+        Distributions.rand(instance.pdf)
     end
 
     instance.setpdf = fout[1]
@@ -314,6 +311,13 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       end
     end
 
+    # Define setpdf
+    if isa(fin[1], Function)
+      fout[1] = 
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
+        instance.pdf = fin[1](pstate, nstate)
+    end
+
     # Initialize output vector of functions fout by copying into it contents of fin
     fout = Union(Function, Nothing)[fin[i] for i in 1:nf]
 
@@ -325,12 +329,8 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
           fout[i] =
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
-        elseif isa(fin[1], Function)
-          fout[i] =
-            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            f(setpdf(pstate, nstate), pstate.value)
-        elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
-          method_exists(f, (typeof(instance.pdf), FloatingPoint))
+        elseif isa(fin[1], Function) || 
+          (isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{FloatingPoint})))
           fout[i] =
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             f(instance.pdf, pstate.value)
@@ -373,18 +373,13 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     end
 
     # Define rand
-    if fin[17] == nothing
-      if isa(fin[1], Function)
-        fout[17] =
-          function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-            instance.pdf = setpdf(pstate, nstate)
-            Distributions.rand(instance.pdf)
-          end
-      elseif isa(instance.pdf, ContinuousMultivariateDistribution) &&
-        method_exists(Distributions.rand, (typeof(instance.pdf),))
-        fout[17] =
-          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) -> Distributions.rand(pdf)
-      end
+    if fin[17] == nothing &&
+      (isa(fin[1], Function) || 
+      (isa(pdf, ContinuousMultivariateDistribution) &&
+      method_exists(Distributions.rand, (typeof(pdf), Vector{FloatingPoint}))))
+      fout[17] =
+        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
+        Distributions.rand(instance.pdf)
     end
 
     instance.setpdf = fout[1]

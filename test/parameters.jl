@@ -42,14 +42,14 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 
 p = ContinuousUnivariateParameter(1, :p, setpdf=(pstates, nstates) -> Normal(nstates[:μ].value))
 
+p.setpdf(pstate, nstates)
 p.pdf == Normal(μ)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
 @test p.logtarget(pstate, nstates) == lt
 @test p.gradlogtarget(pstate, nstates) == glt
 @test p.uptogradlogtarget(pstate, nstates) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-ms, es = mean(s), 3*std(s)
-@test ms-es <= nstates[:μ].value <= ms+es
+@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
 for i in [3, 4, 6, 7, 9:14, 16, 17]
   @test getfield(p, fields[i]) == nothing
@@ -60,7 +60,7 @@ pstate.value = v
 μ = 0.12
 nstates[:μ].value = μ
 
-p.setpdf = (pstates, nstates) -> Normal(nstates[:μ].value)
+p.setpdf(pstate, nstates)
 
 p.pdf == Normal(μ)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
@@ -68,8 +68,7 @@ lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
 @test p.gradlogtarget(pstate, nstates) == glt
 @test p.uptogradlogtarget(pstate, nstates) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-ms, es = mean(s), 3*std(s)
-@test ms-es <= nstates[:μ].value <= ms+es
+@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
 for i in [3, 4, 6, 7, 9:14, 16, 17]
   @test getfield(p, fields[i]) == nothing
