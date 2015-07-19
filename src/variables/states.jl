@@ -46,14 +46,18 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Univ
   gradloglikelihood::N
   gradlogprior::N
   gradlogtarget::N
+  tensorloglikelihood::N
+  tensorlogprior::N  
   tensorlogtarget::N
+  dtensorloglikelihood::N
+  dtensorlogprior::N    
   dtensorlogtarget::N
   diagnostics::Dict
 end
 
 function ContinuousUnivariateParameterState{N<:FloatingPoint}(value::N, diagnostics::Dict=Dict())
   v = convert(N, NaN)
-  ContinuousUnivariateParameterState{N}(value, v, v, v, v, v, v, v, v, diagnostics)
+  ContinuousUnivariateParameterState{N}(value, v, v, v, v, v, v, v, v, v, v, v, v, diagnostics)
 end
 
 ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}, diagnostics::Dict=Dict()) =
@@ -69,7 +73,11 @@ type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Mu
   gradloglikelihood::Vector{N}
   gradlogprior::Vector{N}
   gradlogtarget::Vector{N}
+  tensorloglikelihood::Matrix{N}
+  tensorlogprior::Matrix{N}
   tensorlogtarget::Matrix{N}
+  dtensorloglikelihood::Array{N, 3}
+  dtensorlogprior::Array{N, 3}
   dtensorlogtarget::Array{N, 3}
   size::Int
   diagnostics::Dict
@@ -77,13 +85,13 @@ end
 
 function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   value::Vector{N},
-  monitor::Vector{Bool}=fill(false, 5),
+  monitor::Vector{Bool}=fill(false, 9),
   diagnostics::Dict=Dict()
 )
   size = length(value)
 
-  l = Array(Int, 5)
-  for i in 1:5
+  l = Array(Int, 9)
+  for i in 1:9
     l[i] = (monitor[i] == false ? zero(Int) : size)
   end
 
@@ -98,7 +106,11 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
     Array(N, l[2]),
     Array(N, l[3]),
     Array(N, l[4], l[4]),
-    Array(N, l[5], l[5], l[5]),
+    Array(N, l[5], l[5]),
+    Array(N, l[6], l[6]),
+    Array(N, l[7], l[7], l[7]),
+    Array(N, l[8], l[8], l[8]),
+    Array(N, l[9], l[9], l[9]),
     size,
     diagnostics
   )
@@ -109,10 +121,20 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   monitor::Dict{Symbol, Bool},
   diagnostics::Dict=Dict()  
 )
-  fields = (:gradloglikelihood, :gradlogprior, :gradlogtarget, :tensorlogtarget, :dtensorlogtarget)
+  fields = (
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget
+)
   ContinuousMultivariateParameterState(
     value, 
-    Bool[haskey(monitor, fields[i]) ? monitor[fields[i]] : false for i in 1:5],
+    Bool[haskey(monitor, fields[i]) ? monitor[fields[i]] : false for i in 1:9],
     diagnostics
   )
 end
@@ -120,7 +142,7 @@ end
 ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N},
   size::Int=0,
-  monitor::Vector{Bool}=fill(false, 5),
+  monitor::Vector{Bool}=fill(false, 9),
   diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostics)
