@@ -155,7 +155,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     # Define rand
     if fin[17] == nothing &&
       (isa(fin[1], Function) || 
-      (isa(pdf, ContinuousUnivariateDistribution) && method_exists(Distributions.rand, (typeof(pdf), FloatingPoint))))
+      (isa(pdf, ContinuousUnivariateDistribution) && method_exists(Distributions.rand, (typeof(pdf),))))
       fout[17] =
         (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         Distributions.rand(instance.pdf)
@@ -376,7 +376,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     if fin[17] == nothing &&
       (isa(fin[1], Function) || 
       (isa(pdf, ContinuousMultivariateDistribution) &&
-      method_exists(Distributions.rand, (typeof(pdf), Vector{FloatingPoint}))))
+      method_exists(Distributions.rand, (typeof(pdf),))))
       fout[17] =
         (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
         Distributions.rand(instance.pdf)
