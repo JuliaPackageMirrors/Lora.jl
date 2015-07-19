@@ -16,21 +16,21 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
   key::Symbol
   pdf::Union(ContinuousUnivariateDistribution, Nothing)
   setpdf::Union(Function, Nothing)
-  loglikelihood::Union(Function, Nothing)
-  logprior::Union(Function, Nothing)
-  logtarget::Union(Function, Nothing)
-  gradloglikelihood::Union(Function, Nothing)
-  gradlogprior::Union(Function, Nothing)
-  gradlogtarget::Union(Function, Nothing)
-  tensorloglikelihood::Union(Function, Nothing)
-  tensorlogprior::Union(Function, Nothing)
-  tensorlogtarget::Union(Function, Nothing)
-  dtensorloglikelihood::Union(Function, Nothing)
-  dtensorlogprior::Union(Function, Nothing)
-  dtensorlogtarget::Union(Function, Nothing)
-  uptogradlogtarget::Union(Function, Nothing)
-  uptotensorlogtarget::Union(Function, Nothing)
-  uptodtensorlogtarget::Union(Function, Nothing)
+  loglikelihood!::Union(Function, Nothing)
+  logprior!::Union(Function, Nothing)
+  logtarget!::Union(Function, Nothing)
+  gradloglikelihood!::Union(Function, Nothing)
+  gradlogprior!::Union(Function, Nothing)
+  gradlogtarget!::Union(Function, Nothing)
+  tensorloglikelihood!::Union(Function, Nothing)
+  tensorlogprior!::Union(Function, Nothing)
+  tensorlogtarget!::Union(Function, Nothing)
+  dtensorloglikelihood!::Union(Function, Nothing)
+  dtensorlogprior!::Union(Function, Nothing)
+  dtensorlogtarget!::Union(Function, Nothing)
+  uptogradlogtarget!::Union(Function, Nothing)
+  uptotensorlogtarget!::Union(Function, Nothing)
+  uptodtensorlogtarget!::Union(Function, Nothing)
   rand::Union(Function, Nothing)
 
   ContinuousUnivariateParameter(
@@ -63,21 +63,21 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     fin = (setpdf, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt, rand)
     fnames = (
       "setpdf",
-      "loglikelihood",
-      "logprior",
-      "logtarget",
-      "gradloglikelihood",
-      "gradlogprior",
-      "gradlogtarget",
-      "tensorloglikelihood",
-      "tensorlogprior",
-      "tensorlogtarget",
-      "dtensorloglikelihood",
-      "dtensorlogprior",
-      "dtensorlogtarget",
-      "uptogradlogtarget",
-      "uptotensorlogtarget",
-      "uptodtensorlogtarget",
+      "loglikelihood!",
+      "logprior!",
+      "logtarget!",
+      "gradloglikelihood!",
+      "gradlogprior!",
+      "gradlogtarget!",
+      "tensorloglikelihood!",
+      "tensorlogprior!",
+      "tensorlogtarget!",
+      "dtensorloglikelihood!",
+      "dtensorlogprior!",
+      "dtensorlogtarget!",
+      "uptogradlogtarget!",
+      "uptotensorlogtarget!",
+      "uptodtensorlogtarget!",
       "rand"
     )
     nf = 17
@@ -179,21 +179,21 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     end
 
     instance.setpdf = fout[1]
-    instance.loglikelihood = fout[2]
-    instance.logprior = fout[3]
-    instance.logtarget = fout[4]
-    instance.gradloglikelihood = fout[5]
-    instance.gradlogprior = fout[6]
-    instance.gradlogtarget = fout[7]
-    instance.tensorloglikelihood = fout[8]
-    instance.tensorlogprior = fout[9]
-    instance.tensorlogtarget = fout[10]
-    instance.dtensorloglikelihood = fout[11]
-    instance.dtensorlogprior = fout[12]
-    instance.dtensorlogtarget = fout[13]
-    instance.uptogradlogtarget = fout[14]
-    instance.uptotensorlogtarget = fout[15]
-    instance.uptodtensorlogtarget = fout[16]
+    instance.loglikelihood! = fout[2]
+    instance.logprior! = fout[3]
+    instance.logtarget! = fout[4]
+    instance.gradloglikelihood! = fout[5]
+    instance.gradlogprior! = fout[6]
+    instance.gradlogtarget! = fout[7]
+    instance.tensorloglikelihood! = fout[8]
+    instance.tensorlogprior! = fout[9]
+    instance.tensorlogtarget! = fout[10]
+    instance.dtensorloglikelihood! = fout[11]
+    instance.dtensorlogprior! = fout[12]
+    instance.dtensorlogtarget! = fout[13]
+    instance.uptogradlogtarget! = fout[14]
+    instance.uptotensorlogtarget! = fout[15]
+    instance.uptodtensorlogtarget! = fout[16]
     instance.rand = fout[17]
 
     instance
@@ -205,7 +205,7 @@ function ContinuousUnivariateParameter(
   key::Symbol;
   pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
   setpdf::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
+  loglikelihood!::Union(Function, Nothing)=nothing,
   logprior::Union(Function, Nothing)=nothing,
   logtarget::Union(Function, Nothing)=nothing,
   gradloglikelihood::Union(Function, Nothing)=nothing,
@@ -227,7 +227,7 @@ function ContinuousUnivariateParameter(
     key,
     pdf,
     setpdf,
-    loglikelihood,
+    loglikelihood!,
     logprior,
     logtarget,
     gradloglikelihood,

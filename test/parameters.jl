@@ -5,21 +5,21 @@ using Lora
 fields = (
   :pdf,
   :setpdf,
-  :loglikelihood,
-  :logprior,
-  :logtarget,
-  :gradloglikelihood,
-  :gradlogprior,
-  :gradlogtarget,
-  :tensorloglikelihood,
-  :tensorlogprior,
-  :tensorlogtarget,
-  :dtensorloglikelihood,
-  :dtensorlogprior,
-  :dtensorlogtarget,
-  :uptogradlogtarget,
-  :uptotensorlogtarget,
-  :uptodtensorlogtarget,
+  :loglikelihood!,
+  :logprior!,
+  :logtarget!,
+  :gradloglikelihood!,
+  :gradlogprior!,
+  :gradlogtarget!,
+  :tensorloglikelihood!,
+  :tensorlogprior!,
+  :tensorlogtarget!,
+  :dtensorloglikelihood!,
+  :dtensorlogprior!,
+  :dtensorlogtarget!,
+  :uptogradlogtarget!,
+  :uptotensorlogtarget!,
+  :uptodtensorlogtarget!,
   :rand
 )
 
@@ -44,14 +44,14 @@ p = ContinuousUnivariateParameter(1, :p, pdf=Normal(nstates[:μ].value))
 
 p.pdf == Normal(nstates[:μ].value)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
-p.logtarget(pstate, nstates)
+p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
-p.gradlogtarget(pstate, nstates)
+p.gradlogtarget!(pstate, nstates)
 @test pstate.gradlogtarget == glt
 
 pstate = ContinuousUnivariateParameterState(v)
 
-p.uptogradlogtarget(pstate, nstates)
+p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
 @test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
@@ -69,14 +69,14 @@ p.pdf = Normal(nstates[:μ].value)
 
 p.pdf == Normal(nstates[:μ].value)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
-p.logtarget(pstate, nstates)
+p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
-p.gradlogtarget(pstate, nstates)
+p.gradlogtarget!(pstate, nstates)
 @test pstate.gradlogtarget == glt
 
 pstate = ContinuousUnivariateParameterState(v)
 
-p.uptogradlogtarget(pstate, nstates)
+p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
 @test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
@@ -98,14 +98,14 @@ p = ContinuousUnivariateParameter(1, :p, setpdf=(pstates, nstates) -> Normal(nst
 p.setpdf(pstate, nstates)
 p.pdf == Normal(μ)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
-p.logtarget(pstate, nstates)
+p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
-p.gradlogtarget(pstate, nstates)
+p.gradlogtarget!(pstate, nstates)
 @test pstate.gradlogtarget == glt
 
 pstate = ContinuousUnivariateParameterState(v)
 
-p.uptogradlogtarget(pstate, nstates)
+p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
 @test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
@@ -123,14 +123,14 @@ p.setpdf(pstate, nstates)
 
 p.pdf == Normal(μ)
 lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
-p.logtarget(pstate, nstates)
+p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
-p.gradlogtarget(pstate, nstates)
+p.gradlogtarget!(pstate, nstates)
 @test pstate.gradlogtarget == glt
 
 pstate = ContinuousUnivariateParameterState(v)
 
-p.uptogradlogtarget(pstate, nstates)
+p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
 s = Float64[p.rand(pstate, nstates) for i = 1:1000]
 @test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
@@ -155,7 +155,7 @@ p = ContinuousUnivariateParameter(
 
 distribution = Normal(μ)
 lt = logpdf(distribution, v)
-p.logtarget(pstate, nstates)
+p.logtarget!(pstate, nstates)
 @test 0.5*(pstate.logtarget-log(2*pi)) == lt
 
 for i in [1:4, 6:18]
