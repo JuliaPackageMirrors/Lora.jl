@@ -253,21 +253,21 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
   key::Symbol
   pdf::Union(ContinuousMultivariateDistribution, Nothing)
   setpdf::Union(Function, Nothing)
-  loglikelihood::Union(Function, Nothing)
-  logprior::Union(Function, Nothing)
-  logtarget::Union(Function, Nothing)
-  gradloglikelihood::Union(Function, Nothing)
-  gradlogprior::Union(Function, Nothing)
-  gradlogtarget::Union(Function, Nothing)
-  tensorloglikelihood::Union(Function, Nothing)
-  tensorlogprior::Union(Function, Nothing)
-  tensorlogtarget::Union(Function, Nothing)
-  dtensorloglikelihood::Union(Function, Nothing)
-  dtensorlogprior::Union(Function, Nothing)
-  dtensorlogtarget::Union(Function, Nothing)
-  uptogradlogtarget::Union(Function, Nothing)
-  uptotensorlogtarget::Union(Function, Nothing)
-  uptodtensorlogtarget::Union(Function, Nothing)
+  loglikelihood!::Union(Function, Nothing)
+  logprior!::Union(Function, Nothing)
+  logtarget!::Union(Function, Nothing)
+  gradloglikelihood!::Union(Function, Nothing)
+  gradlogprior!::Union(Function, Nothing)
+  gradlogtarget!::Union(Function, Nothing)
+  tensorloglikelihood!::Union(Function, Nothing)
+  tensorlogprior!::Union(Function, Nothing)
+  tensorlogtarget!::Union(Function, Nothing)
+  dtensorloglikelihood!::Union(Function, Nothing)
+  dtensorlogprior!::Union(Function, Nothing)
+  dtensorlogtarget!::Union(Function, Nothing)
+  uptogradlogtarget!::Union(Function, Nothing)
+  uptotensorlogtarget!::Union(Function, Nothing)
+  uptodtensorlogtarget!::Union(Function, Nothing)
   rand::Union(Function, Nothing)
 
   ContinuousMultivariateParameter(
@@ -300,21 +300,21 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     fin = (setpdf, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt, rand)
     fnames = (
       "setpdf",
-      "loglikelihood",
-      "logprior",
-      "logtarget",
-      "gradloglikelihood",
-      "gradlogprior",
-      "gradlogtarget",
-      "tensorloglikelihood",
-      "tensorlogprior",
-      "tensorlogtarget",
-      "dtensorloglikelihood",
-      "dtensorlogprior",
-      "dtensorlogtarget",
-      "uptogradlogtarget",
-      "uptotensorlogtarget",
-      "uptodtensorlogtarget",
+      "loglikelihood!",
+      "logprior!",
+      "logtarget!",
+      "gradloglikelihood!",
+      "gradlogprior!",
+      "gradlogtarget!",
+      "tensorloglikelihood!",
+      "tensorlogprior!",
+      "tensorlogtarget!",
+      "dtensorloglikelihood!",
+      "dtensorlogprior!",
+      "dtensorlogtarget!",
+      "uptogradlogtarget!",
+      "uptotensorlogtarget!",
+      "uptodtensorlogtarget!",
       "rand"
     )
     nf = 17
@@ -339,43 +339,56 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     fout = Union(Function, Nothing)[fin[i] for i in 1:nf]
 
     # Define logtarget (i = 4) and gradlogtarget (i = 7)
-    for (i , f) in ((4, logpdf), (7, gradlogpdf))
+    for (i , fields, f) in 
+      ((4, (:loglikelihood, :logprior, :logtarget), logpdf),
+      (7, (:gradloglikelihood, :gradlogprior, :gradlogtarget), gradlogpdf))
       if fin[i] == nothing
         if isa(fin[i-2], Function) && isa(fin[i-1], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           fout[i] =
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
+            setfield!(pstate, fields[1], fin[i-2](pstate, nstate))
+            setfield!(pstate, fields[2], fin[i-1](pstate, nstate))
+            setfield!(pstate, fields[3], getfield(pstate, fields[1])+getfield(pstate, fields[2]))
         elseif isa(fin[1], Function) || 
           (isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{FloatingPoint})))
           fout[i] =
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            f(instance.pdf, pstate.value)
+            setfield!(pstate, fields[3], f(instance.pdf, pstate.value))
         end
       end
     end
 
     # Define tensorlogtarget (i = 10) and dtensorlogtarget (i = 13)
-    for i in (10, 13)
+    for (i , fields) in
+      ((10, (:tensorloglikelihood, :tensorlogprior, :tensorlogtarget)),
+      (13, (:dtensorloglikelihood, :dtensorlogprior, :dtensorlogtarget)))
       if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
         fout[i] =
           (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          fin[i-2](pstate, nstate)+fin[i-1](pstate, nstate)
+          setfield!(pstate, fields[1], fin[i-2](pstate, nstate))
+          setfield!(pstate, fields[2], fin[i-1](pstate, nstate))
+          setfield!(pstate, fields[3], getfield(pstate, fields[1])+getfield(pstate, fields[2]))
       end
     end
 
     # Define uptogradlogtarget
     if fin[14] == nothing && isa(fout[4], Function) && isa(fout[7], Function)
       fout[14] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-        (fout[4](pstate, nstate), fout[7](pstate, nstate))
+        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
+          fout[4](pstate, nstate)
+          fout[7](pstate, nstate)
+        end
     end
 
     # Define uptotensorlogtarget
     if fin[15] == nothing && isa(fout[4], Function) && isa(fout[7], Function) && isa(fout[10], Function)
       fout[15] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-        (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate))
+        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
+          fout[4](pstate, nstate)
+          fout[7](pstate, nstate)
+          fout[10](pstate, nstate)
+        end
     end
 
     # Define uptodtensorlogtarget
@@ -385,8 +398,12 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       isa(fout[10], Function) &&
       isa(fout[13], Function)
       fout[16] =
-        (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-        (fout[4](pstate, nstate), fout[7](pstate, nstate), fout[10](pstate, nstate), fout[13](pstate, nstate))
+        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
+          fout[4](pstate, nstate)
+          fout[7](pstate, nstate)
+          fout[10](pstate, nstate)
+          fout[13](pstate, nstate)
+        end
     end
 
     # Define rand
@@ -400,21 +417,21 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     end
 
     instance.setpdf = fout[1]
-    instance.loglikelihood = fout[2]
-    instance.logprior = fout[3]
-    instance.logtarget = fout[4]
-    instance.gradloglikelihood = fout[5]
-    instance.gradlogprior = fout[6]
-    instance.gradlogtarget = fout[7]
-    instance.tensorloglikelihood = fout[8]
-    instance.tensorlogprior = fout[9]
-    instance.tensorlogtarget = fout[10]
-    instance.dtensorloglikelihood = fout[11]
-    instance.dtensorlogprior = fout[12]
-    instance.dtensorlogtarget = fout[13]
-    instance.uptogradlogtarget = fout[14]
-    instance.uptotensorlogtarget = fout[15]
-    instance.uptodtensorlogtarget = fout[16]
+    instance.loglikelihood! = fout[2]
+    instance.logprior! = fout[3]
+    instance.logtarget! = fout[4]
+    instance.gradloglikelihood! = fout[5]
+    instance.gradlogprior! = fout[6]
+    instance.gradlogtarget! = fout[7]
+    instance.tensorloglikelihood! = fout[8]
+    instance.tensorlogprior! = fout[9]
+    instance.tensorlogtarget! = fout[10]
+    instance.dtensorloglikelihood! = fout[11]
+    instance.dtensorlogprior! = fout[12]
+    instance.dtensorlogtarget! = fout[13]
+    instance.uptogradlogtarget! = fout[14]
+    instance.uptotensorlogtarget! = fout[15]
+    instance.uptodtensorlogtarget! = fout[16]
     instance.rand = fout[17]
 
     instance
@@ -426,21 +443,21 @@ function ContinuousMultivariateParameter(
   key::Symbol;
   pdf::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
   setpdf::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
-  logprior::Union(Function, Nothing)=nothing,
-  logtarget::Union(Function, Nothing)=nothing,
-  gradloglikelihood::Union(Function, Nothing)=nothing,
-  gradlogprior::Union(Function, Nothing)=nothing,
-  gradlogtarget::Union(Function, Nothing)=nothing,
-  tensorloglikelihood::Union(Function, Nothing)=nothing,
-  tensorlogprior::Union(Function, Nothing)=nothing,
-  tensorlogtarget::Union(Function, Nothing)=nothing,
-  dtensorloglikelihood::Union(Function, Nothing)=nothing,
-  dtensorlogprior::Union(Function, Nothing)=nothing,
-  dtensorlogtarget::Union(Function, Nothing)=nothing,
-  uptogradlogtarget::Union(Function, Nothing)=nothing,
-  uptotensorlogtarget::Union(Function, Nothing)=nothing,
-  uptodtensorlogtarget::Union(Function, Nothing)=nothing,
+  loglikelihood!::Union(Function, Nothing)=nothing,
+  logprior!::Union(Function, Nothing)=nothing,
+  logtarget!::Union(Function, Nothing)=nothing,
+  gradloglikelihood!::Union(Function, Nothing)=nothing,
+  gradlogprior!::Union(Function, Nothing)=nothing,
+  gradlogtarget!::Union(Function, Nothing)=nothing,
+  tensorloglikelihood!::Union(Function, Nothing)=nothing,
+  tensorlogprior!::Union(Function, Nothing)=nothing,
+  tensorlogtarget!::Union(Function, Nothing)=nothing,
+  dtensorloglikelihood!::Union(Function, Nothing)=nothing,
+  dtensorlogprior!::Union(Function, Nothing)=nothing,
+  dtensorlogtarget!::Union(Function, Nothing)=nothing,
+  uptogradlogtarget!::Union(Function, Nothing)=nothing,
+  uptotensorlogtarget!::Union(Function, Nothing)=nothing,
+  uptodtensorlogtarget!::Union(Function, Nothing)=nothing,
   rand::Union(Function, Nothing)=nothing
 )
   ContinuousMultivariateParameter(
@@ -448,21 +465,21 @@ function ContinuousMultivariateParameter(
     key,
     pdf,
     setpdf,
-    loglikelihood,
-    logprior,
-    logtarget,
-    gradloglikelihood,
-    gradlogprior,
-    gradlogtarget,
-    tensorloglikelihood,
-    tensorlogprior,
-    tensorlogtarget,
-    dtensorloglikelihood,
-    dtensorlogprior,
-    dtensorlogtarget,
-    uptogradlogtarget,
-    uptotensorlogtarget,
-    uptodtensorlogtarget,
+    loglikelihood!,
+    logprior!,
+    logtarget!,
+    gradloglikelihood!,
+    gradlogprior!,
+    gradlogtarget!,
+    tensorloglikelihood!,
+    tensorlogprior!,
+    tensorlogtarget!,
+    dtensorloglikelihood!,
+    dtensorlogprior!,
+    dtensorlogtarget!,
+    uptogradlogtarget!,
+    uptotensorlogtarget!,
+    uptodtensorlogtarget!,
     rand
   )
 end
