@@ -314,7 +314,7 @@ end
 
 ## ContinuousMultivariateParameter
 
-type ContinuousMultivariateParameter <: Parameter{Continuous, Univariate}
+type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
   index::Int
   key::Symbol
   pdf::Union(ContinuousMultivariateDistribution, Nothing)
