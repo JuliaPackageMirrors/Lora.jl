@@ -2,33 +2,34 @@ using Base.Test
 using Distributions
 using Lora
 
-fields = (
-  :pdf,
-  :setpdf,
-  :loglikelihood!,
-  :logprior!,
-  :logtarget!,
-  :gradloglikelihood!,
-  :gradlogprior!,
-  :gradlogtarget!,
-  :tensorloglikelihood!,
-  :tensorlogprior!,
-  :tensorlogtarget!,
-  :dtensorloglikelihood!,
-  :dtensorlogprior!,
-  :dtensorlogtarget!,
-  :uptogradlogtarget!,
-  :uptotensorlogtarget!,
-  :uptodtensorlogtarget!,
-  :rand
-)
+fields = {
+  :pdf=>:pdf,
+  :prior=>:prior,
+  :spdf=>:setpdf,
+  :sprior=>:setprior,
+  :ll=>:loglikelihood!,
+  :lp=>:logprior!,
+  :lt=>:logtarget!,
+  :gll=>:gradloglikelihood!,
+  :glp=>:gradlogprior!,
+  :glt=>:gradlogtarget!,
+  :tll=>:tensorloglikelihood!,
+  :tlp=>:tensorlogprior!,
+  :tlt=>:tensorlogtarget!,
+  :dtll=>:dtensorloglikelihood!,
+  :dtlp=>:dtensorlogprior!,
+  :dtlt=>:dtensorlogtarget!,
+  :uptoglt=>:uptogradlogtarget!,
+  :uptotlt=>:uptotensorlogtarget!,
+  :uptodtlt=>:uptodtensorlogtarget!
+}
 
 println("    Testing ContinuousUnivariateParameter constructors...")
 
 # Univariate parameter initialized by setting only its index and key
 
 p = ContinuousUnivariateParameter(1, :p)
-for field in fields
+for field in values(fields)
   @test getfield(p, field) == nothing
 end
 
@@ -53,11 +54,9 @@ pstate = ContinuousUnivariateParameterState(v)
 
 p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
-s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
-for i in [2, 3, 4, 6, 7, 9:14, 16, 17]
-  @test getfield(p, fields[i]) == nothing
+for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
 end
 
 v = -11.87
@@ -78,11 +77,9 @@ pstate = ContinuousUnivariateParameterState(v)
 
 p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
-s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
-for i in [2, 3, 4, 6, 7, 9:14, 16, 17]
-  @test getfield(p, fields[i]) == nothing
+for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
 end
 
 # Univariate parameter initialized via its setpdf field
@@ -107,11 +104,9 @@ pstate = ContinuousUnivariateParameterState(v)
 
 p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
-s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
-for i in [3, 4, 6, 7, 9:14, 16, 17]
-  @test getfield(p, fields[i]) == nothing
+for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
 end
 
 v = -1.91
@@ -132,11 +127,9 @@ pstate = ContinuousUnivariateParameterState(v)
 
 p.uptogradlogtarget!(pstate, nstates)
 @test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
-s = Float64[p.rand(pstate, nstates) for i = 1:1000]
-@test nstates[:μ].value-1 <= mean(s) <= nstates[:μ].value+1
 
-for i in [3, 4, 6, 7, 9:14, 16, 17]
-  @test getfield(p, fields[i]) == nothing
+for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
 end
 
 # Univariate parameter initialized via its logtarget field
@@ -158,8 +151,16 @@ lt = logpdf(distribution, v)
 p.logtarget!(pstate, nstates)
 @test 0.5*(pstate.logtarget-log(2*pi)) == lt
 
-for i in [1:4, 6:18]
-  @test getfield(p, fields[i]) == nothing
+for field in [
+  :pdf, :prior,
+  :spdf, :sprior,
+  :ll, :lp,
+  :gll, :glp, :glt,
+  :tll, :tlp, :tlt,
+  :dtll, :dtlp, :dtlt,
+  :uptoglt, :uptotlt, :uptodtlt
+]
+  @test getfield(p, fields[field]) == nothing
 end
 
 println("    Testing ContinuousMultivariateParameter constructors...")
