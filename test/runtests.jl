@@ -1,7 +1,8 @@
 tests =
   [
     "states",
-    "parameters",
+    "ContinuousUnivariateParameter",
+    "ContinuousMultivariateParameter",
     "GenericModel"
   ]
 

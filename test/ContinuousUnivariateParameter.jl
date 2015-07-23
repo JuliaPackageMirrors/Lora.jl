@@ -24,16 +24,17 @@ fields = {
   :uptodtlt=>:uptodtensorlogtarget!
 }
 
-println("    Testing ContinuousUnivariateParameter constructors...")
+println("    Testing ContinuousUnivariateParameter constructors:")
 
-# Univariate parameter initialized by setting only its index and key
+println("      Testing univariate parameter initialization by setting only index and key...")
 
 p = ContinuousUnivariateParameter(1, :p)
+
 for field in values(fields)
   @test getfield(p, field) == nothing
 end
 
-# Univariate parameter initialized via its pdf field
+println("      Testing univariate parameter initialization via its pdf field...")
 
 v = 5.18
 pstate = ContinuousUnivariateParameterState(v)
@@ -43,8 +44,9 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 
 p = ContinuousUnivariateParameter(1, :p, pdf=Normal(nstates[:μ].value))
 
-p.pdf == Normal(nstates[:μ].value)
-lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
+distribution = Normal(μ)
+p.pdf == distribution
+lt, glt = logpdf(distribution, v), gradlogpdf(distribution, v)
 p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
 p.gradlogtarget!(pstate, nstates)
@@ -66,8 +68,9 @@ nstates[:μ].value = μ
 
 p.pdf = Normal(nstates[:μ].value)
 
-p.pdf == Normal(nstates[:μ].value)
-lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
+distribution = Normal(μ)
+p.pdf == distribution
+lt, glt = logpdf(distribution, v), gradlogpdf(distribution, v)
 p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
 p.gradlogtarget!(pstate, nstates)
@@ -82,7 +85,36 @@ for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :d
   @test getfield(p, fields[field]) == nothing
 end
 
-# Univariate parameter initialized via its setpdf field
+println("      Testing univariate parameter initialization via its prior field...")
+
+v = 1.25
+pstate = ContinuousUnivariateParameterState(v)
+nstates = Dict{Symbol, VariableState}()
+σ = 10.
+nstates[:σ] = UnivariateGenericVariableState(σ)
+
+p = ContinuousUnivariateParameter(1, :p, prior=Normal(0., nstates[:σ].value))
+
+distribution = Normal(0., σ)
+p.prior == distribution
+p.logprior!(pstate, nstates)
+@test pstate.logprior == logpdf(distribution, v)
+p.gradlogprior!(pstate, nstates)
+@test pstate.gradlogprior == gradlogpdf(distribution, v)
+
+for field in [
+  :pdf, :spdf,
+  :sprior,
+  :ll, :lt,
+  :gll, :glt,
+  :tll, :tlp, :tlt,
+  :dtll, :dtlp, :dtlt,
+  :uptoglt, :uptotlt, :uptodtlt
+]
+  @test getfield(p, fields[field]) == nothing
+end
+
+println("      Testing univariate parameter initialization via its setpdf field...")
 
 v = 3.79
 pstate = ContinuousUnivariateParameterState(v)
@@ -91,10 +123,11 @@ nstates = Dict{Symbol, VariableState}()
 nstates[:μ] = UnivariateGenericVariableState(μ)
 
 p = ContinuousUnivariateParameter(1, :p, setpdf=(pstates, nstates) -> Normal(nstates[:μ].value))
-
 p.setpdf(pstate, nstates)
-p.pdf == Normal(μ)
-lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
+
+distribution = Normal(μ)
+p.pdf == distribution
+lt, glt = logpdf(distribution, v), gradlogpdf(distribution, v)
 p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
 p.gradlogtarget!(pstate, nstates)
@@ -116,8 +149,9 @@ nstates[:μ].value = μ
 
 p.setpdf(pstate, nstates)
 
-p.pdf == Normal(μ)
-lt, glt = logpdf(Normal(μ), v), gradlogpdf(Normal(μ), v)
+distribution = Normal(μ)
+p.pdf == distribution
+lt, glt = logpdf(distribution, v), gradlogpdf(distribution, v)
 p.logtarget!(pstate, nstates)
 @test pstate.logtarget == lt
 p.gradlogtarget!(pstate, nstates)
@@ -132,7 +166,7 @@ for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :d
   @test getfield(p, fields[field]) == nothing
 end
 
-# Univariate parameter initialized via its logtarget field
+println("      Testing univariate parameter initialization via its logtarget field...")
 
 v = -1.28
 pstate = ContinuousUnivariateParameterState(v)
@@ -146,10 +180,8 @@ p = ContinuousUnivariateParameter(
   logtarget=(pstates, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value)
 )
 
-distribution = Normal(μ)
-lt = logpdf(distribution, v)
 p.logtarget!(pstate, nstates)
-@test 0.5*(pstate.logtarget-log(2*pi)) == lt
+@test 0.5*(pstate.logtarget-log(2*pi)) == logpdf(Normal(μ), v)
 
 for field in [
   :pdf, :prior,
@@ -162,8 +194,3 @@ for field in [
 ]
   @test getfield(p, fields[field]) == nothing
 end
-
-println("    Testing ContinuousMultivariateParameter constructors...")
-
-ContinuousMultivariateParameter(1, :p)
-ContinuousMultivariateParameter(1, :p, pdf=MvNormal(ones(2)))

@@ -63,7 +63,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     instance.pdf = pdf
     instance.prior = prior
 
-    fin = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
+    args = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
     fnames = (
       "setpdf",
       "setprior",
@@ -87,9 +87,9 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(fin[i], Function) &&
-        isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousUnivariateParameterState, Dict{Symbol, VariableState}))
+      if isa(args[i], Function) &&
+        isgeneric(args[i]) &&
+        !method_exists(args[i], (ContinuousUnivariateParameterState, Dict{Symbol, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -99,19 +99,19 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       setfield!(
         instance,
         setter,
-        if isa(fin[i], Function)
+        if isa(args[i], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(instance, distribution, fin[i](pstate, nstate))
+          setfield!(instance, distribution, args[i](pstate, nstate))
         else
-          fin[i]
+          args[i]
         end
       )
     end
 
     # Define loglikelihood! (i = 3) and gradloglikelihood! (i = 6)
-    instance.loglikelihood! = fin[3]
-    instance.gradloglikelihood! = fin[6]
+    instance.loglikelihood! = args[3]
+    instance.gradloglikelihood! = args[6]
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
@@ -122,14 +122,14 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       setfield!(
         instance,
         ppfield,
-        if fin[i] == nothing && (
+        if args[i] == nothing && (
           (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), FloatingPoint))) ||
-          isa(fin[2], Function)
+          isa(args[2], Function)
         )
           (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
           setfield!(pstate, spfield, f(instance.prior, pstate.value))
         else
-          fin[i]
+          args[i]
         end
       )
     end
@@ -154,31 +154,31 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       setfield!(
         instance,
         ptfield,
-        if fin[i] == nothing
-          if isa(fin[i-2], Function) && isa(getfield(instance, pfield), Function)
+        if args[i] == nothing
+          if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
             function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
               getfield(instance, plfield)(pstate, nstate)
               getfield(instance, ppfield)(pstate, nstate)
               setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
             end
           elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), FloatingPoint))) ||
-            isa(fin[1], Function)
+            isa(args[1], Function)
             (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             setfield!(pstate, stfield, f(instance.pdf, pstate.value))
           end
         else
-          fin[i]
+          args[i]
         end
       )
     end
 
     # Define tensorloglikelihood! (i = 9) and dtensorloglikelihood! (i = 12)
-    instance.tensorloglikelihood! = fin[9]
-    instance.dtensorloglikelihood! = fin[12]
+    instance.tensorloglikelihood! = args[9]
+    instance.dtensorloglikelihood! = args[12]
 
     # Define tensorlogprior! (i = 10) and dtensorlogprior! (i = 13)
-    instance.tensorlogprior! = fin[10]
-    instance.dtensorlogprior! = fin[13]
+    instance.tensorlogprior! = args[10]
+    instance.dtensorlogprior! = args[13]
 
     # Define tensorlogtarget! (i = 11) and dtensorlogtarget! (i = 14)
     for (i , ptfield, plfield, ppfield, stfield, slfield, spfield) in (
@@ -196,14 +196,14 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       setfield!(
         instance,
         ptfield,
-        if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
+        if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
           function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
             getfield(instance, plfield)(pstate, nstate)
             getfield(instance, ppfield)(pstate, nstate)
             setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
           end
         else
-          fin[i]
+          args[i]
         end
       )
     end
@@ -212,13 +212,13 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     setfield!(
       instance,
       :uptogradlogtarget!,
-      if fin[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
+      if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
         function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
           instance.logtarget!(pstate, nstate)
           instance.gradlogtarget!(pstate, nstate)
         end
       else
-        fin[15]
+        args[15]
       end
     )
 
@@ -226,7 +226,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     setfield!(
       instance,
       :uptotensorlogtarget!,
-      if fin[16] == nothing &&
+      if args[16] == nothing &&
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
@@ -236,7 +236,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
           instance.tensorlogtarget!(pstate, nstate)          
         end
       else
-        fin[16]
+        args[16]
       end
     )
 
@@ -244,7 +244,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     setfield!(
       instance,
       :uptodtensorlogtarget!,
-      if fin[17] == nothing &&
+      if args[17] == nothing &&
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
@@ -256,7 +256,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
           instance.dtensorlogtarget!(pstate, nstate)
         end
       else
-        fin[17]
+        args[17]
       end
     )
 
@@ -366,7 +366,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     instance.pdf = pdf
     instance.prior = prior
 
-    fin = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
+    args = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
     fnames = (
       "setpdf",
       "setprior",
@@ -390,9 +390,9 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(fin[i], Function) &&
-        isgeneric(fin[i]) &&
-        !method_exists(fin[i], (ContinuousMultivariateParameterState, Dict{Symbol, VariableState}))
+      if isa(args[i], Function) &&
+        isgeneric(args[i]) &&
+        !method_exists(args[i], (ContinuousMultivariateParameterState, Dict{Symbol, VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -402,19 +402,19 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       setfield!(
         instance,
         setter,
-        if isa(fin[i], Function)
+        if isa(args[i], Function)
           # pstate and nstate stand for parameter state and neighbors' state respectively
           (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(instance, distribution, fin[i](pstate, nstate))
+          setfield!(instance, distribution, args[i](pstate, nstate))
         else
-          fin[i]
+          args[i]
         end
       )
     end
 
     # Define loglikelihood! (i = 3) and gradloglikelihood! (i = 6)
-    instance.loglikelihood! = fin[3]
-    instance.gradloglikelihood! = fin[6]
+    instance.loglikelihood! = args[3]
+    instance.gradloglikelihood! = args[6]
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
@@ -425,17 +425,17 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       setfield!(
         instance,
         ppfield,
-        if fin[i] == nothing && (
+        if args[i] == nothing && (
           (
             isa(prior, ContinuousMultivariateDistribution) && 
             method_exists(f, (typeof(prior), Vector{FloatingPoint}))
           ) ||
-          isa(fin[2], Function)
+          isa(args[2], Function)
         )
           (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
           setfield!(pstate, spfield, f(instance.prior, pstate.value))
         else
-          fin[i]
+          args[i]
         end
       )
     end
@@ -460,8 +460,8 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       setfield!(
         instance,
         ptfield,
-        if fin[i] == nothing
-          if isa(fin[i-2], Function) && isa(getfield(instance, pfield), Function)
+        if args[i] == nothing
+          if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
             function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
               getfield(instance, plfield)(pstate, nstate)
               getfield(instance, ppfield)(pstate, nstate)
@@ -471,23 +471,23 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
               isa(pdf, ContinuousMultivariateDistribution) &&
               method_exists(f, (typeof(pdf), Vector{FloatingPoint}))
             ) ||
-            isa(fin[1], Function)
+            isa(args[1], Function)
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             setfield!(pstate, stfield, f(instance.pdf, pstate.value))
           end
         else
-          fin[i]
+          args[i]
         end
       )
     end
 
     # Define tensorloglikelihood! (i = 9) and dtensorloglikelihood! (i = 12)
-    instance.tensorloglikelihood! = fin[9]
-    instance.dtensorloglikelihood! = fin[12]
+    instance.tensorloglikelihood! = args[9]
+    instance.dtensorloglikelihood! = args[12]
 
     # Define tensorlogprior! (i = 10) and dtensorlogprior! (i = 13)
-    instance.tensorlogprior! = fin[10]
-    instance.dtensorlogprior! = fin[13]
+    instance.tensorlogprior! = args[10]
+    instance.dtensorlogprior! = args[13]
 
     # Define tensorlogtarget! (i = 11) and dtensorlogtarget! (i = 14)
     for (i , ptfield, plfield, ppfield, stfield, slfield, spfield) in (
@@ -505,14 +505,14 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       setfield!(
         instance,
         ptfield,
-        if fin[i] == nothing && isa(fin[i-2], Function) && isa(fin[i-1], Function)
+        if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
           function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
             getfield(instance, plfield)(pstate, nstate)
             getfield(instance, ppfield)(pstate, nstate)
             setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
           end
         else
-          fin[i]
+          args[i]
         end
       )
     end
@@ -521,13 +521,13 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     setfield!(
       instance,
       :uptogradlogtarget!,
-      if fin[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
+      if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
         function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
           instance.logtarget!(pstate, nstate)
           instance.gradlogtarget!(pstate, nstate)
         end
       else
-        fin[15]
+        args[15]
       end
     )
 
@@ -535,7 +535,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     setfield!(
       instance,
       :uptotensorlogtarget!,
-      if fin[16] == nothing &&
+      if args[16] == nothing &&
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
@@ -545,7 +545,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
           instance.tensorlogtarget!(pstate, nstate)          
         end
       else
-        fin[16]
+        args[16]
       end
     )
 
@@ -553,7 +553,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
     setfield!(
       instance,
       :uptodtensorlogtarget!,
-      if fin[17] == nothing &&
+      if args[17] == nothing &&
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
@@ -565,7 +565,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
           instance.dtensorlogtarget!(pstate, nstate)
         end
       else
-        fin[17]
+        args[17]
       end
     )
 
