@@ -26,7 +26,7 @@ fields = {
 
 println("    Testing ContinuousUnivariateParameter constructors:")
 
-println("      Testing univariate parameter initialization by setting only index and key...")
+println("      Testing univariate parameter initialization by setting only its index and key fields...")
 
 p = ContinuousUnivariateParameter(1, :p)
 
@@ -114,6 +114,32 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
+v = -0.21
+pstate.value = v
+σ = 1.
+nstates[:σ].value = σ
+
+p.prior = Normal(0., nstates[:σ].value)
+
+distribution = Normal(0., σ)
+p.prior == distribution
+p.logprior!(pstate, nstates)
+@test pstate.logprior == logpdf(distribution, v)
+p.gradlogprior!(pstate, nstates)
+@test pstate.gradlogprior == gradlogpdf(distribution, v)
+
+for field in [
+  :pdf, :spdf,
+  :sprior,
+  :ll, :lt,
+  :gll, :glt,
+  :tll, :tlp, :tlt,
+  :dtll, :dtlp, :dtlt,
+  :uptoglt, :uptotlt, :uptodtlt
+]
+  @test getfield(p, fields[field]) == nothing
+end
+
 println("      Testing univariate parameter initialization via its setpdf field...")
 
 v = 3.79
@@ -166,7 +192,47 @@ for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :d
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Testing univariate parameter initialization via its logtarget field...")
+println("      Testing univariate parameter initialization via its setprior field...")
+
+v = 3.55
+pstate = ContinuousUnivariateParameterState(v)
+nstates = Dict{Symbol, VariableState}()
+σ = 2.
+nstates[:σ] = UnivariateGenericVariableState(σ)
+
+p = ContinuousUnivariateParameter(1, :p, setprior=(pstates, nstates) -> Normal(0., nstates[:σ].value))
+p.setprior(pstate, nstates)
+
+distribution = Normal(0., σ)
+p.prior == distribution
+p.logprior!(pstate, nstates)
+@test pstate.logprior == logpdf(distribution, v)
+p.gradlogprior!(pstate, nstates)
+@test pstate.gradlogprior == gradlogpdf(distribution, v)
+
+for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptoglt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
+end
+
+v = -2.67
+pstate.value = v
+σ = 5.
+nstates[:σ].value = σ
+
+p.setprior(pstate, nstates)
+
+distribution = Normal(0., σ)
+p.prior == distribution
+p.logprior!(pstate, nstates)
+@test pstate.logprior == logpdf(distribution, v)
+p.gradlogprior!(pstate, nstates)
+@test pstate.gradlogprior == gradlogpdf(distribution, v)
+
+for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptoglt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
+end
+
+println("      Testing univariate parameter initialization via its logtarget field (unnormalized normal target)...")
 
 v = -1.28
 pstate = ContinuousUnivariateParameterState(v)
@@ -177,7 +243,7 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(pstates, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value)
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value)
 )
 
 p.logtarget!(pstate, nstates)
@@ -191,6 +257,48 @@ for field in [
   :tll, :tlp, :tlt,
   :dtll, :dtlp, :dtlt,
   :uptoglt, :uptotlt, :uptodtlt
+]
+  @test getfield(p, fields[field]) == nothing
+end
+
+println(
+  "      Testing univariate parameter initialization via its logtarget and gradlogtarget fields"*
+  "(unnormalized normal target)..."
+)
+
+v = -4.29
+pstate = ContinuousUnivariateParameterState(v)
+nstates = Dict{Symbol, VariableState}()
+μ = 2.2
+nstates[:μ] = UnivariateGenericVariableState(μ)
+
+p = ContinuousUnivariateParameter(
+  1,
+  :p,
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value),
+  gradlogtarget=(pstate, nstates) -> pstate.gradlogtarget = -2*(pstate.value-nstates[:μ].value)
+)
+
+distribution = Normal(μ)
+lt, glt = logpdf(distribution, v), gradlogpdf(distribution, v)
+p.logtarget!(pstate, nstates)
+@test 0.5*(pstate.logtarget-log(2*pi)) == lt
+p.gradlogtarget!(pstate, nstates)
+@test 0.5*pstate.gradlogtarget == glt
+
+pstate = ContinuousUnivariateParameterState(v)
+
+p.uptogradlogtarget!(pstate, nstates)
+@test (0.5*(pstate.logtarget-log(2*pi)), 0.5*pstate.gradlogtarget) == (lt, glt)
+
+for field in [
+  :pdf, :prior,
+  :spdf, :sprior,
+  :ll, :lp,
+  :gll, :glp,
+  :tll, :tlp, :tlt,
+  :dtll, :dtlp, :dtlt,
+  :uptotlt, :uptodtlt
 ]
   @test getfield(p, fields[field]) == nothing
 end
