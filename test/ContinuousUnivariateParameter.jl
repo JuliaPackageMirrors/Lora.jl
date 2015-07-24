@@ -26,7 +26,7 @@ fields = {
 
 println("    Testing ContinuousUnivariateParameter constructors:")
 
-println("      Testing univariate parameter initialization by setting only its index and key fields...")
+println("      Initialization via index and key fields...")
 
 p = ContinuousUnivariateParameter(1, :p)
 
@@ -34,7 +34,7 @@ for field in values(fields)
   @test getfield(p, field) == nothing
 end
 
-println("      Testing univariate parameter initialization via its pdf field...")
+println("      Initialization via pdf field...")
 
 v = 5.18
 pstate = ContinuousUnivariateParameterState(v)
@@ -85,7 +85,7 @@ for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :d
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Testing univariate parameter initialization via its prior field...")
+println("      Initialization via prior field...")
 
 v = 1.25
 pstate = ContinuousUnivariateParameterState(v)
@@ -140,7 +140,7 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Testing univariate parameter initialization via its setpdf field...")
+println("      Initialization via setpdf field...")
 
 v = 3.79
 pstate = ContinuousUnivariateParameterState(v)
@@ -192,7 +192,7 @@ for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :d
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Testing univariate parameter initialization via its setprior field...")
+println("      Initialization via setprior field...")
 
 v = 3.55
 pstate = ContinuousUnivariateParameterState(v)
@@ -232,7 +232,63 @@ for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp,
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Testing univariate parameter initialization via its logtarget field (unnormalized normal target)...")
+println("      Initialization via loglikelihood and logprior fields (normal-normal conjugacy)...")
+# Log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+
+v = -2.637
+pstate = ContinuousUnivariateParameterState(v)
+nstates = Dict{Symbol, VariableState}()
+μ = -1.88
+nstates[:μ] = UnivariateGenericVariableState(μ)
+σ = 1.
+nstates[:σ] = UnivariateGenericVariableState(σ)
+μ0 = 0.
+nstates[:μ0] = UnivariateGenericVariableState(μ0)
+σ0 = 1.
+nstates[:σ0] = UnivariateGenericVariableState(σ0)
+
+llf(pstate, nstates) =
+  pstate.loglikelihood =
+  -0.5*((pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value)/(nstates[:σ].value^2)+
+  log(2*pi))-
+  log(nstates[:σ].value)
+
+lpf(pstate, nstates) =
+  pstate.logprior =
+  -0.5*((nstates[:μ].value-nstates[:μ0].value)*(nstates[:μ].value-nstates[:μ0].value)/(nstates[:σ0].value^2)+
+  log(2*pi))-
+  log(nstates[:σ0].value)
+
+p = ContinuousUnivariateParameter(1, :p, loglikelihood=llf, logprior=lpf)
+
+ld = Normal(μ, σ)
+pd = Normal(μ0, σ0)
+ll, lp = logpdf(ld, v), logpdf(pd, μ)
+lt = ll+lp
+p.loglikelihood!(pstate, nstates)
+@test pstate.loglikelihood == ll
+p.logprior!(pstate, nstates)
+@test pstate.logprior == lp
+p.logtarget!(pstate, nstates)
+@test pstate.logtarget == lt
+
+pstate = ContinuousUnivariateParameterState(v)
+
+p.logtarget!(pstate, nstates)
+@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+
+for field in [
+  :pdf, :prior,
+  :spdf, :sprior,
+  :gll, :glp, :glt,
+  :tll, :tlp, :tlt,
+  :dtll, :dtlp, :dtlt,
+  :uptoglt, :uptotlt, :uptodtlt
+]
+  @test getfield(p, fields[field]) == nothing
+end
+
+println("      Initialization via logtarget field (unnormalized normal target)...")
 
 v = -1.28
 pstate = ContinuousUnivariateParameterState(v)
@@ -243,7 +299,7 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value)
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value)
 )
 
 p.logtarget!(pstate, nstates)
@@ -261,10 +317,7 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
-println(
-  "      Testing univariate parameter initialization via its logtarget and gradlogtarget fields"*
-  "(unnormalized normal target)..."
-)
+println("      Initialization via logtarget and gradlogtarget fields(unnormalized normal target)...")
 
 v = -4.29
 pstate = ContinuousUnivariateParameterState(v)
@@ -275,7 +328,7 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)⋅(pstate.value-nstates[:μ].value),
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value),
   gradlogtarget=(pstate, nstates) -> pstate.gradlogtarget = -2*(pstate.value-nstates[:μ].value)
 )
 
