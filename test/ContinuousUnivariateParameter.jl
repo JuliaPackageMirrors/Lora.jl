@@ -232,8 +232,8 @@ for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp,
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Initialization via loglikelihood and logprior fields (normal-normal conjugacy)...")
-# Log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+# Normal-normal conjugacy: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+println("      Initialization via loglikelihood! and logprior! fields...")
 
 v = -2.637
 pstate = ContinuousUnivariateParameterState(v)
@@ -249,15 +249,11 @@ nstates[:σ0] = UnivariateGenericVariableState(σ0)
 
 llf(pstate, nstates) =
   pstate.loglikelihood =
-  -0.5*((pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value)/(nstates[:σ].value^2)+
-  log(2*pi))-
-  log(nstates[:σ].value)
+  -0.5*((pstate.value-nstates[:μ].value)^2/(nstates[:σ].value^2)+log(2*pi))-log(nstates[:σ].value)
 
 lpf(pstate, nstates) =
   pstate.logprior =
-  -0.5*((nstates[:μ].value-nstates[:μ0].value)*(nstates[:μ].value-nstates[:μ0].value)/(nstates[:σ0].value^2)+
-  log(2*pi))-
-  log(nstates[:σ0].value)
+  -0.5*((nstates[:μ].value-nstates[:μ0].value)^2/(nstates[:σ0].value^2)+log(2*pi))-log(nstates[:σ0].value)
 
 p = ContinuousUnivariateParameter(1, :p, loglikelihood=llf, logprior=lpf)
 
@@ -269,8 +265,6 @@ p.loglikelihood!(pstate, nstates)
 @test pstate.loglikelihood == ll
 p.logprior!(pstate, nstates)
 @test pstate.logprior == lp
-p.logtarget!(pstate, nstates)
-@test pstate.logtarget == lt
 
 pstate = ContinuousUnivariateParameterState(v)
 
@@ -288,7 +282,8 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Initialization via logtarget field (unnormalized normal target)...")
+# Unnormalized normal target
+println("      Initialization via logtarget! field...")
 
 v = -1.28
 pstate = ContinuousUnivariateParameterState(v)
@@ -299,7 +294,7 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value)
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)^2
 )
 
 p.logtarget!(pstate, nstates)
@@ -317,7 +312,70 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
-println("      Initialization via logtarget and gradlogtarget fields(unnormalized normal target)...")
+# Normal-normal conjugacy: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+println("      Initialization via loglikelihood!, logprior!, gradloglikelihood! and gradlogprior! fields...")
+
+v = 6.69
+pstate = ContinuousUnivariateParameterState(v)
+nstates = Dict{Symbol, VariableState}()
+μ = 5.43
+nstates[:μ] = UnivariateGenericVariableState(μ)
+σ = 1.
+nstates[:σ] = UnivariateGenericVariableState(σ)
+μ0 = 0.
+nstates[:μ0] = UnivariateGenericVariableState(μ0)
+σ0 = 1.
+nstates[:σ0] = UnivariateGenericVariableState(σ0)
+
+llf(pstate, nstates) =
+  pstate.loglikelihood =
+  -0.5*((pstate.value-nstates[:μ].value)^2/(nstates[:σ].value^2)+log(2*pi))-log(nstates[:σ].value)
+
+lpf(pstate, nstates) =
+  pstate.logprior =
+  -0.5*((nstates[:μ].value-nstates[:μ0].value)^2/(nstates[:σ0].value^2)+log(2*pi))-log(nstates[:σ0].value)
+
+gllf(pstate, nstates) = pstate.gradloglikelihood = (pstate.value-nstates[:μ].value)/(nstates[:σ].value^2)
+
+glpf(pstate, nstates) =
+  pstate.gradlogprior = -(nstates[:μ].value-nstates[:μ0].value)/(nstates[:σ0].value^2)
+
+p = ContinuousUnivariateParameter(1, :p, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
+
+ld = Normal(μ, σ)
+pd = Normal(μ0, σ0)
+ll, lp = logpdf(ld, v), logpdf(pd, μ)
+lt = ll+lp
+gll, glp = -gradlogpdf(ld, v), gradlogpdf(pd, μ)
+glt = gll+glp
+p.loglikelihood!(pstate, nstates)
+@test pstate.loglikelihood == ll
+p.logprior!(pstate, nstates)
+@test pstate.logprior == lp
+p.gradloglikelihood!(pstate, nstates)
+@test pstate.gradloglikelihood == gll
+p.gradlogprior!(pstate, nstates)
+@test pstate.gradlogprior == glp
+
+pstate = ContinuousUnivariateParameterState(v)
+
+p.logtarget!(pstate, nstates)
+@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+p.gradlogtarget!(pstate, nstates)
+@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+
+pstate = ContinuousUnivariateParameterState(v)
+
+p.uptogradlogtarget!(pstate, nstates)
+@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+
+for field in [:pdf, :prior, :spdf, :sprior, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
+  @test getfield(p, fields[field]) == nothing
+end
+
+# Unnormalized normal target
+println("      Initialization via logtarget! and gradlogtarget! fields...")
 
 v = -4.29
 pstate = ContinuousUnivariateParameterState(v)
@@ -328,7 +386,7 @@ nstates[:μ] = UnivariateGenericVariableState(μ)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)*(pstate.value-nstates[:μ].value),
+  logtarget=(pstate, nstates) -> pstate.logtarget = -(pstate.value-nstates[:μ].value)^2,
   gradlogtarget=(pstate, nstates) -> pstate.gradlogtarget = -2*(pstate.value-nstates[:μ].value)
 )
 
