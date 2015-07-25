@@ -123,7 +123,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         instance,
         ppfield,
         if args[i] == nothing && (
-          (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), FloatingPoint))) ||
+          (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), eltype(prior)))) ||
           isa(args[2], Function)
         )
           (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
@@ -161,7 +161,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
               getfield(instance, ppfield)(pstate, nstate)
               setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
             end
-          elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), FloatingPoint))) ||
+          elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), eltype(pdf)))) ||
             isa(args[1], Function)
             (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
             setfield!(pstate, stfield, f(instance.pdf, pstate.value))
@@ -428,7 +428,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         if args[i] == nothing && (
           (
             isa(prior, ContinuousMultivariateDistribution) && 
-            method_exists(f, (typeof(prior), Vector{FloatingPoint}))
+            method_exists(f, (typeof(prior), Vector{eltype(prior)}))
           ) ||
           isa(args[2], Function)
         )
@@ -469,7 +469,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
             end
           elseif (
               isa(pdf, ContinuousMultivariateDistribution) &&
-              method_exists(f, (typeof(pdf), Vector{FloatingPoint}))
+              method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))
             ) ||
             isa(args[1], Function)
             (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
