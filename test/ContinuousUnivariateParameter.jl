@@ -232,7 +232,7 @@ for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp,
   @test getfield(p, fields[field]) == nothing
 end
 
-# Normal-normal conjugacy: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+# Normal-normal: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
 println("      Initialization via loglikelihood! and logprior! fields...")
 
 μv = -2.637
@@ -262,14 +262,16 @@ pd = Normal(μ0v, σ0v)
 ll, lp = logpdf(ld, xv), logpdf(pd, μv)
 lt = ll+lp
 μ.loglikelihood!(pstate, nstates)
-@test pstate.loglikelihood == ll
+@test_approx_eq pstate.loglikelihood ll
 μ.logprior!(pstate, nstates)
-@test pstate.logprior == lp
+@test_approx_eq pstate.logprior lp
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.logtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+@test_approx_eq pstate.loglikelihood ll
+@test_approx_eq pstate.logprior lp
+@test_approx_eq pstate.logtarget lt
 
 for field in [
   :pdf, :prior,
@@ -298,7 +300,7 @@ p = ContinuousUnivariateParameter(
 )
 
 p.logtarget!(pstate, nstates)
-@test 0.5*(pstate.logtarget-log(2*pi)) == logpdf(Normal(μv), pv)
+@test_approx_eq 0.5*(pstate.logtarget-log(2*pi)) logpdf(Normal(μv), pv)
 
 for field in [
   :pdf, :prior,
@@ -312,7 +314,7 @@ for field in [
   @test getfield(p, fields[field]) == nothing
 end
 
-# Normal-normal conjugacy: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+# Normal-normal: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
 println("      Initialization via loglikelihood!, gradloglikelihood! and prior fields...")
 
 μv = 5.59
@@ -348,26 +350,34 @@ lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
 μ.loglikelihood!(pstate, nstates)
-@test pstate.loglikelihood == ll
+@test_approx_eq pstate.loglikelihood ll
 μ.logprior!(pstate, nstates)
 @test pstate.logprior == lp
 μ.gradloglikelihood!(pstate, nstates)
-@test pstate.gradloglikelihood == gll
+@test_approx_eq pstate.gradloglikelihood gll
 μ.gradlogprior!(pstate, nstates)
 @test pstate.gradlogprior == glp
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.logtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+@test_approx_eq pstate.loglikelihood ll
+@test pstate.logprior == lp
+@test_approx_eq pstate.logtarget lt
 μ.gradlogtarget!(pstate, nstates)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.gradloglikelihood gll
+@test pstate.gradlogprior == glp
+@test_approx_eq pstate.gradlogtarget glt
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.uptogradlogtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.loglikelihood ll
+@test pstate.logprior == lp
+@test_approx_eq pstate.logtarget lt
+@test_approx_eq pstate.gradloglikelihood gll
+@test pstate.gradlogprior == glp
+@test_approx_eq pstate.gradlogtarget glt
 
 for field in [:pdf, :spdf, :sprior, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
   @test getfield(μ, fields[field]) == nothing
@@ -393,32 +403,40 @@ lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
 μ.loglikelihood!(pstate, nstates)
-@test pstate.loglikelihood == ll
+@test_approx_eq pstate.loglikelihood ll
 μ.logprior!(pstate, nstates)
 @test pstate.logprior == lp
 μ.gradloglikelihood!(pstate, nstates)
-@test pstate.gradloglikelihood == gll
+@test_approx_eq pstate.gradloglikelihood gll
 μ.gradlogprior!(pstate, nstates)
 @test pstate.gradlogprior == glp
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.logtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+@test_approx_eq pstate.loglikelihood ll
+@test pstate.logprior == lp
+@test_approx_eq pstate.logtarget lt
 μ.gradlogtarget!(pstate, nstates)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.gradloglikelihood gll
+@test pstate.gradlogprior == glp
+@test_approx_eq pstate.gradlogtarget glt
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.uptogradlogtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.loglikelihood ll
+@test pstate.logprior == lp
+@test_approx_eq pstate.logtarget lt
+@test_approx_eq pstate.gradloglikelihood gll
+@test pstate.gradlogprior == glp
+@test_approx_eq pstate.gradlogtarget glt
 
 for field in [:pdf, :spdf, :sprior, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
   @test getfield(μ, fields[field]) == nothing
 end
 
-# Normal-normal conjugacy: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
+# Normal-normal: log-likelihood follows N(μ, σ) and log-prior follows Normal(μ0, σ0)
 println("      Initialization via loglikelihood!, logprior!, gradloglikelihood! and gradlogprior! fields...")
 
 μv = 6.69
@@ -454,26 +472,34 @@ lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
 μ.loglikelihood!(pstate, nstates)
-@test pstate.loglikelihood == ll
+@test_approx_eq pstate.loglikelihood ll
 μ.logprior!(pstate, nstates)
-@test pstate.logprior == lp
+@test_approx_eq pstate.logprior lp
 μ.gradloglikelihood!(pstate, nstates)
-@test pstate.gradloglikelihood == gll
+@test_approx_eq pstate.gradloglikelihood gll
 μ.gradlogprior!(pstate, nstates)
-@test pstate.gradlogprior == glp
+@test_approx_eq pstate.gradlogprior glp
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.logtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
+@test_approx_eq pstate.loglikelihood ll
+@test_approx_eq pstate.logprior lp
+@test_approx_eq pstate.logtarget lt
 μ.gradlogtarget!(pstate, nstates)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.gradloglikelihood gll
+@test_approx_eq pstate.gradlogprior glp
+@test_approx_eq pstate.gradlogtarget glt
 
 pstate = ContinuousUnivariateParameterState(μv)
 
 μ.uptogradlogtarget!(pstate, nstates)
-@test (pstate.loglikelihood, pstate.logprior, pstate.logtarget) == (ll, lp, lt)
-@test (pstate.gradloglikelihood, pstate.gradlogprior, pstate.gradlogtarget) == (gll, glp, glt)
+@test_approx_eq pstate.loglikelihood ll
+@test_approx_eq pstate.logprior lp
+@test_approx_eq pstate.logtarget lt
+@test_approx_eq pstate.gradloglikelihood gll
+@test_approx_eq pstate.gradlogprior glp
+@test_approx_eq pstate.gradlogtarget glt
 
 for field in [:pdf, :prior, :spdf, :sprior, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
   @test getfield(μ, fields[field]) == nothing
@@ -498,14 +524,15 @@ p = ContinuousUnivariateParameter(
 distribution = Normal(μv)
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
 p.logtarget!(pstate, nstates)
-@test 0.5*(pstate.logtarget-log(2*pi)) == lt
+@test_approx_eq 0.5*(pstate.logtarget-log(2*pi)) lt
 p.gradlogtarget!(pstate, nstates)
-@test 0.5*pstate.gradlogtarget == glt
+@test_approx_eq 0.5*pstate.gradlogtarget glt
 
 pstate = ContinuousUnivariateParameterState(pv)
 
 p.uptogradlogtarget!(pstate, nstates)
-@test (0.5*(pstate.logtarget-log(2*pi)), 0.5*pstate.gradlogtarget) == (lt, glt)
+@test_approx_eq 0.5*(pstate.logtarget-log(2*pi)) lt
+@test_approx_eq 0.5*pstate.gradlogtarget glt
 
 for field in [
   :pdf, :prior,
