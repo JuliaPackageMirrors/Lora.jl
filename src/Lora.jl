@@ -78,5 +78,6 @@ include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")
 include("models/GenericModel.jl")
+include("models/generators.jl")
 
 end

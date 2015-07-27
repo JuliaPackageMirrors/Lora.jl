@@ -1,4 +1,5 @@
-using Graphs, Lora
+using Graphs
+using Lora
 
 m = GenericModel(Variable[], Dependence[])
 
