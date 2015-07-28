@@ -4,7 +4,9 @@ tests =
     "variables",
     "ContinuousUnivariateParameter",
     "ContinuousMultivariateParameter",
-    "GenericModel"
+    "dependencies",
+    "GenericModel",
+    "generators"
   ]
 
 println("Running tests:")

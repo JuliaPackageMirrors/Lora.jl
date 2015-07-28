@@ -1,23 +1,35 @@
 ### Generators are functions used for generating various specific models as instances of GenericModel
 
-##
+## likelihood_model represents a likelihood L(Vector{Parameter} | Vector{Data}, Vector{Hyperparameter})
 
-function single_parameter_posterior(
-  p::Parameter,
-  data::Vector{Data},
-  hp::Vector{Hyperparameter};
+function likelihood_model(
+  p::Vector{Parameter};
+  data::Vector{Data}=Array(Data, 0),
+  hyperparameters::Vector{Hyperparameter}=Array(Hyperparameter, 0),
   is_directed::Bool=true
 )
   m = GenericModel(is_directed)
 
-  for v in [p, data, hp]
+  for v in [p, data, hyperparameters]
     add_vertex!(m, v)
     m.indexof[v] = v.index
   end
 
-  for v in [data, hp]
-    add_edge!(m, v, p)
+  for t in p
+    for s in [data, hyperparameters]
+      add_edge!(m, s, t)
+    end
   end
 
   return m
 end
+
+## single_parameter_likelihood_model represents a likelihood L(Parameter | Vector{Data}, Vector{Hyperparameter})
+
+single_parameter_likelihood_model(
+  p::Parameter;
+  data::Vector{Data}=Array(Data, 0),
+  hyperparameters::Vector{Hyperparameter}=Array(Hyperparameter, 0),
+  is_directed::Bool=true
+) = 
+  likelihood_model(Parameter[p], data=data, hyperparameters=hyperparameters, is_directed=is_directed)

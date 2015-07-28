@@ -46,6 +46,7 @@ export
   Hyperparameter,
   Data,
   Transformation,
+  Parameter,
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   Dependence,
@@ -71,7 +72,9 @@ export
   in_degree,
   in_neighbors,
   add_vertex!,
-  add_edge!
+  add_edge!,
+  likelihood_model,
+  single_parameter_likelihood_model
 
 include("variables/states.jl")
 include("variables/variables.jl")
