@@ -1,11 +1,10 @@
 type GenericModel <: AbstractGraph{Variable, Dependence}
   is_directed::Bool
-  vertices::Vector{Variable}             # An indexable container of vertices (variables)
-  edges::Vector{Dependence}              # An indexable container of edges (dependencies)
-  finclist::Vector{Vector{Dependence}}   # Forward incidence list
-  binclist::Vector{Vector{Dependence}}   # Backward incidence list
-  indexof::Dict{Variable, Int}           # Dictionary storing index for vertex (variable)
-  # stateof::Dict{Variable, VariableState} # Dictionary storing state for vertex (variable)
+  vertices::Vector{Variable}           # An indexable container of vertices (variables)
+  edges::Vector{Dependence}            # An indexable container of edges (dependencies)
+  finclist::Vector{Vector{Dependence}} # Forward incidence list
+  binclist::Vector{Vector{Dependence}} # Backward incidence list
+  indexof::Dict{Variable, Int}         # Dictionary storing index for vertex (variable)
 end
 
 @graph_implements GenericModel vertex_list edge_list
@@ -40,7 +39,6 @@ function add_vertex!(m::GenericModel, v::Variable)
     push!(m.finclist, Int[])
     push!(m.binclist, Int[])
     m.indexof[v] = length(m.vertices)
-    # m.stateof[v] = v.state
     v
 end
 
@@ -72,14 +70,12 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
     Dependence[],
     Graphs.multivecs(Dependence, n),
     Graphs.multivecs(Dependence, n),
-    Dict{Variable, Int}()# ,
-    # Dict{Variable, VariableState}()
+    Dict{Variable, Int}()
   )
 
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
-    # m.stateof[v] = v.state
   end
   
   for d in ds
@@ -90,6 +86,29 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
 end
 
 GenericModel(is_directed::Bool=true) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
+
+function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::Bool=true)
+  n = length(vs)
+  m = GenericModel(
+    is_directed,
+    Variable[],
+    Dependence[],
+    Graphs.multivecs(Dependence, n),
+    Graphs.multivecs(Dependence, n),
+    Dict{Variable, Int}()
+  )
+
+  for v in vs
+    add_vertex!(m, v)
+    m.indexof[v] = v.index
+  end
+  
+  for i in 1:size(ds, 1)
+    add_edge!(m, ds[i, 1], ds[i, 2])
+  end
+  
+  return m
+end
 
 function convert(::Type{GenericGraph}, m::GenericModel)
   dict = Dict{KeyVertex{Symbol}, Int}()
@@ -106,3 +125,5 @@ function convert(::Type{GenericGraph}, m::GenericModel)
     dict
   )
 end
+
+topological_sort_by_dfs(m::GenericModel) = topological_sort_by_dfs(convert(GenericGraph, m))

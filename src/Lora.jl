@@ -26,7 +26,8 @@ import Graphs:
   in_degree,
   in_neighbors,
   add_vertex!,
-  add_edge!
+  add_edge!,
+  topological_sort_by_dfs
 
 export
   ### Types
@@ -73,6 +74,7 @@ export
   in_neighbors,
   add_vertex!,
   add_edge!,
+  topological_sort_by_dfs,
   likelihood_model,
   single_parameter_likelihood_model
 

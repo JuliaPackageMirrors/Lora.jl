@@ -2,8 +2,8 @@
 
 ## likelihood_model represents a likelihood L(Vector{Parameter} | Vector{Data}, Vector{Hyperparameter})
 
-function likelihood_model(
-  p::Vector{Parameter};
+function likelihood_model{P<:Parameter}(
+  p::Vector{P};
   data::Vector{Data}=Array(Data, 0),
   hyperparameters::Vector{Hyperparameter}=Array(Hyperparameter, 0),
   is_directed::Bool=true

@@ -2,7 +2,7 @@ using Base.Test
 using Graphs
 using Lora
 
-println("    Testing conversions of native variables to key vertices compatible with Graphs...")
+println("    Testing conversion of variables to key vertices compatible with Graphs...")
 
 θ = ContinuousUnivariateParameter(1, :θ)
 
