@@ -4,7 +4,8 @@ type GenericModel <: AbstractGraph{Variable, Dependence}
   edges::Vector{Dependence}            # An indexable container of edges (dependencies)
   finclist::Vector{Vector{Dependence}} # Forward incidence list
   binclist::Vector{Vector{Dependence}} # Backward incidence list
-  indexof::Dict{Variable, Int}         # Dictionary storing index for vertex (variable)
+  indexof::Dict{Variable, Int}         # Dictionary storing index of vertex (variable)
+  ofkey::Dict{Symbol, Variable}        # Dictionary storing vertex (variable) of corresponding key
 end
 
 @graph_implements GenericModel vertex_list edge_list
@@ -39,6 +40,7 @@ function add_vertex!(m::GenericModel, v::Variable)
     push!(m.finclist, Int[])
     push!(m.binclist, Int[])
     m.indexof[v] = length(m.vertices)
+    m.ofkey[v.key] = v
     v
 end
 
@@ -70,12 +72,14 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
     Dependence[],
     Graphs.multivecs(Dependence, n),
     Graphs.multivecs(Dependence, n),
-    Dict{Variable, Int}()
+    Dict{Variable, Int}(),
+    Dict{Symbol, Variable}()
   )
 
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
+    m.ofkey[v.key] = v
   end
   
   for d in ds
@@ -95,12 +99,14 @@ function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::B
     Dependence[],
     Graphs.multivecs(Dependence, n),
     Graphs.multivecs(Dependence, n),
-    Dict{Variable, Int}()
+    Dict{Variable, Int}(),
+    Dict{Symbol, Variable}()
   )
 
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
+    m.ofkey[v.key] = v
   end
   
   for i in 1:size(ds, 1)
@@ -126,4 +132,16 @@ function convert(::Type{GenericGraph}, m::GenericModel)
   )
 end
 
-topological_sort_by_dfs(m::GenericModel) = topological_sort_by_dfs(convert(GenericGraph, m))
+function topological_sort_by_dfs(m::GenericModel)
+  g = convert(GenericGraph, m)
+  ngvs = num_vertices(g)
+  mvs = Array(Variable, ngvs)
+
+  gvs = topological_sort_by_dfs(g)
+
+  for i in 1:ngvs
+    mvs[i] = m.ofkey[gvs[i].key]
+  end
+
+  mvs
+end

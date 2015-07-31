@@ -36,4 +36,5 @@ topological_sort_by_dfs(m)
 
 # println("    Testing plotting of GenericModel...")
 
+# g = convert(GenericGraph, m)
 # plot(g)
