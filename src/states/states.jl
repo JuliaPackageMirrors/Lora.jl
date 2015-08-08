@@ -6,6 +6,10 @@ abstract GenericVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
 abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
+Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
+
 ### Generic variable state subtypes
 
 ## UnivariateGenericVariableState
@@ -13,6 +17,9 @@ abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 type UnivariateGenericVariableState{N<:Number} <: GenericVariableState{Univariate, N}
   value::N
 end
+
+Base.eltype{N<:Number}(::Type{UnivariateGenericVariableState{N}}) = N
+Base.eltype{N<:Number}(s::UnivariateGenericVariableState{N}) = N
 
 ## MultivariateGenericVariableState
 
@@ -24,6 +31,9 @@ end
 MultivariateGenericVariableState{N<:Number}(value::Vector{N}) =
   MultivariateGenericVariableState{N}(value, length(value))
 
+Base.eltype{N<:Number}(::Type{MultivariateGenericVariableState{N}}) = N
+Base.eltype{N<:Number}(s::MultivariateGenericVariableState{N}) = N
+
 ## MatrixvariateGenericVariableState
 
 type MatrixvariateGenericVariableState{N<:Number} <: GenericVariableState{Matrixvariate, N}
@@ -33,6 +43,9 @@ end
 
 MatrixvariateGenericVariableState{N<:Number}(value::Matrix{N}) =
   MatrixvariateGenericVariableState{N}(value, size(value))
+
+Base.eltype{N<:Number}(::Type{MatrixvariateGenericVariableState{N}}) = N
+Base.eltype{N<:Number}(s::MatrixvariateGenericVariableState{N}) = N
 
 ### Parameter state subtypes
 
@@ -62,6 +75,9 @@ end
 
 ContinuousUnivariateParameterState{N<:FloatingPoint}(::Type{N}, diagnostics::Dict=Dict()) =
   ContinuousUnivariateParameterState(convert(N, NaN), diagnostics)
+
+Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterState{N}}) = N
+Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterState{N}) = N
 
 ## ContinuousMultivariateParameterState
 
@@ -154,3 +170,6 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
   diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostics)
+
+Base.eltype{N<:FloatingPoint}(::Type{ContinuousMultivariateParameterState{N}}) = N
+Base.eltype{N<:FloatingPoint}(s::ContinuousMultivariateParameterState{N}) = N

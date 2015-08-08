@@ -5,6 +5,7 @@ using Graphs
 
 import Base:
   convert,
+  eltype,
   show
 
 import Graphs: 
@@ -39,6 +40,9 @@ export
   ParameterState,
   ContinuousUnivariateParameterState,
   ContinuousMultivariateParameterState,
+  VariableNState,
+  GenericVariableNState,
+  UnivariateGenericVariableNState,
   Sampleability,
   Deterministic,
   Random,
@@ -53,9 +57,8 @@ export
   Dependence,
   GenericModel,
   ### Functions
+  save!,
   vertex_index,
-  convert,
-  show,
   edge_index,
   source,
   target,
@@ -78,7 +81,8 @@ export
   likelihood_model,
   single_parameter_likelihood_model
 
-include("variables/states.jl")
+include("states/states.jl")
+include("states/NStates.jl")
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")

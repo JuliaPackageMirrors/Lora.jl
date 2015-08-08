@@ -10,13 +10,14 @@ type Random <: Sampleability end
 
 abstract Variable{S<:Sampleability}
 
+Base.eltype{S<:Sampleability}(::Type{Variable{S}}) = S
+
 vertex_index(v::Variable) = v.index
 
-convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
+Base.convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
+Base.convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
 
-convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
-
-show(io::IO, v::Variable) = print(io, "Variable [$(v.index)]: $(v.key) ($(typeof(v)))")
+Base.show(io::IO, v::Variable) = print(io, "Variable [$(v.index)]: $(v.key) ($(typeof(v)))")
 
 ### Deterministic Variable subtypes
 

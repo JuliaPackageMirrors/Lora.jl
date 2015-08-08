@@ -4,32 +4,40 @@ using Lora
 
 println("    Testing generic variable state constructors...")
 
-s = MultivariateGenericVariableState([1.5, 4.1])
+s = UnivariateGenericVariableState(float64(1.21))
+@test eltype(s) == Float64
+
+s = MultivariateGenericVariableState(Float32[1.5, 4.1])
+@test eltype(s) == Float32
 @test s.size == 2
 
-s = MatrixvariateGenericVariableState([3.11 7.34; 9.7 6.72; 1.18 8.1])
+s = MatrixvariateGenericVariableState(BigFloat[3.11 7.34; 9.7 6.72; 1.18 8.1])
+@test eltype(s) == BigFloat
 @test s.size == (3, 2)
 
 println("    Testing ContinuousUnivariateParameterState constructors...")
 
-s = ContinuousUnivariateParameterState(1.5, {:accept=>true})
+s = ContinuousUnivariateParameterState(float64(1.5), {:accept=>true})
+@test eltype(s) == Float64
 @test s.value == 1.5
 @test isnan(s.logtarget)
 @test s.diagnostics[:accept] == true
 
-s = ContinuousUnivariateParameterState(BigFloat)
-@test isa(s.value, BigFloat)
+s = ContinuousUnivariateParameterState(Float16)
+@test isa(s.value, Float16)
 
 println("    Testing ContinuousMultivariateParameterState constructors...")
 
-s = ContinuousMultivariateParameterState([1., 1.5])
+s = ContinuousMultivariateParameterState(Float64[1., 1.5])
+@test eltype(s) == Float64
 @test s.value == [1., 1.5]
 @test isnan(s.logtarget)
 @test length(s.gradlogtarget) == 0
 
 monitor = Dict{Symbol, Bool}()
 monitor[:gradlogtarget] = true
-s = ContinuousMultivariateParameterState([1., 1.5], monitor, {:accept=>false})
+s = ContinuousMultivariateParameterState(Float32[1., 1.5], monitor, {:accept=>false})
+@test eltype(s) == Float32
 @test s.value == [1., 1.5]
 @test isnan(s.logtarget)
 @test length(s.gradloglikelihood) == 0

@@ -1,6 +1,7 @@
 tests =
   [
     "states",
+    "NStates",
     "variables",
     "ContinuousUnivariateParameter",
     "ContinuousMultivariateParameter",

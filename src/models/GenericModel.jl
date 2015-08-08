@@ -116,7 +116,7 @@ function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::B
   return m
 end
 
-function convert(::Type{GenericGraph}, m::GenericModel)
+function Base.convert(::Type{GenericGraph}, m::GenericModel)
   dict = Dict{KeyVertex{Symbol}, Int}()
   for (k, v) in m.indexof
     dict[convert(KeyVertex, k)] = v
