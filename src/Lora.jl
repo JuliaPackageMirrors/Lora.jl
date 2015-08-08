@@ -57,6 +57,7 @@ export
   Dependence,
   GenericModel,
   ### Functions
+  add_dimension,
   save!,
   vertex_index,
   edge_index,
