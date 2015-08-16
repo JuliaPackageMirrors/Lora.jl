@@ -42,7 +42,7 @@ type MultivariateGenericVariableNState{N<:Number} <: GenericVariableNState{Multi
 end
 
 MultivariateGenericVariableNState{N<:Number}(value::Matrix{N}) =
-  MultivariateGenericVariableNState{N}(value, size(value, 2), size(value, 1))
+  MultivariateGenericVariableNState{N}(value, size(value, 1), size(value, 2))
 
 Base.eltype{N<:Number}(::Type{MultivariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::MultivariateGenericVariableNState{N}) = N
@@ -51,3 +51,6 @@ function Base.convert(::Type{MultivariateGenericVariableNState}, state::Multivar
   s = size(state.value)
   MultivariateGenericVariableNState(add_dimension(state.value, s), s[1], 1)
 end
+
+save!(nstate::MultivariateGenericVariableNState, state::MultivariateGenericVariableState, i::Int) =
+  (nstate.value[1:state.size, i] = state.value)
