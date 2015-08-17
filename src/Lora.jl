@@ -44,6 +44,7 @@ export
   GenericVariableNState,
   UnivariateGenericVariableNState,
   MultivariateGenericVariableNState,
+  MatrixvariateGenericVariableNState,
   Sampleability,
   Deterministic,
   Random,
