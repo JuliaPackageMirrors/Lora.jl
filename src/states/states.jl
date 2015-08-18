@@ -1,3 +1,21 @@
+### Constants associated with states and NStates
+
+const main_state_field_names = (
+  :value,
+  :loglikelihood,
+  :logprior,
+  :logtarget,
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget
+)
+
 ### Abstract variable states
 
 abstract VariableState{F<:VariateForm, N<:Number}
@@ -132,28 +150,16 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   )
 end
 
-function ContinuousMultivariateParameterState{N<:FloatingPoint}(
+ContinuousMultivariateParameterState{N<:FloatingPoint}(
   value::Vector{N},
   monitor::Dict{Symbol, Bool},
   diagnostics::Dict=Dict()  
-)
-  fields = (
-  :gradloglikelihood,
-  :gradlogprior,
-  :gradlogtarget,
-  :tensorloglikelihood,
-  :tensorlogprior,
-  :tensorlogtarget,
-  :dtensorloglikelihood,
-  :dtensorlogprior,
-  :dtensorlogtarget
-)
+) =
   ContinuousMultivariateParameterState(
     value, 
-    Bool[haskey(monitor, fields[i]) ? monitor[fields[i]] : false for i in 1:9],
+    Bool[haskey(monitor, main_state_field_names[i]) ? monitor[main_state_field_names[i]] : false for i in 5:13],
     diagnostics
   )
-end
 
 ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N},

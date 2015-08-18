@@ -34,24 +34,8 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterState{Uni
       l[i] = (monitor[i] == false ? zero(Int) : instance.n)
     end
 
-    fields = (
-      :value,
-      :loglikelihood,
-      :logprior,
-      :logtarget,
-      :gradloglikelihood,
-      :gradlogprior,
-      :gradlogtarget,
-      :tensorloglikelihood,
-      :tensorlogprior,
-      :tensorlogtarget,
-      :dtensorloglikelihood,
-      :dtensorlogprior,
-      :dtensorlogtarget
-    )
-
     for i in 1:13
-      setfield!(instance, fields[i], Array(N, l[i]))
+      setfield!(instance, main_state_field_names[i], Array(N, l[i]))
     end
 
     instance.diagnostics = diagnostics
@@ -65,28 +49,16 @@ function codegen_save_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
 )
-  fields = (
-    :value,
-    :loglikelihood,
-    :logprior,
-    :logtarget,
-    :gradloglikelihood,
-    :gradlogprior,
-    :gradlogtarget,
-    :tensorloglikelihood,
-    :tensorlogprior,
-    :tensorlogtarget,
-    :dtensorloglikelihood,
-    :dtensorlogprior,
-    :dtensorlogtarget
-  )
-
   body = {}
   for j in 1:13
     if monitor[j]
       push!(
         body,
-        Expr(:(=), Expr(:ref, Expr(:., nstate, QuoteNode(fields[j])), :_i), Expr(:., :_state, QuoteNode(fields[j])))
+        Expr(
+          :(=),
+          Expr(:ref, Expr(:., nstate, QuoteNode(main_state_field_names[j])), :_i),
+          Expr(:., :_state, QuoteNode(main_state_field_names[j]))
+        )
       )
     end
   end
