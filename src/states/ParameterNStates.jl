@@ -18,32 +18,37 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterState{Uni
   dtensorlogtarget::Vector{N}
   diagnostics::Dict
   n::Int
+  monitor::Vector{Bool}
   save::Function
 
-  ContinuousUnivariateParameterNState{N}(
-    ::Type{N},
-    n::Int,
-    monitor::Vector{Bool}=[true, fill(false, 12)],
-    diagnostics::Dict=Dict()
-  ) = begin
+  ContinuousUnivariateParameterNState(::Type{N}, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
     instance.n = n
+    instance.monitor = monitor
+    instance.diagnostics = diagnostics
 
     l = Array(Int, 13)
     for i in 1:13
-      l[i] = (monitor[i] == false ? zero(Int) : instance.n)
+      l[i] = (monitor[i] == false ? zero(Int) : n)
     end
 
     for i in 1:13
       setfield!(instance, main_state_field_names[i], Array(N, l[i]))
     end
 
-    instance.diagnostics = diagnostics
     instance.save = eval(codegen_save_continuous_univariate_parameter_nstate(instance, monitor))
 
     instance
   end
 end
+
+ContinuousUnivariateParameterNState{N<:FloatingPoint}(
+  ::Type{N},
+  n::Int,
+  monitor::Vector{Bool}=[true, fill(false, 12)],
+  diagnostics::Dict=Dict()
+) =
+  ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
 
 function codegen_save_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
