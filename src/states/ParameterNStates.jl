@@ -86,14 +86,15 @@ function codegen_save_continuous_univariate_parameter_nstate(
     if monitor[j]
       push!(
         body,
-        Expr(:(=), Expr(:ref, Expr(:., nstate, QuoteNode(fields[j])), :_i),
-        Expr(:., :_state, QuoteNode(fields[j])))
+        Expr(:(=), Expr(:ref, Expr(:., nstate, QuoteNode(fields[j])), :_i), Expr(:., :_state, QuoteNode(fields[j])))
       )
     end
   end
 
+  @gensym save_continuous_univariate_parameter_nstate
+
   quote
-    function (_state::ContinuousUnivariateParameterState, _i::Int)
+    function $save_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
       $(body...)
     end
   end
