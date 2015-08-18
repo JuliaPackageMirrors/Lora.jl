@@ -6,6 +6,8 @@ abstract GenericVariableNState{F<:VariateForm, N<:Number} <: VariableNState{F, N
 
 abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
+typealias MCChain ParameterNState
+
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableNState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableNState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N

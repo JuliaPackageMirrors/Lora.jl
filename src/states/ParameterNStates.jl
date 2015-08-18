@@ -2,7 +2,7 @@
 
 ## ContinuousUnivariateParameterNState
 
-type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterState{Univariate, N}
+type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Univariate, N}
   value::Vector{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -48,6 +48,8 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
 
+typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
+
 function codegen_save_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
@@ -90,8 +92,3 @@ end
 
 Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterNState{N}}) = N
 Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterNState{N}) = N
-
-q = :(for var = range/iterable
-  x = 1
-  y = 2
-end)
