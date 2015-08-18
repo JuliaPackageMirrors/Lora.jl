@@ -1,5 +1,4 @@
 using Base.Test
-using Distributions
 using Lora
 
 println("    Testing generic variable state constructors...")

@@ -104,11 +104,11 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   monitor::Vector{Bool}=fill(false, 9),
   diagnostics::Dict=Dict()
 )
-  size = length(value)
+  s = length(value)
 
   l = Array(Int, 9)
   for i in 1:9
-    l[i] = (monitor[i] == false ? zero(Int) : size)
+    l[i] = (monitor[i] == false ? zero(Int) : s)
   end
 
   v = convert(N, NaN)
@@ -127,7 +127,7 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
     Array(N, l[7], l[7], l[7]),
     Array(N, l[8], l[8], l[8]),
     Array(N, l[9], l[9], l[9]),
-    size,
+    s,
     diagnostics
   )
 end

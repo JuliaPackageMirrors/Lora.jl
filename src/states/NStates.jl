@@ -1,4 +1,4 @@
-### Abstract variable nstates
+### Abstract variable NStates
 
 abstract VariableNState{F<:VariateForm, N<:Number}
 
@@ -13,7 +13,7 @@ Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
 add_dimension(n::Number) = eltype(n)[n]
 add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)
 
-### Generic variable nstate subtypes
+### Generic variable NState subtypes
 
 ## UnivariateGenericVariableNState
 

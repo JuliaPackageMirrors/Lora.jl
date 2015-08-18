@@ -45,6 +45,7 @@ export
   UnivariateGenericVariableNState,
   MultivariateGenericVariableNState,
   MatrixvariateGenericVariableNState,
+  ContinuousUnivariateParameterNState,
   Sampleability,
   Deterministic,
   Random,
@@ -61,6 +62,7 @@ export
   ### Functions
   add_dimension,
   save!,
+  save,
   vertex_index,
   edge_index,
   source,
@@ -86,6 +88,7 @@ export
 
 include("states/states.jl")
 include("states/NStates.jl")
+include("states/ParameterNStates.jl")
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")

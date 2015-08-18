@@ -1,5 +1,4 @@
 using Base.Test
-using Distributions
 using Lora
 
 println("    Testing UnivariateGenericVariableNState constructors and methods...")
