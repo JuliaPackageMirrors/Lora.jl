@@ -13,7 +13,8 @@ const main_state_field_names = (
   :tensorlogtarget,
   :dtensorloglikelihood,
   :dtensorlogprior,
-  :dtensorlogtarget
+  :dtensorlogtarget,
+  :diagnostics
 )
 
 ### Abstract variable states

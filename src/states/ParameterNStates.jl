@@ -18,13 +18,11 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterState{Uni
   dtensorlogtarget::Vector{N}
   diagnostics::Dict
   n::Int
-  monitor::Vector{Bool}
   save::Function
 
   ContinuousUnivariateParameterNState(::Type{N}, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
     instance.n = n
-    instance.monitor = monitor
     instance.diagnostics = diagnostics
 
     l = Array(Int, 13)
@@ -45,7 +43,7 @@ end
 ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
-  monitor::Vector{Bool}=[true, fill(false, 12)],
+  monitor::Vector{Bool}=[true, fill(false, 13)],
   diagnostics::Dict=Dict()
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
@@ -59,10 +57,23 @@ function codegen_save_continuous_univariate_parameter_nstate(
     if monitor[j]
       push!(
         body,
-        Expr(
-          :(=),
-          Expr(:ref, Expr(:., nstate, QuoteNode(main_state_field_names[j])), :_i),
-          Expr(:., :_state, QuoteNode(main_state_field_names[j]))
+        :(
+          $(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])
+        )
+      )
+    end
+
+    if monitor[14]
+      push!(
+        body,
+        :(
+          for (k, v) in $(:_state).diagnostics
+            if !haskey($(nstate).diagnostics, k)
+              $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
+            end
+        
+            $(nstate).diagnostics[k][$(:_i)] = v
+          end
         )
       )
     end
@@ -79,3 +90,8 @@ end
 
 Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterNState{N}}) = N
 Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterNState{N}) = N
+
+q = :(for var = range/iterable
+  x = 1
+  y = 2
+end)

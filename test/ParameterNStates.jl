@@ -1,8 +1,9 @@
 using Base.Test
 using Lora
 
-nstate = ContinuousUnivariateParameterNState(Float64, 4)
-state = ContinuousUnivariateParameterState(3.)
+# nstate = ContinuousUnivariateParameterNState(Float64, 4)
+nstate = ContinuousUnivariateParameterNState(Float64, 4, [true, fill(false, 12), true])
+state = ContinuousUnivariateParameterState(3., {:accept=>true})
 nstate.save(state, 2)
 
 # TODO:
@@ -12,5 +13,5 @@ nstate.save(state, 2)
 # 4) Define one more constructor for ContinuousUnivariateParameterNState using value input argument
 # 5) Complete the tests in the current file for current methods for ContinuousUnivariateParameterNState
 # 6) typealias MCChain
-# done 7) Add monitor field to ParameterNStates 
-# 8) Copy over diagnostics::Dict entries from state to nstate
+# skip for now 7) Add monitor field to ParameterNStates 
+# done using code generation 8) Copy over diagnostics::Dict entries from state to nstate
