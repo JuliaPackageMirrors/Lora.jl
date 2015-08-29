@@ -48,6 +48,19 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
 
+ContinuousUnivariateParameterNState{N<:FloatingPoint}(
+  ::Type{N},
+  n::Int,
+  monitor::Dict{Symbol, Bool},
+  diagnostics::Dict=Dict()  
+) =
+  ContinuousUnivariateParameterNState(
+    N,
+    n, 
+    Bool[haskey(monitor, main_state_field_names[i]) ? monitor[main_state_field_names[i]] : false for i in 1:14],
+    diagnostics
+  )
+
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
 
 function codegen_save_continuous_univariate_parameter_nstate(
