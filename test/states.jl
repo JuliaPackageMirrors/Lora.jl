@@ -14,11 +14,19 @@ s = MultivariateGenericVariableState(v)
 @test s.value == v
 @test s.size == 2
 
+s = MultivariateGenericVariableState(Float16, 3)
+@test eltype(s) == Float16
+@test s.size == 3
+
 v = BigFloat[3.11 7.34; 9.7 6.72; 1.18 8.1]
 s = MatrixvariateGenericVariableState(v)
 @test eltype(s) == BigFloat
 @test s.value == v
 @test s.size == (3, 2)
+
+s = MatrixvariateGenericVariableState(Float16, (3, 5))
+@test eltype(s) == Float16
+@test s.size == (3, 5)
 
 println("    Testing ContinuousUnivariateParameterState constructors...")
 

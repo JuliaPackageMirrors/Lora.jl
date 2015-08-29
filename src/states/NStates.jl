@@ -26,6 +26,9 @@ end
 
 UnivariateGenericVariableNState{N<:Number}(value::Vector{N}) = UnivariateGenericVariableNState{N}(value, length(value))
 
+UnivariateGenericVariableNState{N<:Number}(::Type{N}, n::Int=0) = UnivariateGenericVariableNState{N}(Array(N, n), n)
+
+
 Base.eltype{N<:Number}(::Type{UnivariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::UnivariateGenericVariableNState{N}) = N
 
@@ -41,7 +44,10 @@ type MultivariateGenericVariableNState{N<:Number} <: GenericVariableNState{Multi
 end
 
 MultivariateGenericVariableNState{N<:Number}(value::Matrix{N}) =
-  MultivariateGenericVariableNState{N}(value, size(value, 1), size(value, 2))
+  MultivariateGenericVariableNState{N}(value, size(value)...)
+
+MultivariateGenericVariableNState{N<:Number}(::Type{N}, size::Int=0, n::Int=0) =
+  MultivariateGenericVariableNState{N}(Array(N, size, n), size, n)
 
 Base.eltype{N<:Number}(::Type{MultivariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::MultivariateGenericVariableNState{N}) = N
@@ -59,6 +65,9 @@ end
 
 MatrixvariateGenericVariableNState{N<:Number}(value::Array{N, 3}) =
   MatrixvariateGenericVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
+
+MatrixvariateGenericVariableNState{N<:Number}(::Type{N}, size::Tuple=(0, 0), n::Int=0) =
+  MatrixvariateGenericVariableNState{N}(Array(N, size..., n), size, n)
 
 Base.eltype{N<:Number}(::Type{MatrixvariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::MatrixvariateGenericVariableNState{N}) = N

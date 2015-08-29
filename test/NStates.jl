@@ -21,6 +21,10 @@ s = UnivariateGenericVariableNState(v)
 save!(s, UnivariateGenericVariableState(float32(-2.12)), 4)
 @test s.value == Float32[-2.17, 1.92, -0.15, -2.12]
 
+s = UnivariateGenericVariableNState(BigFloat, 10)
+@test eltype(s) == BigFloat
+@test s.n == 10
+
 println("    Testing MultivariateGenericVariableNState constructors and methods...")
 
 v= Float64[1.35 3.7 4.5; 5.6 8.81 9.2]
@@ -52,6 +56,11 @@ save!(s, MultivariateGenericVariableState(BigFloat[0.0646775, 0.379354, 0.010106
   0.0101067  0.4872     0.185226   0.354095  0.944551;
   0.821756   0.448942   0.300905   0.243899  0.126606
 ]
+
+s = MultivariateGenericVariableNState(Float16, 3, 10)
+@test eltype(s) == Float16
+@test s.size == 3
+@test s.n == 10
 
 println("    Testing MatrixvariateGenericVariableNState constructors and methods...")
 
@@ -117,3 +126,8 @@ statev = Float16[
 save!(s, MatrixvariateGenericVariableState(statev), 2)
 @test s.value[:, :, 1] == nstatev[:, :, 1]
 @test s.value[:, :, 2] == statev
+
+s = MatrixvariateGenericVariableNState(Float16, (3, 5), 12)
+@test eltype(s) == Float16
+@test s.size == (3, 5)
+@test s.n == 12
