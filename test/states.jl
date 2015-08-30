@@ -60,20 +60,6 @@ s = ContinuousMultivariateParameterState(v)
 @test length(s.gradlogtarget) == 0
 @test s.size == length(v)
 
-monitor = Dict{Symbol, Bool}()
-monitor[:gradlogtarget] = true
-v = Float32[-1.2, 11.7]
-ssize = length(v)
-s = ContinuousMultivariateParameterState(v, monitor, {:accept=>false})
-
-@test eltype(s) == Float32
-@test s.value == v
-@test isnan(s.logtarget)
-@test length(s.gradloglikelihood) == 0
-@test length(s.gradlogtarget) == ssize
-@test s.size == ssize
-@test s.diagnostics[:accept] == false
-
 v = Float16[0.24, 5.5, -6.3]
 ssize = length(v)
 s = ContinuousMultivariateParameterState(v, [:gradlogtarget], {:accept=>false})

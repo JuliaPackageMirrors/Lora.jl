@@ -51,19 +51,6 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
 ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
-  monitor::Dict{Symbol, Bool},
-  diagnostics::Dict=Dict()  
-) =
-  ContinuousUnivariateParameterNState(
-    N,
-    n, 
-    Bool[haskey(monitor, main_state_field_names[i]) ? monitor[main_state_field_names[i]] : false for i in 1:14],
-    diagnostics
-  )
-
-ContinuousUnivariateParameterNState{N<:FloatingPoint}(
-  ::Type{N},
-  n::Int,
   monitor::Vector{Symbol},
   diagnostics::Dict=Dict()  
 ) =
@@ -82,21 +69,21 @@ function codegen_save_continuous_univariate_parameter_nstate(
     if monitor[j]
       push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
     end
+  end
 
-    if monitor[14]
-      push!(
-        body,
-        :(
-          for (k, v) in $(:_state).diagnostics
-            if !haskey($(nstate).diagnostics, k)
-              $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
-            end
-        
-            $(nstate).diagnostics[k][$(:_i)] = v
+  if monitor[14]
+    push!(
+      body,
+      :(
+        for (k, v) in $(:_state).diagnostics
+          if !haskey($(nstate).diagnostics, k)
+            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
           end
-        )
+        
+          $(nstate).diagnostics[k][$(:_i)] = v
+        end
       )
-    end
+    )
   end
 
   @gensym save_continuous_univariate_parameter_nstate
@@ -110,3 +97,143 @@ end
 
 Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterNState{N}}) = N
 Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterNState{N}) = N
+
+## ContinuousMultivariateParameterNState
+
+type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Multivariate, N}
+  value::Matrix{N}
+  loglikelihood::Vector{N}
+  logprior::Vector{N}
+  logtarget::Vector{N}
+  gradloglikelihood::Matrix{N}
+  gradlogprior::Matrix{N}
+  gradlogtarget::Matrix{N}
+  tensorloglikelihood::Array{N, 3}
+  tensorlogprior::Array{N, 3}
+  tensorlogtarget::Array{N, 3}
+  dtensorloglikelihood::Array{N, 4}
+  dtensorlogprior::Array{N, 4}
+  dtensorlogtarget::Array{N, 4}
+  diagnostics::Dict
+  size::Int
+  n::Int
+  save::Function
+
+  ContinuousMultivariateParameterNState(::Type{N}, size::Int, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
+    instance = new()
+    instance.size = size
+    instance.n = n
+    instance.diagnostics = diagnostics
+
+    for i in 2:4
+      l = (monitor[i] == false ? zero(Int) : n)
+      setfield!(instance, main_state_field_names[i], Array(N, l))
+    end
+    for i in (1, 5, 6, 7)
+      s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
+      setfield!(instance, main_state_field_names[i], Array(N, s, l))
+    end
+    for i in 8:10
+      s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
+      setfield!(instance, main_state_field_names[i], Array(N, s, s, l))
+    end
+    for i in 11:13
+      s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
+      setfield!(instance, main_state_field_names[i], Array(N, s, s, s, l))
+    end
+
+    instance.save = eval(codegen_save_continuous_multivariate_parameter_nstate(instance, monitor))
+
+    instance
+  end
+end
+
+ContinuousMultivariateParameterNState{N<:FloatingPoint}(
+  ::Type{N},
+  size::Int,
+  n::Int,
+  monitor::Vector{Bool}=[true, fill(false, 13)],
+  diagnostics::Dict=Dict()
+) =
+  ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostics)
+
+ContinuousMultivariateParameterNState{N<:FloatingPoint}(
+  ::Type{N},
+  size::Int,
+  n::Int,
+  monitor::Vector{Symbol},
+  diagnostics::Dict=Dict()  
+) =
+  ContinuousMultivariateParameterNState(
+    N, size, n, Bool[main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
+  )
+
+typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
+
+function codegen_save_continuous_multivariate_parameter_nstate(
+  nstate::ContinuousMultivariateParameterNState,
+  monitor::Vector{Bool}
+)
+  body = {}
+  for j in 2:4
+    if monitor[j]
+      push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
+    end
+  end
+  for j in (1, 5, 6, 7)
+    if monitor[j]
+      push!(
+        body,
+        :($(nstate).(main_state_field_names[$j])[1:$(:_state).size, $(:_i)] = $(:_state).(main_state_field_names[$j]))
+      )
+    end
+  end
+  for j in 8:10
+    if monitor[j]
+      push!(
+        body,
+        :(
+          $(nstate).(main_state_field_names[$j])[1:$(:_state).size, 1:$(:_state).size, $(:_i)] =
+          $(:_state).(main_state_field_names[$j])
+        )
+      )
+    end
+  end
+  for j in 11:13
+    if monitor[j]
+      push!(
+        body,
+        :(
+          $(nstate).(main_state_field_names[$j])[1:$(:_state).size, 1:$(:_state).size, 1:$(:_state).size, $(:_i)] =
+          $(:_state).(main_state_field_names[$j])
+        )
+      )
+    end
+  end
+
+  if monitor[14]
+    push!(
+      body,
+      :(
+        for (k, v) in $(:_state).diagnostics
+          if !haskey($(nstate).diagnostics, k)
+            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
+          end
+        
+          $(nstate).diagnostics[k][$(:_i)] = v
+        end
+      )
+    )
+  end
+
+  @gensym save_continuous_multivariate_parameter_nstate
+
+  quote
+    function $save_continuous_multivariate_parameter_nstate(_state::ContinuousMultivariateParameterState, _i::Int)
+      $(body...)
+    end
+  end
+end
+
+Base.eltype{N<:FloatingPoint}(::Type{ContinuousMultivariateParameterNState{N}}) = N
+Base.eltype{N<:FloatingPoint}(s::ContinuousMultivariateParameterNState{N}) = N
