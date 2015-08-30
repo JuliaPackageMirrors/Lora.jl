@@ -169,6 +169,15 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
   )
 
 ContinuousMultivariateParameterState{N<:FloatingPoint}(
+  value::Vector{N},
+  monitor::Vector{Symbol},
+  diagnostics::Dict=Dict()  
+) =
+  ContinuousMultivariateParameterState(
+    value, Bool[main_state_field_names[i] in monitor ? true : false for i in 5:13], diagnostics
+  )
+
+ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N},
   size::Int=0,
   monitor::Vector{Bool}=fill(false, 9),
@@ -180,6 +189,14 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
   ::Type{N},
   size::Int,
   monitor::Dict{Symbol, Bool},
+  diagnostics::Dict=Dict()
+) =
+  ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostics)
+
+ContinuousMultivariateParameterState{N<:FloatingPoint}(
+  ::Type{N},
+  size::Int,
+  monitor::Vector{Symbol},
   diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostics)
