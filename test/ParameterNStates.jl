@@ -112,3 +112,40 @@ nstate.save(state, savei)
 @test nstate.value[:, savei] == statev
 @test nstate.gradloglikelihood[:, savei] == stategll
 nstate.diagnostics[:accept][savei] == false
+
+nstatesize = 2
+nstaten = 10
+nstate = ContinuousMultivariateMCChain(Float16, nstatesize, nstaten, [:value, :logtarget, :gradlogtarget, :diagnostics])
+
+@test eltype(nstate) == Float16
+@test size(nstate.value) == (nstatesize, nstaten)
+@test length(nstate.logtarget) == nstaten
+@test size(nstate.gradlogtarget) == (nstatesize, nstaten)
+for i in (2, 3, 14)
+  @test length(nstate.(Lora.main_state_field_names[i])) == 0
+end
+for i in (5, 6)
+  @test size(nstate.(Lora.main_state_field_names[i])) == (0, 0)
+end
+for i in 8:10
+  @test size(nstate.(Lora.main_state_field_names[i])) == (0, 0, 0)
+end
+for i in 11:13
+  @test size(nstate.(Lora.main_state_field_names[i])) == (0, 0, 0, 0)
+end
+@test nstate.size == nstatesize
+@test nstate.n == nstaten
+
+statev = Float16[6.91, 0.42]
+statelt = float16(4.67)
+stateglt = Float16[-0.01, 3.2]
+state = ContinuousMultivariateParameterState(statev, [:gradlogtarget], {:accept=>true})
+state.logtarget = statelt
+state.gradlogtarget = stateglt
+savei = 7
+
+nstate.save(state, savei)
+@test nstate.value[:, savei] == statev
+@test nstate.logtarget[savei] == statelt
+@test nstate.gradlogtarget[:, savei] == stateglt
+nstate.diagnostics[:accept][savei] == true
