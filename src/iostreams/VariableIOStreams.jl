@@ -2,7 +2,7 @@
 
 abstract VariableIOStream
 
-### Concrete variable IOStream subtypes
+### Variable IOStream subtypes
 
 ## GenericVariableIOStream
 
@@ -10,8 +10,12 @@ type GenericVariableIOStream <: VariableIOStream
   stream::IOStream
   size::Int
   n::Int
-  save::Function
 end
+
+GenericVariableIOStream(filename::String, size::Int, n::Int) = GenericVariableIOStream(open(filename), size, n)
+
+save!(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
+  write(iostream.stream, join(nstate.value, ","), "\n")
 
 ## ParameterIOStream
 
