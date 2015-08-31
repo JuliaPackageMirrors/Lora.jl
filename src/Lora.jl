@@ -49,6 +49,8 @@ export
   MatrixvariateGenericVariableNState,
   ContinuousUnivariateParameterNState,
   ContinuousUnivariateMCChain,
+  ContinuousMultivariateParameterNState,
+  ContinuousMultivariateMCChain,
   Sampleability,
   Deterministic,
   Random,
