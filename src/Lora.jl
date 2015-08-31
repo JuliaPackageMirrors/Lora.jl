@@ -91,9 +91,11 @@ export
   likelihood_model,
   single_parameter_likelihood_model
 
-include("states/states.jl")
-include("states/NStates.jl")
+include("states/VariableStates.jl")
+include("states/VariableNStates.jl")
 include("states/ParameterNStates.jl")
+include("iostreams/VariableIOStreams.jl")
+# include("iostreams/ParameterIOStreams.jl")
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")
