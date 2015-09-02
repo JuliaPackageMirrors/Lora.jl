@@ -1,10 +1,6 @@
 Lora.jl
 ==============================
 
-[![Build Status](https://travis-ci.org/JuliaStats/Lora.jl.svg?branch=julia03)](https://travis-ci.org/JuliaStats/Lora.jl)
-[![MCMC](http://pkg.julialang.org/badges/Lora_release.svg)](http://pkg.julialang.org/?pkg=Lora&ver=release)
-[![Docs](https://readthedocs.org/projects/lorajl/badge/?version=latest)](http://lorajl.readthedocs.org/en/latest/)
-
 [![Build Status](https://travis-ci.org/JuliaStats/Lora.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/Lora.jl)
 [![Lora](http://pkg.julialang.org/badges/Lora_0.3.svg)](http://pkg.julialang.org/?pkg=Lora&ver=0.3)
 [![Lora](http://pkg.julialang.org/badges/Lora_0.4.svg)](http://pkg.julialang.org/?pkg=Lora&ver=0.4)
