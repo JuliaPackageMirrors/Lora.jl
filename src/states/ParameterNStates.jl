@@ -174,37 +174,51 @@ function codegen_save_continuous_multivariate_parameter_nstate(
   nstate::ContinuousMultivariateParameterNState,
   monitor::Vector{Bool}
 )
+  statelen::Int
   body = {}
+
   for j in 2:4
     if monitor[j]
       push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
     end
   end
+
   for j in (1, 5, 6, 7)
     if monitor[j]
       push!(
         body,
-        :($(nstate).(main_state_field_names[$j])[1:$(:_state).size, $(:_i)] = $(:_state).(main_state_field_names[$j]))
+        :(
+          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
+          $(:_state).(main_state_field_names[$j])
+        )
       )
     end
+  end
+
+  if monitor[8] || monitor[9] || monitor[10]
+    statelen = (nstate.size)^2
   end
   for j in 8:10
     if monitor[j]
       push!(
         body,
         :(
-          $(nstate).(main_state_field_names[$j])[1:$(:_state).size, 1:$(:_state).size, $(:_i)] =
+          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
           $(:_state).(main_state_field_names[$j])
         )
       )
     end
+  end
+
+  if monitor[11] || monitor[12] || monitor[13]
+    statelen = (nstate.size)^3
   end
   for j in 11:13
     if monitor[j]
       push!(
         body,
         :(
-          $(nstate).(main_state_field_names[$j])[1:$(:_state).size, 1:$(:_state).size, 1:$(:_state).size, $(:_i)] =
+          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
           $(:_state).(main_state_field_names[$j])
         )
       )

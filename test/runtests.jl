@@ -1,7 +1,7 @@
 tests =
   [
-    "states",
-    "NStates",
+    "VariableStates",
+    "VariableNStates",
     "ParameterNStates",
     "variables",
     "ContinuousUnivariateParameter",
