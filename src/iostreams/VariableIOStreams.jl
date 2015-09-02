@@ -8,11 +8,11 @@ abstract VariableIOStream
 
 type GenericVariableIOStream <: VariableIOStream
   stream::IOStream
-  size::Int
+  size::Tuple
   n::Int
 end
 
-GenericVariableIOStream(filename::String, size::Int, n::Int) = GenericVariableIOStream(open(filename), size, n)
+GenericVariableIOStream(filename::String, size::Tuple, n::Int) = GenericVariableIOStream(open(filename), size, n)
 
 save!(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
   write(iostream.stream, join(nstate.value, ","), "\n")
@@ -34,7 +34,7 @@ type ParameterIOStream <: VariableIOStream
   dtensorlogprior::Union(IOStream, Nothing)
   dtensorlogtarget::Union(IOStream, Nothing)
   diagnostics::Union(Vector{IOStream}, Nothing)
-  size::Int
+  size::Tuple
   n::Int
   save::Function
 end

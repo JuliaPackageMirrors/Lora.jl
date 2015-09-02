@@ -53,7 +53,7 @@ Base.eltype{N<:Number}(::Type{MultivariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::MultivariateGenericVariableNState{N}) = N
 
 save!(nstate::MultivariateGenericVariableNState, state::MultivariateGenericVariableState, i::Int) =
-  (nstate.value[1:state.size, i] = state.value)
+  (nstate.value[1+(i-1)*state.size:i*state.size] = state.value)
 
 ## MatrixvariateGenericVariableNState
 
@@ -72,5 +72,10 @@ MatrixvariateGenericVariableNState{N<:Number}(::Type{N}, size::Tuple=(0, 0), n::
 Base.eltype{N<:Number}(::Type{MatrixvariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::MatrixvariateGenericVariableNState{N}) = N
 
-save!(nstate::MatrixvariateGenericVariableNState, state::MatrixvariateGenericVariableState, i::Int) =
-  (nstate.value[1:state.size[1], 1:state.size[2], i] = state.value)
+save!(
+  nstate::MatrixvariateGenericVariableNState,
+  state::MatrixvariateGenericVariableState,
+  i::Int,
+  statelen::Int=prod(state.size)
+) =
+  (nstate.value[1+(i-1)*statelen:i*statelen] = state.value)
