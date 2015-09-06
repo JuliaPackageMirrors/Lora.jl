@@ -30,7 +30,7 @@ state = ContinuousUnivariateParameterState(statev, {:accept=>true})
 state.gradlogtarget = stateglt
 savei = 2
 
-nstate.save(state, savei)
+nstate.copy(state, savei)
 @test nstate.value[savei] == statev
 @test nstate.gradlogtarget[savei] == stateglt
 nstate.diagnostics[:accept][savei] == true
@@ -52,7 +52,7 @@ state = ContinuousUnivariateParameterState(statev, {:accept=>true})
 state.logtarget = statelt
 savei = 7
 
-nstate.save(state, savei)
+nstate.copy(state, savei)
 @test nstate.value[savei] == statev
 @test nstate.logtarget[savei] == statelt
 nstate.diagnostics[:accept][savei] == false
@@ -108,7 +108,7 @@ state = ContinuousMultivariateParameterState(statev, [:gradloglikelihood], {:acc
 state.gradloglikelihood = stategll
 savei = 3
 
-nstate.save(state, savei)
+nstate.copy(state, savei)
 @test nstate.value[:, savei] == statev
 @test nstate.gradloglikelihood[:, savei] == stategll
 nstate.diagnostics[:accept][savei] == false
@@ -144,7 +144,7 @@ state.logtarget = statelt
 state.gradlogtarget = stateglt
 savei = 7
 
-nstate.save(state, savei)
+nstate.copy(state, savei)
 @test nstate.value[:, savei] == statev
 @test nstate.logtarget[savei] == statelt
 @test nstate.gradlogtarget[:, savei] == stateglt

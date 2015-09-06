@@ -5,8 +5,10 @@ using Graphs
 
 import Base:
   convert,
+  copy!,
   eltype,
-  show
+  show,
+  write
 
 import Graphs: 
   vertex_index,

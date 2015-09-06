@@ -18,7 +18,7 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Un
   dtensorlogtarget::Vector{N}
   diagnostics::Dict
   n::Int
-  save::Function
+  copy::Function
 
   ContinuousUnivariateParameterNState(::Type{N}, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
@@ -34,7 +34,7 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Un
       setfield!(instance, main_state_field_names[i], Array(N, l[i]))
     end
 
-    instance.save = eval(codegen_save_continuous_univariate_parameter_nstate(instance, monitor))
+    instance.copy = eval(codegen_copy_continuous_univariate_parameter_nstate(instance, monitor))
 
     instance
   end
@@ -60,7 +60,7 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
 
-function codegen_save_continuous_univariate_parameter_nstate(
+function codegen_copy_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
 )
@@ -86,10 +86,10 @@ function codegen_save_continuous_univariate_parameter_nstate(
     )
   end
 
-  @gensym save_continuous_univariate_parameter_nstate
+  @gensym copy_continuous_univariate_parameter_nstate
 
   quote
-    function $save_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
+    function $copy_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
       $(body...)
     end
   end
@@ -117,7 +117,7 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ParameterNState{
   diagnostics::Dict
   size::Int
   n::Int
-  save::Function
+  copy::Function
 
   ContinuousMultivariateParameterNState(::Type{N}, size::Int, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
@@ -142,7 +142,7 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ParameterNState{
       setfield!(instance, main_state_field_names[i], Array(N, s, s, s, l))
     end
 
-    instance.save = eval(codegen_save_continuous_multivariate_parameter_nstate(instance, monitor))
+    instance.copy = eval(codegen_copy_continuous_multivariate_parameter_nstate(instance, monitor))
 
     instance
   end
@@ -170,7 +170,7 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
 
 typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
 
-function codegen_save_continuous_multivariate_parameter_nstate(
+function codegen_copy_continuous_multivariate_parameter_nstate(
   nstate::ContinuousMultivariateParameterNState,
   monitor::Vector{Bool}
 )
@@ -240,10 +240,10 @@ function codegen_save_continuous_multivariate_parameter_nstate(
     )
   end
 
-  @gensym save_continuous_multivariate_parameter_nstate
+  @gensym copy_continuous_multivariate_parameter_nstate
 
   quote
-    function $save_continuous_multivariate_parameter_nstate(_state::ContinuousMultivariateParameterState, _i::Int)
+    function $copy_continuous_multivariate_parameter_nstate(_state::ContinuousMultivariateParameterState, _i::Int)
       $(body...)
     end
   end

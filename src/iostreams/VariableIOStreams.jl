@@ -14,7 +14,7 @@ end
 
 GenericVariableIOStream(filename::String, size::Tuple, n::Int) = GenericVariableIOStream(open(filename), size, n)
 
-save!(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
+Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
   write(iostream.stream, join(nstate.value, ","), "\n")
 
 ## ParameterIOStream
@@ -36,5 +36,5 @@ type ParameterIOStream <: VariableIOStream
   diagnostics::Union(Vector{IOStream}, Nothing)
   size::Tuple
   n::Int
-  save::Function
+  write::Function
 end
