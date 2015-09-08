@@ -14,19 +14,19 @@ end
 @test nstate.n == nstaten
 
 nstaten = 5
-nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true, fill(false, 5), true, fill(false, 6), true])
+nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true; fill(false, 5); true; fill(false, 6); true])
 
 @test eltype(nstate) == Float32
 @test length(nstate.value) == nstaten
 @test length(nstate.gradlogtarget) == nstaten
-for i in [2:6, 8:14]
+for i in [2:6; 8:14]
   @test length(nstate.(Lora.main_state_field_names[i])) == 0
 end
 @test nstate.n == nstaten
 
-statev = float32(3.)
-stateglt = float32(4.21)
-state = ContinuousUnivariateParameterState(statev, {:accept=>true})
+statev = Float32(3.)
+stateglt = Float32(4.21)
+state = ContinuousUnivariateParameterState(statev, Dict{Symbol, Bool}(:accept=>true))
 state.gradlogtarget = stateglt
 savei = 2
 
@@ -41,14 +41,14 @@ nstate = ContinuousUnivariateMCChain(Float64, nstaten, [:value, :logtarget, :dia
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
 @test length(nstate.logtarget) == nstaten
-for i in [2:3, 5:14]
+for i in [2:3; 5:14]
   @test length(nstate.(Lora.main_state_field_names[i])) == 0
 end
 @test nstate.n == nstaten
 
-statev = float64(1.25)
-statelt = float64(-1.12)
-state = ContinuousUnivariateParameterState(statev, {:accept=>true})
+statev = Float64(1.25)
+statelt = Float64(-1.12)
+state = ContinuousUnivariateParameterState(statev, Dict{Symbol, Bool}(:accept=>true))
 state.logtarget = statelt
 savei = 7
 
@@ -82,7 +82,7 @@ end
 
 nstatesize = 2
 nstaten = 5
-nstate = ContinuousMultivariateMCChain(Float32, nstatesize, nstaten, [true, fill(false, 3), true, fill(false, 8), true])
+nstate = ContinuousMultivariateMCChain(Float32, nstatesize, nstaten, [true; fill(false, 3); true; fill(false, 8); true])
 
 @test eltype(nstate) == Float32
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -104,7 +104,7 @@ end
 
 statev = Float32[0.17, 9.44]
 stategll = Float32[-0.01, 4.7]
-state = ContinuousMultivariateParameterState(statev, [:gradloglikelihood], {:accept=>false})
+state = ContinuousMultivariateParameterState(statev, [:gradloglikelihood], Dict{Symbol, Bool}(:accept=>false))
 state.gradloglikelihood = stategll
 savei = 3
 
@@ -137,9 +137,9 @@ end
 @test nstate.n == nstaten
 
 statev = Float16[6.91, 0.42]
-statelt = float16(4.67)
+statelt = Float16(4.67)
 stateglt = Float16[-0.01, 3.2]
-state = ContinuousMultivariateParameterState(statev, [:gradlogtarget], {:accept=>true})
+state = ContinuousMultivariateParameterState(statev, [:gradlogtarget], Dict{Symbol, Bool}(:accept=>true))
 state.logtarget = statelt
 state.gradlogtarget = stateglt
 savei = 7

@@ -12,7 +12,8 @@ type GenericVariableIOStream <: VariableIOStream
   n::Int
 end
 
-GenericVariableIOStream(filename::String, size::Tuple, n::Int) = GenericVariableIOStream(open(filename), size, n)
+GenericVariableIOStream(filename::AbstractString, size::Tuple, n::Int) =
+  GenericVariableIOStream(open(filename), size, n)
 
 Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
   write(iostream.stream, join(state.value, ","), "\n")

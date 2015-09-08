@@ -59,7 +59,7 @@ Base.copy!(nstate::MultivariateGenericVariableNState, state::MultivariateGeneric
 
 type MatrixvariateGenericVariableNState{N<:Number} <: GenericVariableNState{Matrixvariate, N}
   value::Array{N, 3}
-  size::Tuple
+  size::Tuple{Int, Int}
   n::Int
 end
 

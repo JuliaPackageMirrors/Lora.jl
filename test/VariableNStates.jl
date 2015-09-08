@@ -10,11 +10,11 @@ nstate = UnivariateGenericVariableNState(nstatev)
 @test nstate.value == nstatev
 @test nstate.n == length(nstatev)
 
-statev = float64(5.2)
+statev = Float64(5.2)
 savei = 2
 
 copy!(nstate, UnivariateGenericVariableState(statev), savei)
-@test nstate.value == [nstatev[1:savei-1], statev, nstatev[savei+1:end]]
+@test nstate.value == [nstatev[1:savei-1]; statev; nstatev[savei+1:end]]
 
 nstatev = Float32[-2.17, 1.92, -0.15, -0.65]
 nstate = UnivariateGenericVariableNState(nstatev)
@@ -23,11 +23,11 @@ nstate = UnivariateGenericVariableNState(nstatev)
 @test nstate.value == nstatev
 @test nstate.n == length(nstatev)
 
-statev = float32(-2.12)
+statev = Float32(-2.12)
 savei = 4
 
 copy!(nstate, UnivariateGenericVariableState(statev), savei)
-@test nstate.value == [nstatev[1:savei-1], statev, nstatev[savei+1:end]]
+@test nstate.value == [nstatev[1:savei-1]; statev; nstatev[savei+1:end]]
 
 nstaten = 10
 nstate = UnivariateGenericVariableNState(BigFloat, nstaten)
@@ -117,7 +117,7 @@ statev = Float64[
 savei = 3
 
 copy!(nstate, MatrixvariateGenericVariableState(statev), savei)
-for i in [1:savei-1, savei, savei+1:nstaten]
+for i in [1:savei-1; savei; savei+1:nstaten]
   @test nstate.value[:, :, i] == nstatev[:, :, i]
 end
 @test nstate.value[:, :, savei] == statev
@@ -150,7 +150,7 @@ statev = Float16[
 savei = 2
 
 copy!(nstate, MatrixvariateGenericVariableState(statev), savei)
-for i in [1:savei-1, savei, savei+1:nstaten]
+for i in [1:savei-1; savei; savei+1:nstaten]
   @test nstate.value[:, :, i] == nstatev[:, :, i]
 end
 @test nstate.value[:, :, savei] == statev

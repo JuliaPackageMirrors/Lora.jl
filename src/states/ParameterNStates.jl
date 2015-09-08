@@ -43,7 +43,7 @@ end
 ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
-  monitor::Vector{Bool}=[true, fill(false, 13)],
+  monitor::Vector{Bool}=[true; fill(false, 13)],
   diagnostics::Dict=Dict()
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
@@ -64,7 +64,7 @@ function codegen_copy_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
 )
-  body = {}
+  body = []
   for j in 1:13
     if monitor[j]
       push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
@@ -152,7 +152,7 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   size::Int,
   n::Int,
-  monitor::Vector{Bool}=[true, fill(false, 13)],
+  monitor::Vector{Bool}=[true; fill(false, 13)],
   diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostics)
@@ -175,7 +175,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   monitor::Vector{Bool}
 )
   statelen::Int
-  body = {}
+  body = []
 
   for j in 2:4
     if monitor[j]

@@ -2,7 +2,7 @@ using Base.Test
 using Distributions
 using Lora
 
-fields = {
+fields = Dict{Symbol, Symbol}(
   :pdf=>:pdf,
   :prior=>:prior,
   :spdf=>:setpdf,
@@ -22,7 +22,7 @@ fields = {
   :uptoglt=>:uptogradlogtarget!,
   :uptotlt=>:uptotensorlogtarget!,
   :uptodtlt=>:uptodtensorlogtarget!
-}
+)
 
 println("    Testing ContinuousMultivariateParameter constructors:")
 

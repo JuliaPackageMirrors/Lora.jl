@@ -3,7 +3,7 @@ using Lora
 
 println("    Testing generic variable state constructors...")
 
-v = float64(1.21)
+v = Float64(1.21)
 s = UnivariateGenericVariableState(v)
 
 @test eltype(s) == Float64
@@ -37,8 +37,8 @@ s = MatrixvariateGenericVariableState(Float16, ssize)
 
 println("    Testing ContinuousUnivariateParameterState constructors...")
 
-v = float64(1.5)
-s = ContinuousUnivariateParameterState(v, {:accept=>true})
+v = Float64(1.5)
+s = ContinuousUnivariateParameterState(v, Dict{Symbol, Bool}(:accept=>true))
 
 @test eltype(s) == Float64
 @test s.value == v
@@ -62,7 +62,7 @@ s = ContinuousMultivariateParameterState(v)
 
 v = Float16[0.24, 5.5, -6.3]
 ssize = length(v)
-s = ContinuousMultivariateParameterState(v, [:gradlogtarget], {:accept=>false})
+s = ContinuousMultivariateParameterState(v, [:gradlogtarget], Dict{Symbol, Bool}(:accept=>false))
 
 @test eltype(s) == Float16
 @test s.value == v

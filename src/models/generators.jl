@@ -10,13 +10,13 @@ function likelihood_model{P<:Parameter}(
 )
   m = GenericModel(is_directed)
 
-  for v in [p, data, hyperparameters]
+  for v in [p; data; hyperparameters]
     add_vertex!(m, v)
     m.indexof[v] = v.index
   end
 
   for t in p
-    for s in [data, hyperparameters]
+    for s in [data; hyperparameters]
       add_edge!(m, s, t)
     end
   end

@@ -60,7 +60,7 @@ Base.eltype{N<:Number}(s::MultivariateGenericVariableState{N}) = N
 
 type MatrixvariateGenericVariableState{N<:Number} <: GenericVariableState{Matrixvariate, N}
   value::Matrix{N}
-  size::Tuple
+  size::Tuple{Int, Int}
 end
 
 MatrixvariateGenericVariableState{N<:Number}(value::Matrix{N}) =
