@@ -16,10 +16,10 @@ GenericVariableIOStream(filename::AbstractString, size::Tuple, n::Int) =
   GenericVariableIOStream(open(filename), size, n)
 
 Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
-  write(iostream.stream, join(state.value, ","), "\n")
+  write(iostream.stream, join(state.value, ','), "\n")
 
 Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
-  write(iostream.stream, join(nstate.value, ","), "\n")
+  write(iostream.stream, join(nstate.value, ','), "\n")
 
 function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
   nstate::GenericVariableNState
@@ -35,7 +35,8 @@ function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
     statelen = (nstate.size)^3
     line = 1
     while !eof(iostream.stream)
-      nstate.value[1+(line-1)*statelen:line*statelen] = T[parse(T, c) for c in readline(iostream.stream)]
+      nstate.value[1+(line-1)*statelen:line*statelen] =
+        T[parse(T, c) for c in split(rstrip(readline(iostream.stream)), ',')]
       line += 1
     end
   end
