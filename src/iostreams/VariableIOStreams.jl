@@ -21,19 +21,27 @@ Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
 Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
   write(iostream.stream, join(nstate.value, ","), "\n")
 
-# function Base.read{N<:FloatingPoint}(iostream::GenericVariableIOStream, t::N)
-#   nstate::GenericVariableNState
+function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
+  nstate::GenericVariableNState
 
-#   if length(iostream.size) == 1
-#     if iostream.size[1] == 1
-#       nstate = UnivariateGenericVariableNState(N, s)
-#     else
-#     end
-#   else
-#   end
+  if length(iostream.size) == 1
+    if iostream.size[1] == 1
+      nstate = UnivariateGenericVariableNState(vec(readdlm(iostream.stream, ',', T)), iostream.n)
+    else
+      nstate = MultivariateGenericVariableNState(readdlm(iostream.stream, ',', T)', iostream.size[1], iostream.n)
+    end
+  else
+    nstate = MatrixvariateGenericVariableNState(T, iostream.size, iostream.n)
+    statelen = (nstate.size)^3
+    line = 1
+    while !eof(iostream.stream)
+      nstate.value[1+(line-1)*statelen:line*statelen] = T[parse(T, c) for c in readline(iostream.stream)]
+      line += 1
+    end
+  end
 
-#   nstate
-# end
+  nstate
+end
 
 ## ParameterIOStream
 

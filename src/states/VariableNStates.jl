@@ -28,7 +28,6 @@ UnivariateGenericVariableNState{N<:Number}(value::Vector{N}) = UnivariateGeneric
 
 UnivariateGenericVariableNState{N<:Number}(::Type{N}, n::Int=0) = UnivariateGenericVariableNState{N}(Array(N, n), n)
 
-
 Base.eltype{N<:Number}(::Type{UnivariateGenericVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::UnivariateGenericVariableNState{N}) = N
 
