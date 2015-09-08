@@ -14,8 +14,25 @@ end
 
 GenericVariableIOStream(filename::String, size::Tuple, n::Int) = GenericVariableIOStream(open(filename), size, n)
 
+Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
+  write(iostream.stream, join(state.value, ","), "\n")
+
 Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
   write(iostream.stream, join(nstate.value, ","), "\n")
+
+# function Base.read{N<:FloatingPoint}(iostream::GenericVariableIOStream, t::N)
+#   nstate::GenericVariableNState
+
+#   if length(iostream.size) == 1
+#     if iostream.size[1] == 1
+#       nstate = UnivariateGenericVariableNState(N, s)
+#     else
+#     end
+#   else
+#   end
+
+#   nstate
+# end
 
 ## ParameterIOStream
 

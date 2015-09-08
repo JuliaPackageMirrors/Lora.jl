@@ -7,6 +7,7 @@ import Base:
   convert,
   copy!,
   eltype,
+  read,
   show,
   write
 
