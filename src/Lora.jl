@@ -4,6 +4,7 @@ using Distributions
 using Graphs
 
 import Base:
+  close,
   convert,
   copy!,
   eltype,
@@ -54,6 +55,8 @@ export
   ContinuousUnivariateMCChain,
   ContinuousMultivariateParameterNState,
   ContinuousMultivariateMCChain,
+  VariableIOStream,
+  GenericVariableIOStream,
   Sampleability,
   Deterministic,
   Random,

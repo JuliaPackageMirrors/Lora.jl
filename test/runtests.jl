@@ -3,6 +3,7 @@ tests =
     "VariableStates",
     "VariableNStates",
     "ParameterNStates",
+    "VariableIOStreams",
     "variables",
     "ContinuousUnivariateParameter",
     "ContinuousMultivariateParameter",

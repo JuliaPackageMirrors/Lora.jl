@@ -15,6 +15,8 @@ end
 GenericVariableIOStream(filename::AbstractString, size::Tuple, n::Int) =
   GenericVariableIOStream(open(filename), size, n)
 
+Base.close(iostream::GenericVariableIOStream) = close(iostream.stream)
+
 Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
   write(iostream.stream, join(state.value, ','), "\n")
 
@@ -23,14 +25,17 @@ Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
 
 function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
   nstate::GenericVariableNState
+  l = length(iostream.size)
 
-  if length(iostream.size) == 1
+  if l == 1
     if iostream.size[1] == 1
       nstate = UnivariateGenericVariableNState(vec(readdlm(iostream.stream, ',', T)), iostream.n)
-    else
+    elseif iostream.size[1] > 1
       nstate = MultivariateGenericVariableNState(readdlm(iostream.stream, ',', T)', iostream.size[1], iostream.n)
+    else
+      error("GenericVariableIOStream size must be > 0, got $(iostream.size[1])")
     end
-  else
+  elseif l > 1
     nstate = MatrixvariateGenericVariableNState(T, iostream.size, iostream.n)
     statelen = (nstate.size)^3
     line = 1
@@ -39,6 +44,8 @@ function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
         T[parse(T, c) for c in split(rstrip(readline(iostream.stream)), ',')]
       line += 1
     end
+  else
+    error("GenericVariableIOStream.size must be a tuple of length > 0, got $(iostream.size) length")
   end
 
   nstate
