@@ -12,18 +12,21 @@ type GenericVariableIOStream <: VariableIOStream
   n::Int
 end
 
-GenericVariableIOStream(filename::AbstractString, size::Tuple, n::Int) =
-  GenericVariableIOStream(open(filename), size, n)
+GenericVariableIOStream(filename::AbstractString, mode::AbstractString, size::Tuple, n::Int) =
+  GenericVariableIOStream(open(filename, mode), size, n)
 
 Base.close(iostream::GenericVariableIOStream) = close(iostream.stream)
 
 Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
   write(iostream.stream, join(state.value, ','), "\n")
 
-Base.write(iostream::GenericVariableIOStream, nstate::GenericVariableNState) =
-  write(iostream.stream, join(nstate.value, ','), "\n")
+Base.write(iostream::GenericVariableIOStream, nstate::UnivariateGenericVariableNState) =
+  writedlm(iostream.stream, nstate.value)
 
-function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::N)
+Base.write(iostream::GenericVariableIOStream, nstate::MultivariateGenericVariableNState) =
+  writedlm(iostream.stream, nstate.value', ',')
+
+function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::Type{N})
   nstate::GenericVariableNState
   l = length(iostream.size)
 
