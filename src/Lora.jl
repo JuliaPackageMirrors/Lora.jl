@@ -9,6 +9,7 @@ import Base:
   copy!,
   eltype,
   read,
+  read!,
   show,
   write
 
