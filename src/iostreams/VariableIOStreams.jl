@@ -44,7 +44,7 @@ function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::Multiv
   line = 1
   while !eof(iostream.stream)
     nstate.value[1+(line-1)*statelen:line*statelen] =
-      T[parse(T, c) for c in split(chomp(readline(iostream.stream)), ',')]
+      N[parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
     line += 1
   end
 end
