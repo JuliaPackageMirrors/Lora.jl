@@ -39,7 +39,7 @@ Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::UnivariateGener
 Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::MultivariateGenericVariableNState{N}) =
   nstate.value = readdlm(iostream.stream, ',', N)'
 
-function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::MultivariateGenericVariableNState{N})
+function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::MatrixvariateGenericVariableNState{N})
   statelen = prod(iostream.size)
   line = 1
   while !eof(iostream.stream)
