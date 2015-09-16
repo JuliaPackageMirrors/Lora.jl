@@ -85,10 +85,10 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Univ
   gradlogprior::N
   gradlogtarget::N
   tensorloglikelihood::N
-  tensorlogprior::N  
+  tensorlogprior::N
   tensorlogtarget::N
   dtensorloglikelihood::N
-  dtensorlogprior::N    
+  dtensorlogprior::N
   dtensorlogtarget::N
   diagnostics::Dict
 end
@@ -160,10 +160,10 @@ end
 ContinuousMultivariateParameterState{N<:FloatingPoint}(
   value::Vector{N},
   monitor::Vector{Symbol},
-  diagnostics::Dict=Dict()  
+  diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterState(
-    value, Bool[main_state_field_names[i] in monitor ? true : false for i in 5:13], diagnostics
+    value, [main_state_field_names[i] in monitor ? true : false for i in 5:13], diagnostics
   )
 
 ContinuousMultivariateParameterState{N<:FloatingPoint}(

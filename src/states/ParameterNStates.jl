@@ -22,8 +22,6 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Un
 
   ContinuousUnivariateParameterNState(::Type{N}, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
-    instance.n = n
-    instance.diagnostics = diagnostics
 
     l = Array(Int, 13)
     for i in 1:13
@@ -33,6 +31,9 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ParameterNState{Un
     for i in 1:13
       setfield!(instance, main_state_field_names[i], Array(N, l[i]))
     end
+
+    instance.diagnostics = diagnostics
+    instance.n = n
 
     instance.copy = eval(codegen_copy_continuous_univariate_parameter_nstate(instance, monitor))
 
@@ -52,10 +53,10 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
   monitor::Vector{Symbol},
-  diagnostics::Dict=Dict()  
+  diagnostics::Dict=Dict()
 ) =
   ContinuousUnivariateParameterNState(
-    N, n, Bool[main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
+    N, n, [main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
   )
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
@@ -77,9 +78,9 @@ function codegen_copy_continuous_univariate_parameter_nstate(
       :(
         for (k, v) in $(:_state).diagnostics
           if !haskey($(nstate).diagnostics, k)
-            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
+            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)
           end
-        
+
           $(nstate).diagnostics[k][$(:_i)] = v
         end
       )
@@ -121,9 +122,6 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ParameterNState{
 
   ContinuousMultivariateParameterNState(::Type{N}, size::Int, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
     instance = new()
-    instance.size = size
-    instance.n = n
-    instance.diagnostics = diagnostics
 
     for i in 2:4
       l = (monitor[i] == false ? zero(Int) : n)
@@ -141,6 +139,10 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ParameterNState{
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
       setfield!(instance, main_state_field_names[i], Array(N, s, s, s, l))
     end
+
+    instance.diagnostics = diagnostics
+    instance.size = size
+    instance.n = n
 
     instance.copy = eval(codegen_copy_continuous_multivariate_parameter_nstate(instance, monitor))
 
@@ -162,7 +164,7 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
   size::Int,
   n::Int,
   monitor::Vector{Symbol},
-  diagnostics::Dict=Dict()  
+  diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterNState(
     N, size, n, Bool[main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
@@ -231,9 +233,9 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       :(
         for (k, v) in $(:_state).diagnostics
           if !haskey($(nstate).diagnostics, k)
-            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)          
+            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)
           end
-        
+
           $(nstate).diagnostics[k][$(:_i)] = v
         end
       )

@@ -44,7 +44,7 @@ function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::Matrix
   line = 1
   while !eof(iostream.stream)
     nstate.value[1+(line-1)*statelen:line*statelen] =
-      N[parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
+      [parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
     line += 1
   end
 end
@@ -87,8 +87,30 @@ type ParameterIOStream <: VariableIOStream
   dtensorloglikelihood::Union(IOStream, Nothing)
   dtensorlogprior::Union(IOStream, Nothing)
   dtensorlogtarget::Union(IOStream, Nothing)
-  diagnostics::Union(Vector{IOStream}, Nothing)
+  diagnostics::Union(IOStream, Nothing)
   size::Tuple
   n::Int
   write::Function
+
+  ParameterIOStream(streams::Vector{Union(IOStream, Nothing)}, size::Tuple, n::Int) = begin
+    instance = new()
+
+    for i in 1:14
+      setfield!(instance, main_state_field_names[i], streams[i])
+    end
+
+    instance.size = size
+    instance.n = n
+
+    instance.write = eval(codegen_write_parameter_iostream(instance, monitor))
+
+    instance
+  end
 end
+
+ParameterIOStream(size::Tuple, n::Int, monitor::Vector{Bool}, filepath::AbstractString, filesuffix::AbstractString) =
+  ParameterIOStream(
+    [monitor[i] == false ? nothing : joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix)],
+    size,
+    n
+  )
