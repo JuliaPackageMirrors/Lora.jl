@@ -13,7 +13,7 @@ import Base:
   show,
   write
 
-import Graphs: 
+import Graphs:
   vertex_index,
   edge_index,
   source,
@@ -57,7 +57,9 @@ export
   ContinuousMultivariateParameterNState,
   ContinuousMultivariateMCChain,
   VariableIOStream,
+  ParameterIOStream,
   GenericVariableIOStream,
+  GenericParameterIOStream,
   Sampleability,
   Deterministic,
   Random,
@@ -99,10 +101,11 @@ export
   single_parameter_likelihood_model
 
 include("states/VariableStates.jl")
+include("states/ParameterStates.jl")
 include("states/VariableNStates.jl")
 include("states/ParameterNStates.jl")
 include("iostreams/VariableIOStreams.jl")
-# include("iostreams/ParameterIOStreams.jl")
+include("iostreams/ParameterIOStreams.jl")
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")

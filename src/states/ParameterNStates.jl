@@ -167,7 +167,7 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
   diagnostics::Dict=Dict()
 ) =
   ContinuousMultivariateParameterNState(
-    N, size, n, Bool[main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
+    N, size, n, [main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
   )
 
 typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState

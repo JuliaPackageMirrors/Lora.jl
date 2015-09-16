@@ -1,10 +1,10 @@
-### VariableIOStreams
+### Abstract variable IOStream
 
 abstract VariableIOStream
 
-### Variable IOStream subtypes
+abstract ParameterIOStream <: VariableIOStream
 
-## GenericVariableIOStream
+### GenericVariableIOStream
 
 type GenericVariableIOStream <: VariableIOStream
   stream::IOStream
@@ -70,47 +70,3 @@ function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::Type{N})
   read!(iostream, nstate)
   nstate
 end
-
-## ParameterIOStream
-
-type ParameterIOStream <: VariableIOStream
-  value::Union(IOStream, Nothing)
-  loglikelihood::Union(IOStream, Nothing)
-  logprior::Union(IOStream, Nothing)
-  logtarget::Union(IOStream, Nothing)
-  gradloglikelihood::Union(IOStream, Nothing)
-  gradlogprior::Union(IOStream, Nothing)
-  gradlogtarget::Union(IOStream, Nothing)
-  tensorloglikelihood::Union(IOStream, Nothing)
-  tensorlogprior::Union(IOStream, Nothing)
-  tensorlogtarget::Union(IOStream, Nothing)
-  dtensorloglikelihood::Union(IOStream, Nothing)
-  dtensorlogprior::Union(IOStream, Nothing)
-  dtensorlogtarget::Union(IOStream, Nothing)
-  diagnostics::Union(IOStream, Nothing)
-  size::Tuple
-  n::Int
-  write::Function
-
-  ParameterIOStream(streams::Vector{Union(IOStream, Nothing)}, size::Tuple, n::Int) = begin
-    instance = new()
-
-    for i in 1:14
-      setfield!(instance, main_state_field_names[i], streams[i])
-    end
-
-    instance.size = size
-    instance.n = n
-
-    instance.write = eval(codegen_write_parameter_iostream(instance, monitor))
-
-    instance
-  end
-end
-
-ParameterIOStream(size::Tuple, n::Int, monitor::Vector{Bool}, filepath::AbstractString, filesuffix::AbstractString) =
-  ParameterIOStream(
-    [monitor[i] == false ? nothing : joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix)],
-    size,
-    n
-  )

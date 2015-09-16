@@ -1,9 +1,11 @@
 tests =
   [
     "VariableStates",
+    "ParameterStates",
     "VariableNStates",
     "ParameterNStates",
     "VariableIOStreams",
+    "ParameterIOStreams",
     "variables",
     "ContinuousUnivariateParameter",
     "ContinuousMultivariateParameter",
