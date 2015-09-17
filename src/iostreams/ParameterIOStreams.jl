@@ -72,12 +72,23 @@ ContinuousParameterIOStream(
 function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
   body = []
 
-  ### Complete definition
+  for i in 1:13
+    if getfield(iostream, main_state_field_names[i]) != nothing
+      push!(
+        body,
+        :(write($(iostream).(main_state_field_names[$i]), join($(:_state).(main_state_field_names[$i]), ','), "\n"))
+      )
+    end
+  end
+
+  if iostream.diagnostics != nothing
+    push!(body, :(write($(iostream).diagnostics, join(values($(:_state).diagnostics), ','), "\n")))
+  end
 
   @gensym write_continuous_parameter_iostream
 
   quote
-    function $write_continuous_parameter_iostream(_state::ParameterState, _i::Int)
+    function $write_continuous_parameter_iostream(_state::ContinuousParameterState)
       $(body...)
     end
   end
