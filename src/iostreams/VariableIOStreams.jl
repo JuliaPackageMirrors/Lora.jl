@@ -1,4 +1,4 @@
-### Abstract variable IOStream
+### Abstract variable IOStreams
 
 abstract VariableIOStream
 

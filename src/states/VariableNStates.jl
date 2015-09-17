@@ -6,11 +6,16 @@ abstract GenericVariableNState{F<:VariateForm, N<:Number} <: VariableNState{F, N
 
 abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
+abstract ContinuousParameterNState{F<:VariateForm, N<:FloatingPoint} <: ParameterNState{F, N}
+
 typealias MCChain ParameterNState
+
+typealias ContinuousMCChain ContinuousParameterNState
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableNState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableNState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:FloatingPoint}(::Type{ContinuousParameterNState{F, N}}) = N
 
 add_dimension(n::Number) = eltype(n)[n]
 add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)

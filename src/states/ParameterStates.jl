@@ -2,7 +2,7 @@
 
 ## ContinuousUnivariateParameterState
 
-type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ParameterState{Univariate, N}
+type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ContinuousParameterState{Univariate, N}
   value::N
   loglikelihood::N
   logprior::N
@@ -32,7 +32,7 @@ Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterState{N}) = N
 
 ## ContinuousMultivariateParameterState
 
-type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ParameterState{Multivariate, N}
+type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ContinuousParameterState{Multivariate, N}
   value::Vector{N}
   loglikelihood::N
   logprior::N

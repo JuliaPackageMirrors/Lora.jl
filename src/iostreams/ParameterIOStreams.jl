@@ -1,6 +1,6 @@
-## GenericParameterIOStream
+### ContinuousParameterIOStream
 
-type GenericParameterIOStream <: ParameterIOStream
+type ContinuousParameterIOStream <: ParameterIOStream
   value::Union(IOStream, Nothing)
   loglikelihood::Union(IOStream, Nothing)
   logprior::Union(IOStream, Nothing)
@@ -19,7 +19,7 @@ type GenericParameterIOStream <: ParameterIOStream
   n::Int
   write::Function
 
-  GenericParameterIOStream(streams::Vector{Union(IOStream, Nothing)}, size::Tuple, n::Int) = begin
+  ContinuousParameterIOStream(streams::Vector{Union(IOStream, Nothing)}, size::Tuple, n::Int) = begin
     instance = new()
 
     for i in 1:14
@@ -29,20 +29,20 @@ type GenericParameterIOStream <: ParameterIOStream
     instance.size = size
     instance.n = n
 
-    instance.write = eval(codegen_write_parameter_iostream(instance, monitor))
+    instance.write = eval(codegen_write_continuous_parameter_iostream(instance))
 
     instance
   end
 end
 
-GenericParameterIOStream(
+ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
   monitor::Vector{Bool},
   filepath::AbstractString,
   filesuffix::AbstractString
 ) =
-  GenericParameterIOStream(
+  ContinuousParameterIOStream(
     [
       monitor[i] == false ? nothing : open(joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix))
       for i in 1:14
@@ -51,14 +51,14 @@ GenericParameterIOStream(
     n
   )
 
-GenericParameterIOStream(
+ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol},
   filepath::AbstractString,
   filesuffix::AbstractString
 ) =
-  GenericParameterIOStream(
+  ContinuousParameterIOStream(
     [
       main_state_field_names[i] in monitor ?
         open(joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix)) :
@@ -68,3 +68,17 @@ GenericParameterIOStream(
     size,
     n
   )
+
+function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
+  body = []
+
+  ### Complete definition
+
+  @gensym write_continuous_parameter_iostream
+
+  quote
+    function $write_continuous_parameter_iostream(_state::ParameterState, _i::Int)
+      $(body...)
+    end
+  end
+end
