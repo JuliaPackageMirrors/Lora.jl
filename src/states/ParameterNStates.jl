@@ -1,3 +1,16 @@
+### Abstract parameter NStates
+
+abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
+
+abstract ContinuousParameterNState{F<:VariateForm, N<:FloatingPoint} <: ParameterNState{F, N}
+
+typealias MCChain ParameterNState
+
+typealias ContinuousMCChain ContinuousParameterNState
+
+Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:FloatingPoint}(::Type{ContinuousParameterNState{F, N}}) = N
+
 ### Parameter NState subtypes
 
 ## ContinuousUnivariateParameterNState
@@ -16,11 +29,18 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ContinuousParamete
   dtensorloglikelihood::Vector{N}
   dtensorlogprior::Vector{N}
   dtensorlogtarget::Vector{N}
-  diagnostics::Dict
+  diagnostickeys::Vector{Symbol}
+  diagnosticvalues::Matrix
   n::Int
   copy::Function
 
-  ContinuousUnivariateParameterNState(::Type{N}, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
+  ContinuousUnivariateParameterNState(
+    ::Type{N},
+    n::Int,
+    monitor::Vector{Bool},
+    diagnostickeys::Vector{Symbol}=Symbol[],
+    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  ) = begin
     instance = new()
 
     l = Array(Int, 13)
@@ -29,10 +49,11 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ContinuousParamete
     end
 
     for i in 1:13
-      setfield!(instance, main_state_field_names[i], Array(N, l[i]))
+      setfield!(instance, main_cpstate_fields[i], Array(N, l[i]))
     end
 
-    instance.diagnostics = diagnostics
+    instance.diagnostickeys = diagnostickeys
+    instance.diagnosticvalues = diagnosticvalues
     instance.n = n
 
     instance.copy = eval(codegen_copy_continuous_univariate_parameter_nstate(instance, monitor))
@@ -44,19 +65,21 @@ end
 ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
-  monitor::Vector{Bool}=[true; fill(false, 13)],
-  diagnostics::Dict=Dict()
+  monitor::Vector{Bool}=[true; fill(false, 12)],
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
 ) =
-  ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostics)
+  ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostickeys, diagnosticvalues)
 
 ContinuousUnivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   n::Int,
   monitor::Vector{Symbol},
-  diagnostics::Dict=Dict()
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
 ) =
   ContinuousUnivariateParameterNState(
-    N, n, [main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
+    N, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
   )
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
@@ -68,23 +91,12 @@ function codegen_copy_continuous_univariate_parameter_nstate(
   body = []
   for j in 1:13
     if monitor[j]
-      push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
+      push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
     end
   end
 
-  if monitor[14]
-    push!(
-      body,
-      :(
-        for (k, v) in $(:_state).diagnostics
-          if !haskey($(nstate).diagnostics, k)
-            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)
-          end
-
-          $(nstate).diagnostics[k][$(:_i)] = v
-        end
-      )
-    )
+  if length(nstate.diagnostickeys) != 0
+    push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
   @gensym copy_continuous_univariate_parameter_nstate
@@ -115,32 +127,41 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ContinuousParame
   dtensorloglikelihood::Array{N, 4}
   dtensorlogprior::Array{N, 4}
   dtensorlogtarget::Array{N, 4}
-  diagnostics::Dict
+  diagnostickeys::Vector{Symbol}
+  diagnosticvalues::Matrix
   size::Int
   n::Int
   copy::Function
 
-  ContinuousMultivariateParameterNState(::Type{N}, size::Int, n::Int, monitor::Vector{Bool}, diagnostics::Dict) = begin
+  ContinuousMultivariateParameterNState(
+    ::Type{N},
+    size::Int,
+    n::Int,
+    monitor::Vector{Bool},
+    diagnostickeys::Vector{Symbol}=Symbol[],
+    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  ) = begin
     instance = new()
 
     for i in 2:4
       l = (monitor[i] == false ? zero(Int) : n)
-      setfield!(instance, main_state_field_names[i], Array(N, l))
+      setfield!(instance, main_cpstate_fields[i], Array(N, l))
     end
     for i in (1, 5, 6, 7)
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_state_field_names[i], Array(N, s, l))
+      setfield!(instance, main_cpstate_fields[i], Array(N, s, l))
     end
     for i in 8:10
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_state_field_names[i], Array(N, s, s, l))
+      setfield!(instance, main_cpstate_fields[i], Array(N, s, s, l))
     end
     for i in 11:13
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_state_field_names[i], Array(N, s, s, s, l))
+      setfield!(instance, main_cpstate_fields[i], Array(N, s, s, s, l))
     end
 
-    instance.diagnostics = diagnostics
+    instance.diagnostickeys = diagnostickeys
+    instance.diagnosticvalues = diagnosticvalues
     instance.size = size
     instance.n = n
 
@@ -154,20 +175,22 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   size::Int,
   n::Int,
-  monitor::Vector{Bool}=[true; fill(false, 13)],
-  diagnostics::Dict=Dict()
+  monitor::Vector{Bool}=[true; fill(false, 12)],
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
 ) =
-  ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostics)
+  ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostickeys, diagnosticvalues)
 
 ContinuousMultivariateParameterNState{N<:FloatingPoint}(
   ::Type{N},
   size::Int,
   n::Int,
   monitor::Vector{Symbol},
-  diagnostics::Dict=Dict()
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
 ) =
   ContinuousMultivariateParameterNState(
-    N, size, n, [main_state_field_names[i] in monitor ? true : false for i in 1:14], diagnostics
+    N, size, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
   )
 
 typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
@@ -181,7 +204,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
 
   for j in 2:4
     if monitor[j]
-      push!(body, :($(nstate).(main_state_field_names[$j])[$(:_i)] = $(:_state).(main_state_field_names[$j])))
+      push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
     end
   end
 
@@ -190,8 +213,8 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       push!(
         body,
         :(
-          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
-          $(:_state).(main_state_field_names[$j])
+          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
+          $(:_state).(main_cpstate_fields[$j])
         )
       )
     end
@@ -205,8 +228,8 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       push!(
         body,
         :(
-          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          $(:_state).(main_state_field_names[$j])
+          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
+          $(:_state).(main_cpstate_fields[$j])
         )
       )
     end
@@ -220,26 +243,15 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       push!(
         body,
         :(
-          $(nstate).(main_state_field_names[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          $(:_state).(main_state_field_names[$j])
+          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
+          $(:_state).(main_cpstate_fields[$j])
         )
       )
     end
   end
 
-  if monitor[14]
-    push!(
-      body,
-      :(
-        for (k, v) in $(:_state).diagnostics
-          if !haskey($(nstate).diagnostics, k)
-            $(nstate).diagnostics[k] = Array(typeof(v), $(nstate).n)
-          end
-
-          $(nstate).diagnostics[k][$(:_i)] = v
-        end
-      )
-    )
+  if length(nstate.diagnostickeys) != 0
+    push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
   @gensym copy_continuous_multivariate_parameter_nstate

@@ -23,7 +23,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
     instance = new()
 
     for i in 1:14
-      setfield!(instance, main_state_field_names[i], streams[i])
+      setfield!(instance, main_cpstate_fields[i], streams[i])
     end
 
     instance.size = size
@@ -44,7 +44,7 @@ ContinuousParameterIOStream(
 ) =
   ContinuousParameterIOStream(
     [
-      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix))
+      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i]), "."*filesuffix))
       for i in 1:14
     ],
     size,
@@ -60,8 +60,8 @@ ContinuousParameterIOStream(
 ) =
   ContinuousParameterIOStream(
     [
-      main_state_field_names[i] in monitor ?
-        open(joinpath(filepath, string(main_state_field_names[i]), "."*filesuffix)) :
+      main_cpstate_fields[i] in monitor ?
+        open(joinpath(filepath, string(main_cpstate_fields[i]), "."*filesuffix)) :
         true
       for i in 1:14
     ],
@@ -73,10 +73,10 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   body = []
 
   for i in 1:13
-    if getfield(iostream, main_state_field_names[i]) != nothing
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
       push!(
         body,
-        :(write($(iostream).(main_state_field_names[$i]), join($(:_state).(main_state_field_names[$i]), ','), "\n"))
+        :(write($(iostream).(main_cpstate_fields[$i]), join($(:_state).(main_cpstate_fields[$i]), ','), "\n"))
       )
     end
   end

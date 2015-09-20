@@ -1,36 +1,11 @@
-### Constants associated with states and NStates
-
-const main_state_field_names = (
-  :value,
-  :loglikelihood,
-  :logprior,
-  :logtarget,
-  :gradloglikelihood,
-  :gradlogprior,
-  :gradlogtarget,
-  :tensorloglikelihood,
-  :tensorlogprior,
-  :tensorlogtarget,
-  :dtensorloglikelihood,
-  :dtensorlogprior,
-  :dtensorlogtarget,
-  :diagnostics
-)
-
 ### Abstract variable states
 
 abstract VariableState{F<:VariateForm, N<:Number}
 
 abstract GenericVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
-abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
-
-abstract ContinuousParameterState{F<:VariateForm, N<:FloatingPoint} <: ParameterState{F, N}
-
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:FloatingPoint}(::Type{ContinuousParameterState{F, N}}) = N
 
 ### Generic variable state subtypes
 
