@@ -2,8 +2,6 @@
 
 abstract VariableIOStream
 
-abstract ParameterIOStream <: VariableIOStream
-
 ### GenericVariableIOStream
 
 type GenericVariableIOStream <: VariableIOStream

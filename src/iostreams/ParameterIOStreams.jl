@@ -1,3 +1,7 @@
+### Abstract parameter IOStreams
+
+abstract ParameterIOStream <: VariableIOStream
+
 ### ContinuousParameterIOStream
 
 type ContinuousParameterIOStream <: ParameterIOStream
@@ -14,18 +18,27 @@ type ContinuousParameterIOStream <: ParameterIOStream
   dtensorloglikelihood::Union(IOStream, Nothing)
   dtensorlogprior::Union(IOStream, Nothing)
   dtensorlogtarget::Union(IOStream, Nothing)
-  diagnostics::Union(IOStream, Nothing)
+  diagnostickeys::Vector{Symbol}
+  diagnosticvalues::Union(IOStream, Nothing)
   size::Tuple
   n::Int
   write::Function
 
-  ContinuousParameterIOStream(streams::Vector{Union(IOStream, Nothing)}, size::Tuple, n::Int) = begin
+  ContinuousParameterIOStream(
+    size::Tuple,
+    n::Int,
+    streams::Vector{Union(IOStream, Nothing)},
+    diagnostickeys::Vector{Symbol}=Symbol[],
+    diagnosticvalues::Union(IOStream, Nothing)=nothing
+  ) = begin
     instance = new()
 
-    for i in 1:14
+    for i in 1:13
       setfield!(instance, main_cpstate_fields[i], streams[i])
     end
 
+    instance.diagnostickeys = diagnostickeys
+    instance.diagnosticvalues = diagnosticvalues
     instance.size = size
     instance.n = n
 
@@ -38,35 +51,41 @@ end
 ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
-  monitor::Vector{Bool},
-  filepath::AbstractString,
-  filesuffix::AbstractString
+  monitor::Vector{Bool}=[true; fill(false, 12)],
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  filepath::AbstractString="",
+  filesuffix::AbstractString="csv"
 ) =
   ContinuousParameterIOStream(
-    [
-      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i]), "."*filesuffix))
-      for i in 1:14
-    ],
     size,
-    n
+    n,
+    [
+      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix))
+      for i in 1:13
+    ],
+    diagnostickeys,
+    length(diagnostickeys) == 0 ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
   )
 
 ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol},
-  filepath::AbstractString,
-  filesuffix::AbstractString
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  filepath::AbstractString="",
+  filesuffix::AbstractString="csv"
 ) =
   ContinuousParameterIOStream(
+    size,
+    n,
     [
       main_cpstate_fields[i] in monitor ?
         open(joinpath(filepath, string(main_cpstate_fields[i]), "."*filesuffix)) :
-        true
-      for i in 1:14
+        nothing
+      for i in 1:13
     ],
-    size,
-    n
+    diagnostickeys,
+    length(diagnostickeys) == 0 ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
   )
 
 function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
@@ -81,8 +100,8 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
     end
   end
 
-  if iostream.diagnostics != nothing
-    push!(body, :(write($(iostream).diagnostics, join(values($(:_state).diagnostics), ','), "\n")))
+  if iostream.diagnosticvalues != nothing
+    push!(body, :(write($(iostream).diagnosticvalues, join(values($(:_state).diagnosticvalues), ','), "\n")))
   end
 
   @gensym write_continuous_parameter_iostream

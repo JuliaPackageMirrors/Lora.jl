@@ -37,7 +37,7 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ContinuousParamete
   ContinuousUnivariateParameterNState(
     ::Type{N},
     n::Int,
-    monitor::Vector{Bool},
+    monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
   ) = begin
@@ -95,7 +95,7 @@ function codegen_copy_continuous_univariate_parameter_nstate(
     end
   end
 
-  if length(nstate.diagnostickeys) != 0
+  if size(nstate.diagnosticvalues) != (0, 0)
     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
@@ -137,7 +137,7 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ContinuousParame
     ::Type{N},
     size::Int,
     n::Int,
-    monitor::Vector{Bool},
+    monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
   ) = begin
@@ -250,7 +250,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
     end
   end
 
-  if length(nstate.diagnostickeys) != 0
+  if size(nstate.diagnosticvalues) != (0, 0)
     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
