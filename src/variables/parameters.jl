@@ -89,7 +89,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
     for i = 1:nf
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
-        !method_exists(args[i], (ContinuousUnivariateParameterState, Dict{Symbol, VariableState}))
+        !method_exists(args[i], (Vector{VariableState}, Int))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -100,9 +100,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         instance,
         setter,
         if isa(args[i], Function)
-          # pstate and nstate stand for parameter state and neighbors' state respectively
-          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(instance, distribution, args[i](pstate, nstate))
+          (states::Vector{VariableState}, j::Int) -> setfield!(instance, distribution, args[i](states, j))
         else
           args[i]
         end
@@ -126,8 +124,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
           (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), eltype(prior)))) ||
           isa(args[2], Function)
         )
-          (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(pstate, spfield, f(instance.prior, pstate.value))
+          (states::Vector{VariableState}, j::Int) -> setfield!(states[j], spfield, f(instance.prior, states[j].value))
         else
           args[i]
         end
@@ -156,15 +153,14 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         ptfield,
         if args[i] == nothing
           if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
-            function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-              getfield(instance, plfield)(pstate, nstate)
-              getfield(instance, ppfield)(pstate, nstate)
-              setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
+            function (states::Vector{VariableState}, j::Int)
+              getfield(instance, plfield)(states, j)
+              getfield(instance, ppfield)(states, j)
+              setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
             end
           elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), eltype(pdf)))) ||
             isa(args[1], Function)
-            (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            setfield!(pstate, stfield, f(instance.pdf, pstate.value))
+            (states::Vector{VariableState}, j::Int) -> setfield!(states[j], stfield, f(instance.pdf, states[j].value))
           end
         else
           args[i]
@@ -197,10 +193,10 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         instance,
         ptfield,
         if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
-          function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-            getfield(instance, plfield)(pstate, nstate)
-            getfield(instance, ppfield)(pstate, nstate)
-            setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
+          function (states::Vector{VariableState}, j::Int)
+            getfield(instance, plfield)(states, j)
+            getfield(instance, ppfield)(states, j)
+            setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
           end
         else
           args[i]
@@ -213,9 +209,9 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
       instance,
       :uptogradlogtarget!,
       if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
-        function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
         end
       else
         args[15]
@@ -230,10 +226,10 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
-        function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
-          instance.tensorlogtarget!(pstate, nstate)          
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
+          instance.tensorlogtarget!(states, j)
         end
       else
         args[16]
@@ -249,11 +245,11 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
         isa(instance.dtensorlogtarget!, Function)
-        function (pstate::ContinuousUnivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
-          instance.tensorlogtarget!(pstate, nstate)
-          instance.dtensorlogtarget!(pstate, nstate)
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
+          instance.tensorlogtarget!(states, j)
+          instance.dtensorlogtarget!(states, j)
         end
       else
         args[17]
@@ -268,7 +264,7 @@ function ContinuousUnivariateParameter(
   index::Int,
   key::Symbol;
   pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
-  prior::Union(ContinuousUnivariateDistribution, Nothing)=nothing,  
+  prior::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
   setpdf::Union(Function, Nothing)=nothing,
   setprior::Union(Function, Nothing)=nothing,
   loglikelihood::Union(Function, Nothing)=nothing,
@@ -427,7 +423,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         ppfield,
         if args[i] == nothing && (
           (
-            isa(prior, ContinuousMultivariateDistribution) && 
+            isa(prior, ContinuousMultivariateDistribution) &&
             method_exists(f, (typeof(prior), Vector{eltype(prior)}))
           ) ||
           isa(args[2], Function)
@@ -542,7 +538,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
           instance.logtarget!(pstate, nstate)
           instance.gradlogtarget!(pstate, nstate)
-          instance.tensorlogtarget!(pstate, nstate)          
+          instance.tensorlogtarget!(pstate, nstate)
         end
       else
         args[16]
@@ -577,7 +573,7 @@ function ContinuousMultivariateParameter(
   index::Int,
   key::Symbol;
   pdf::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
-  prior::Union(ContinuousMultivariateDistribution, Nothing)=nothing,  
+  prior::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
   setpdf::Union(Function, Nothing)=nothing,
   setprior::Union(Function, Nothing)=nothing,
   loglikelihood::Union(Function, Nothing)=nothing,
