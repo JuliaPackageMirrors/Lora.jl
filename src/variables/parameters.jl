@@ -87,9 +87,7 @@ type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(args[i], Function) &&
-        isgeneric(args[i]) &&
-        !method_exists(args[i], (Vector{VariableState}, Int))
+      if isa(args[i], Function) && isgeneric(args[i]) && !method_exists(args[i], (Vector{VariableState}, Int))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -386,9 +384,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(args[i], Function) &&
-        isgeneric(args[i]) &&
-        !method_exists(args[i], (ContinuousMultivariateParameterState, Dict{Symbol, VariableState}))
+      if isa(args[i], Function) && isgeneric(args[i]) && !method_exists(args[i], (Vector{VariableState}, Int))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -399,9 +395,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         instance,
         setter,
         if isa(args[i], Function)
-          # pstate and nstate stand for parameter state and neighbors' state respectively
-          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(instance, distribution, args[i](pstate, nstate))
+          (states::Vector{VariableState}, j::Int) -> setfield!(instance, distribution, args[i](states, j))
         else
           args[i]
         end
@@ -428,8 +422,7 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
           ) ||
           isa(args[2], Function)
         )
-          (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-          setfield!(pstate, spfield, f(instance.prior, pstate.value))
+          (states::Vector{VariableState}, j::Int) -> setfield!(states[j], spfield, f(instance.prior, states[j].value))
         else
           args[i]
         end
@@ -458,18 +451,17 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         ptfield,
         if args[i] == nothing
           if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
-            function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-              getfield(instance, plfield)(pstate, nstate)
-              getfield(instance, ppfield)(pstate, nstate)
-              setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
+            function (states::Vector{VariableState}, j::Int)
+              getfield(instance, plfield)(states, j)
+              getfield(instance, ppfield)(states, j)
+              setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
             end
           elseif (
               isa(pdf, ContinuousMultivariateDistribution) &&
               method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))
             ) ||
             isa(args[1], Function)
-            (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState}) ->
-            setfield!(pstate, stfield, f(instance.pdf, pstate.value))
+            (states::Vector{VariableState}, j::Int) -> setfield!(states[j], stfield, f(instance.pdf, states[j].value))
           end
         else
           args[i]
@@ -502,10 +494,10 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         instance,
         ptfield,
         if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
-          function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-            getfield(instance, plfield)(pstate, nstate)
-            getfield(instance, ppfield)(pstate, nstate)
-            setfield!(pstate, stfield, getfield(pstate, slfield)+getfield(pstate, spfield))
+          function (states::Vector{VariableState}, j::Int)
+            getfield(instance, plfield)(states, j)
+            getfield(instance, ppfield)(states, j)
+            setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
           end
         else
           args[i]
@@ -518,9 +510,9 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
       instance,
       :uptogradlogtarget!,
       if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
-        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
         end
       else
         args[15]
@@ -535,10 +527,10 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
-        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
-          instance.tensorlogtarget!(pstate, nstate)
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
+          instance.tensorlogtarget!(states, j)
         end
       else
         args[16]
@@ -554,11 +546,11 @@ type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
         isa(instance.dtensorlogtarget!, Function)
-        function (pstate::ContinuousMultivariateParameterState, nstate::Dict{Symbol, VariableState})
-          instance.logtarget!(pstate, nstate)
-          instance.gradlogtarget!(pstate, nstate)
-          instance.tensorlogtarget!(pstate, nstate)
-          instance.dtensorlogtarget!(pstate, nstate)
+        function (states::Vector{VariableState}, j::Int)
+          instance.logtarget!(states, j)
+          instance.gradlogtarget!(states, j)
+          instance.tensorlogtarget!(states, j)
+          instance.dtensorlogtarget!(states, j)
         end
       else
         args[17]

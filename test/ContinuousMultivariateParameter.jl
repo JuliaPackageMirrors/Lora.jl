@@ -37,20 +37,18 @@ end
 println("      Initialization via pdf field...")
 
 pv = [5.18, -7.76]
-pstate = ContinuousMultivariateParameterState(pv)
-nstates = Dict{Symbol, VariableState}()
 μv = [6.11, -8.5]
-nstates[:μ] = MultivariateGenericVariableState(μv)
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(μv)]
 
-p = ContinuousMultivariateParameter(1, :p, pdf=MvNormal(nstates[:μ].value, 1.))
+p = ContinuousMultivariateParameter(1, :p, pdf=MvNormal(states[2].value, 1.))
 
 distribution = MvNormal(μv, 1.)
 p.pdf == distribution
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(pstate, nstates)
-@test pstate.logtarget == lt
-p.gradlogtarget!(pstate, nstates)
-@test pstate.gradlogtarget == glt
+p.logtarget!(states, 1)
+@test states[1].logtarget == lt
+p.gradlogtarget!(states, 1)
+@test states[1].gradlogtarget == glt
 
 pstate = ContinuousMultivariateParameterState(pv)
 

@@ -8,7 +8,7 @@ tests =
     "ParameterIOStreams",
     "variables",
     "ContinuousUnivariateParameter",
-    "ContinuousMultivariateParameter",
+    #"ContinuousMultivariateParameter",
     "dependencies",
     "GenericModel",
     "generators"
