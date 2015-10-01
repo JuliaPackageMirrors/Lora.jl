@@ -37,7 +37,7 @@ typealias Hyperparameter Constant
 immutable Data <: Variable{Deterministic}
   index::Int
   key::Symbol
-  update::Union(Function, Nothing)
+  update::Union{Function, Void}
 end
 
 Data(index::Int, key::Symbol) = Data(index, key, nothing)

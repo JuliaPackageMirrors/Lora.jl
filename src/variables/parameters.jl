@@ -14,48 +14,48 @@ abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
   index::Int
   key::Symbol
-  pdf::Union(ContinuousUnivariateDistribution, Nothing)
-  prior::Union(ContinuousUnivariateDistribution, Nothing)
-  setpdf::Union(Function, Nothing)
-  setprior::Union(Function, Nothing)
-  loglikelihood!::Union(Function, Nothing)
-  logprior!::Union(Function, Nothing)
-  logtarget!::Union(Function, Nothing)
-  gradloglikelihood!::Union(Function, Nothing)
-  gradlogprior!::Union(Function, Nothing)
-  gradlogtarget!::Union(Function, Nothing)
-  tensorloglikelihood!::Union(Function, Nothing)
-  tensorlogprior!::Union(Function, Nothing)
-  tensorlogtarget!::Union(Function, Nothing)
-  dtensorloglikelihood!::Union(Function, Nothing)
-  dtensorlogprior!::Union(Function, Nothing)
-  dtensorlogtarget!::Union(Function, Nothing)
-  uptogradlogtarget!::Union(Function, Nothing)
-  uptotensorlogtarget!::Union(Function, Nothing)
-  uptodtensorlogtarget!::Union(Function, Nothing)
+  pdf::Union{ContinuousUnivariateDistribution, Void}
+  prior::Union{ContinuousUnivariateDistribution, Void}
+  setpdf::Union{Function, Void}
+  setprior::Union{Function, Void}
+  loglikelihood!::Union{Function, Void}
+  logprior!::Union{Function, Void}
+  logtarget!::Union{Function, Void}
+  gradloglikelihood!::Union{Function, Void}
+  gradlogprior!::Union{Function, Void}
+  gradlogtarget!::Union{Function, Void}
+  tensorloglikelihood!::Union{Function, Void}
+  tensorlogprior!::Union{Function, Void}
+  tensorlogtarget!::Union{Function, Void}
+  dtensorloglikelihood!::Union{Function, Void}
+  dtensorlogprior!::Union{Function, Void}
+  dtensorlogtarget!::Union{Function, Void}
+  uptogradlogtarget!::Union{Function, Void}
+  uptotensorlogtarget!::Union{Function, Void}
+  uptodtensorlogtarget!::Union{Function, Void}
 
   ContinuousUnivariateParameter(
     index::Int,
     key::Symbol,
-    pdf::Union(ContinuousUnivariateDistribution, Nothing),
-    prior::Union(ContinuousUnivariateDistribution, Nothing),
-    setpdf::Union(Function, Nothing),
-    setprior::Union(Function, Nothing),
-    ll::Union(Function, Nothing),
-    lp::Union(Function, Nothing),
-    lt::Union(Function, Nothing),
-    gll::Union(Function, Nothing),
-    glp::Union(Function, Nothing),
-    glt::Union(Function, Nothing),
-    tll::Union(Function, Nothing),
-    tlp::Union(Function, Nothing),
-    tlt::Union(Function, Nothing),
-    dtll::Union(Function, Nothing),
-    dtlp::Union(Function, Nothing),
-    dtlt::Union(Function, Nothing),
-    uptoglt::Union(Function, Nothing),
-    uptotlt::Union(Function, Nothing),
-    uptodtlt::Union(Function, Nothing)
+    pdf::Union{ContinuousUnivariateDistribution, Void},
+    prior::Union{ContinuousUnivariateDistribution, Void},
+    setpdf::Union{Function, Void},
+    setprior::Union{Function, Void},
+    ll::Union{Function, Void},
+    lp::Union{Function, Void},
+    lt::Union{Function, Void},
+    gll::Union{Function, Void},
+    glp::Union{Function, Void},
+    glt::Union{Function, Void},
+    tll::Union{Function, Void},
+    tlp::Union{Function, Void},
+    tlt::Union{Function, Void},
+    dtll::Union{Function, Void},
+    dtlp::Union{Function, Void},
+    dtlt::Union{Function, Void},
+    uptoglt::Union{Function, Void},
+    uptotlt::Union{Function, Void},
+    uptodtlt::Union{Function, Void}
   ) = begin
     instance = new()
     instance.index = index
@@ -261,25 +261,25 @@ end
 function ContinuousUnivariateParameter(
   index::Int,
   key::Symbol;
-  pdf::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
-  prior::Union(ContinuousUnivariateDistribution, Nothing)=nothing,
-  setpdf::Union(Function, Nothing)=nothing,
-  setprior::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
-  logprior::Union(Function, Nothing)=nothing,
-  logtarget::Union(Function, Nothing)=nothing,
-  gradloglikelihood::Union(Function, Nothing)=nothing,
-  gradlogprior::Union(Function, Nothing)=nothing,
-  gradlogtarget::Union(Function, Nothing)=nothing,
-  tensorloglikelihood::Union(Function, Nothing)=nothing,
-  tensorlogprior::Union(Function, Nothing)=nothing,
-  tensorlogtarget::Union(Function, Nothing)=nothing,
-  dtensorloglikelihood::Union(Function, Nothing)=nothing,
-  dtensorlogprior::Union(Function, Nothing)=nothing,
-  dtensorlogtarget::Union(Function, Nothing)=nothing,
-  uptogradlogtarget::Union(Function, Nothing)=nothing,
-  uptotensorlogtarget::Union(Function, Nothing)=nothing,
-  uptodtensorlogtarget::Union(Function, Nothing)=nothing
+  pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  setpdf::Union{Function, Void}=nothing,
+  setprior::Union{Function, Void}=nothing,
+  loglikelihood::Union{Function, Void}=nothing,
+  logprior::Union{Function, Void}=nothing,
+  logtarget::Union{Function, Void}=nothing,
+  gradloglikelihood::Union{Function, Void}=nothing,
+  gradlogprior::Union{Function, Void}=nothing,
+  gradlogtarget::Union{Function, Void}=nothing,
+  tensorloglikelihood::Union{Function, Void}=nothing,
+  tensorlogprior::Union{Function, Void}=nothing,
+  tensorlogtarget::Union{Function, Void}=nothing,
+  dtensorloglikelihood::Union{Function, Void}=nothing,
+  dtensorlogprior::Union{Function, Void}=nothing,
+  dtensorlogtarget::Union{Function, Void}=nothing,
+  uptogradlogtarget::Union{Function, Void}=nothing,
+  uptotensorlogtarget::Union{Function, Void}=nothing,
+  uptodtensorlogtarget::Union{Function, Void}=nothing
 )
   ContinuousUnivariateParameter(
     index,
@@ -311,48 +311,48 @@ end
 type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
   index::Int
   key::Symbol
-  pdf::Union(ContinuousMultivariateDistribution, Nothing)
-  prior::Union(ContinuousMultivariateDistribution, Nothing)
-  setpdf::Union(Function, Nothing)
-  setprior::Union(Function, Nothing)
-  loglikelihood!::Union(Function, Nothing)
-  logprior!::Union(Function, Nothing)
-  logtarget!::Union(Function, Nothing)
-  gradloglikelihood!::Union(Function, Nothing)
-  gradlogprior!::Union(Function, Nothing)
-  gradlogtarget!::Union(Function, Nothing)
-  tensorloglikelihood!::Union(Function, Nothing)
-  tensorlogprior!::Union(Function, Nothing)
-  tensorlogtarget!::Union(Function, Nothing)
-  dtensorloglikelihood!::Union(Function, Nothing)
-  dtensorlogprior!::Union(Function, Nothing)
-  dtensorlogtarget!::Union(Function, Nothing)
-  uptogradlogtarget!::Union(Function, Nothing)
-  uptotensorlogtarget!::Union(Function, Nothing)
-  uptodtensorlogtarget!::Union(Function, Nothing)
+  pdf::Union{ContinuousMultivariateDistribution, Void}
+  prior::Union{ContinuousMultivariateDistribution, Void}
+  setpdf::Union{Function, Void}
+  setprior::Union{Function, Void}
+  loglikelihood!::Union{Function, Void}
+  logprior!::Union{Function, Void}
+  logtarget!::Union{Function, Void}
+  gradloglikelihood!::Union{Function, Void}
+  gradlogprior!::Union{Function, Void}
+  gradlogtarget!::Union{Function, Void}
+  tensorloglikelihood!::Union{Function, Void}
+  tensorlogprior!::Union{Function, Void}
+  tensorlogtarget!::Union{Function, Void}
+  dtensorloglikelihood!::Union{Function, Void}
+  dtensorlogprior!::Union{Function, Void}
+  dtensorlogtarget!::Union{Function, Void}
+  uptogradlogtarget!::Union{Function, Void}
+  uptotensorlogtarget!::Union{Function, Void}
+  uptodtensorlogtarget!::Union{Function, Void}
 
   ContinuousMultivariateParameter(
     index::Int,
     key::Symbol,
-    pdf::Union(ContinuousMultivariateDistribution, Nothing),
-    prior::Union(ContinuousMultivariateDistribution, Nothing),
-    setpdf::Union(Function, Nothing),
-    setprior::Union(Function, Nothing),
-    ll::Union(Function, Nothing),
-    lp::Union(Function, Nothing),
-    lt::Union(Function, Nothing),
-    gll::Union(Function, Nothing),
-    glp::Union(Function, Nothing),
-    glt::Union(Function, Nothing),
-    tll::Union(Function, Nothing),
-    tlp::Union(Function, Nothing),
-    tlt::Union(Function, Nothing),
-    dtll::Union(Function, Nothing),
-    dtlp::Union(Function, Nothing),
-    dtlt::Union(Function, Nothing),
-    uptoglt::Union(Function, Nothing),
-    uptotlt::Union(Function, Nothing),
-    uptodtlt::Union(Function, Nothing)
+    pdf::Union{ContinuousMultivariateDistribution, Void},
+    prior::Union{ContinuousMultivariateDistribution, Void},
+    setpdf::Union{Function, Void},
+    setprior::Union{Function, Void},
+    ll::Union{Function, Void},
+    lp::Union{Function, Void},
+    lt::Union{Function, Void},
+    gll::Union{Function, Void},
+    glp::Union{Function, Void},
+    glt::Union{Function, Void},
+    tll::Union{Function, Void},
+    tlp::Union{Function, Void},
+    tlt::Union{Function, Void},
+    dtll::Union{Function, Void},
+    dtlp::Union{Function, Void},
+    dtlt::Union{Function, Void},
+    uptoglt::Union{Function, Void},
+    uptotlt::Union{Function, Void},
+    uptodtlt::Union{Function, Void}
   ) = begin
     instance = new()
     instance.index = index
@@ -564,25 +564,25 @@ end
 function ContinuousMultivariateParameter(
   index::Int,
   key::Symbol;
-  pdf::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
-  prior::Union(ContinuousMultivariateDistribution, Nothing)=nothing,
-  setpdf::Union(Function, Nothing)=nothing,
-  setprior::Union(Function, Nothing)=nothing,
-  loglikelihood::Union(Function, Nothing)=nothing,
-  logprior::Union(Function, Nothing)=nothing,
-  logtarget::Union(Function, Nothing)=nothing,
-  gradloglikelihood::Union(Function, Nothing)=nothing,
-  gradlogprior::Union(Function, Nothing)=nothing,
-  gradlogtarget::Union(Function, Nothing)=nothing,
-  tensorloglikelihood::Union(Function, Nothing)=nothing,
-  tensorlogprior::Union(Function, Nothing)=nothing,
-  tensorlogtarget::Union(Function, Nothing)=nothing,
-  dtensorloglikelihood::Union(Function, Nothing)=nothing,
-  dtensorlogprior::Union(Function, Nothing)=nothing,
-  dtensorlogtarget::Union(Function, Nothing)=nothing,
-  uptogradlogtarget::Union(Function, Nothing)=nothing,
-  uptotensorlogtarget::Union(Function, Nothing)=nothing,
-  uptodtensorlogtarget::Union(Function, Nothing)=nothing
+  pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  setpdf::Union{Function, Void}=nothing,
+  setprior::Union{Function, Void}=nothing,
+  loglikelihood::Union{Function, Void}=nothing,
+  logprior::Union{Function, Void}=nothing,
+  logtarget::Union{Function, Void}=nothing,
+  gradloglikelihood::Union{Function, Void}=nothing,
+  gradlogprior::Union{Function, Void}=nothing,
+  gradlogtarget::Union{Function, Void}=nothing,
+  tensorloglikelihood::Union{Function, Void}=nothing,
+  tensorlogprior::Union{Function, Void}=nothing,
+  tensorlogtarget::Union{Function, Void}=nothing,
+  dtensorloglikelihood::Union{Function, Void}=nothing,
+  dtensorlogprior::Union{Function, Void}=nothing,
+  dtensorlogtarget::Union{Function, Void}=nothing,
+  uptogradlogtarget::Union{Function, Void}=nothing,
+  uptotensorlogtarget::Union{Function, Void}=nothing,
+  uptodtensorlogtarget::Union{Function, Void}=nothing
 )
   ContinuousMultivariateParameter(
     index,

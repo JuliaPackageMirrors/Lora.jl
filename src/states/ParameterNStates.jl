@@ -2,20 +2,20 @@
 
 abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
-abstract ContinuousParameterNState{F<:VariateForm, N<:FloatingPoint} <: ParameterNState{F, N}
+abstract ContinuousParameterNState{F<:VariateForm, N<:AbstractFloat} <: ParameterNState{F, N}
 
 typealias MCChain ParameterNState
 
 typealias ContinuousMCChain ContinuousParameterNState
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:FloatingPoint}(::Type{ContinuousParameterNState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:AbstractFloat}(::Type{ContinuousParameterNState{F, N}}) = N
 
 ### Parameter NState subtypes
 
 ## ContinuousUnivariateParameterNState
 
-type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ContinuousParameterNState{Univariate, N}
+type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParameterNState{Univariate, N}
   value::Vector{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -62,7 +62,7 @@ type ContinuousUnivariateParameterNState{N<:FloatingPoint} <: ContinuousParamete
   end
 end
 
-ContinuousUnivariateParameterNState{N<:FloatingPoint}(
+ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
@@ -71,7 +71,7 @@ ContinuousUnivariateParameterNState{N<:FloatingPoint}(
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousUnivariateParameterNState{N<:FloatingPoint}(
+ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   n::Int,
   monitor::Vector{Symbol},
@@ -108,12 +108,12 @@ function codegen_copy_continuous_univariate_parameter_nstate(
   end
 end
 
-Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterNState{N}}) = N
-Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterNState{N}) = N
+Base.eltype{N<:AbstractFloat}(::Type{ContinuousUnivariateParameterNState{N}}) = N
+Base.eltype{N<:AbstractFloat}(s::ContinuousUnivariateParameterNState{N}) = N
 
 ## ContinuousMultivariateParameterNState
 
-type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ContinuousParameterNState{Multivariate, N}
+type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParameterNState{Multivariate, N}
   value::Matrix{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -171,7 +171,7 @@ type ContinuousMultivariateParameterNState{N<:FloatingPoint} <: ContinuousParame
   end
 end
 
-ContinuousMultivariateParameterNState{N<:FloatingPoint}(
+ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   size::Int,
   n::Int,
@@ -181,7 +181,7 @@ ContinuousMultivariateParameterNState{N<:FloatingPoint}(
 ) =
   ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousMultivariateParameterNState{N<:FloatingPoint}(
+ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   size::Int,
   n::Int,
@@ -263,5 +263,5 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   end
 end
 
-Base.eltype{N<:FloatingPoint}(::Type{ContinuousMultivariateParameterNState{N}}) = N
-Base.eltype{N<:FloatingPoint}(s::ContinuousMultivariateParameterNState{N}) = N
+Base.eltype{N<:AbstractFloat}(::Type{ContinuousMultivariateParameterNState{N}}) = N
+Base.eltype{N<:AbstractFloat}(s::ContinuousMultivariateParameterNState{N}) = N

@@ -2,10 +2,10 @@
 
 abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
-abstract ContinuousParameterState{F<:VariateForm, N<:FloatingPoint} <: ParameterState{F, N}
+abstract ContinuousParameterState{F<:VariateForm, N<:AbstractFloat} <: ParameterState{F, N}
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:FloatingPoint}(::Type{ContinuousParameterState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:AbstractFloat}(::Type{ContinuousParameterState{F, N}}) = N
 
 ### Constants associated with continuous parameter states and NStates
 
@@ -29,7 +29,7 @@ const main_cpstate_fields = (
 
 ## ContinuousUnivariateParameterState
 
-type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ContinuousParameterState{Univariate, N}
+type ContinuousUnivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Univariate, N}
   value::N
   loglikelihood::N
   logprior::N
@@ -47,7 +47,7 @@ type ContinuousUnivariateParameterState{N<:FloatingPoint} <: ContinuousParameter
   diagnosticvalues::Vector
 end
 
-function ContinuousUnivariateParameterState{N<:FloatingPoint}(
+function ContinuousUnivariateParameterState{N<:AbstractFloat}(
   value::N,
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
@@ -58,19 +58,19 @@ function ContinuousUnivariateParameterState{N<:FloatingPoint}(
   )
 end
 
-ContinuousUnivariateParameterState{N<:FloatingPoint}(
+ContinuousUnivariateParameterState{N<:AbstractFloat}(
   ::Type{N},
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
   ContinuousUnivariateParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:FloatingPoint}(::Type{ContinuousUnivariateParameterState{N}}) = N
-Base.eltype{N<:FloatingPoint}(s::ContinuousUnivariateParameterState{N}) = N
+Base.eltype{N<:AbstractFloat}(::Type{ContinuousUnivariateParameterState{N}}) = N
+Base.eltype{N<:AbstractFloat}(s::ContinuousUnivariateParameterState{N}) = N
 
 ## ContinuousMultivariateParameterState
 
-type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ContinuousParameterState{Multivariate, N}
+type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Multivariate, N}
   value::Vector{N}
   loglikelihood::N
   logprior::N
@@ -89,7 +89,7 @@ type ContinuousMultivariateParameterState{N<:FloatingPoint} <: ContinuousParamet
   diagnosticvalues::Vector
 end
 
-function ContinuousMultivariateParameterState{N<:FloatingPoint}(
+function ContinuousMultivariateParameterState{N<:AbstractFloat}(
   value::Vector{N},
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -124,7 +124,7 @@ function ContinuousMultivariateParameterState{N<:FloatingPoint}(
   )
 end
 
-ContinuousMultivariateParameterState{N<:FloatingPoint}(
+ContinuousMultivariateParameterState{N<:AbstractFloat}(
   value::Vector{N},
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -134,7 +134,7 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
     value, [main_cpstate_fields[i] in monitor ? true : false for i in 5:13], diagnostickeys, diagnosticvalues
   )
 
-ContinuousMultivariateParameterState{N<:FloatingPoint}(
+ContinuousMultivariateParameterState{N<:AbstractFloat}(
   ::Type{N},
   size::Int=0,
   monitor::Vector{Bool}=fill(false, 9),
@@ -143,7 +143,7 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousMultivariateParameterState{N<:FloatingPoint}(
+ContinuousMultivariateParameterState{N<:AbstractFloat}(
   ::Type{N},
   size::Int,
   monitor::Vector{Symbol},
@@ -152,5 +152,5 @@ ContinuousMultivariateParameterState{N<:FloatingPoint}(
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:FloatingPoint}(::Type{ContinuousMultivariateParameterState{N}}) = N
-Base.eltype{N<:FloatingPoint}(s::ContinuousMultivariateParameterState{N}) = N
+Base.eltype{N<:AbstractFloat}(::Type{ContinuousMultivariateParameterState{N}}) = N
+Base.eltype{N<:AbstractFloat}(s::ContinuousMultivariateParameterState{N}) = N

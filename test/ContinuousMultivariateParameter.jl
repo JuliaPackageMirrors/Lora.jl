@@ -50,10 +50,10 @@ p.logtarget!(states, 1)
 p.gradlogtarget!(states, 1)
 @test states[1].gradlogtarget == glt
 
-pstate = ContinuousMultivariateParameterState(pv)
+states[1] = ContinuousMultivariateParameterState(pv)
 
-p.uptogradlogtarget!(pstate, nstates)
-@test (pstate.logtarget, pstate.gradlogtarget) == (lt, glt)
+p.uptogradlogtarget!(states, 1)
+@test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
 
 for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
   @test getfield(p, fields[field]) == nothing

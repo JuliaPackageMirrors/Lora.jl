@@ -5,21 +5,21 @@ abstract ParameterIOStream <: VariableIOStream
 ### ContinuousParameterIOStream
 
 type ContinuousParameterIOStream <: ParameterIOStream
-  value::Union(IOStream, Nothing)
-  loglikelihood::Union(IOStream, Nothing)
-  logprior::Union(IOStream, Nothing)
-  logtarget::Union(IOStream, Nothing)
-  gradloglikelihood::Union(IOStream, Nothing)
-  gradlogprior::Union(IOStream, Nothing)
-  gradlogtarget::Union(IOStream, Nothing)
-  tensorloglikelihood::Union(IOStream, Nothing)
-  tensorlogprior::Union(IOStream, Nothing)
-  tensorlogtarget::Union(IOStream, Nothing)
-  dtensorloglikelihood::Union(IOStream, Nothing)
-  dtensorlogprior::Union(IOStream, Nothing)
-  dtensorlogtarget::Union(IOStream, Nothing)
+  value::Union{IOStream, Void}
+  loglikelihood::Union{IOStream, Void}
+  logprior::Union{IOStream, Void}
+  logtarget::Union{IOStream, Void}
+  gradloglikelihood::Union{IOStream, Void}
+  gradlogprior::Union{IOStream, Void}
+  gradlogtarget::Union{IOStream, Void}
+  tensorloglikelihood::Union{IOStream, Void}
+  tensorlogprior::Union{IOStream, Void}
+  tensorlogtarget::Union{IOStream, Void}
+  dtensorloglikelihood::Union{IOStream, Void}
+  dtensorlogprior::Union{IOStream, Void}
+  dtensorlogtarget::Union{IOStream, Void}
   diagnostickeys::Vector{Symbol}
-  diagnosticvalues::Union(IOStream, Nothing)
+  diagnosticvalues::Union{IOStream, Void}
   size::Tuple
   n::Int
   write::Function
@@ -27,9 +27,9 @@ type ContinuousParameterIOStream <: ParameterIOStream
   ContinuousParameterIOStream(
     size::Tuple,
     n::Int,
-    streams::Vector{Union(IOStream, Nothing)},
+    streams::Vector{Union{IOStream, Void}},
     diagnostickeys::Vector{Symbol}=Symbol[],
-    diagnosticvalues::Union(IOStream, Nothing)=nothing
+    diagnosticvalues::Union{IOStream, Void}=nothing
   ) = begin
     instance = new()
 
