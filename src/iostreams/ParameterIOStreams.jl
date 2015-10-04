@@ -64,7 +64,7 @@ ContinuousParameterIOStream(
       for i in 1:13
     ],
     diagnostickeys,
-    length(diagnostickeys) == 0 ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
+    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
   )
 
 ContinuousParameterIOStream(
@@ -85,7 +85,7 @@ ContinuousParameterIOStream(
       for i in 1:13
     ],
     diagnostickeys,
-    length(diagnostickeys) == 0 ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
+    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
   )
 
 function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
@@ -110,5 +110,29 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
     function $write_continuous_parameter_iostream(_state::ContinuousParameterState)
       $(body...)
     end
+  end
+end
+
+function Base.close(iostream::ContinuousParameterIOStream)
+  for i in 1:13
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      close(getfield(iostream, main_cpstate_fields[i]))
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    close(iostream.diagnosticvalues)
+  end
+end
+
+function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUnivariateParameterNState)
+  for i in 1:13
+    if !isempty(getfield(nstate, main_cpstate_fields[i]))
+      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+    end
+  end
+
+  if !isempty(nstate.diagnosticvalues)
+    writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
   end
 end

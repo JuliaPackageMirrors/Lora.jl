@@ -39,7 +39,7 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
-    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
   ) = begin
     instance = new()
 
@@ -67,7 +67,7 @@ ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
-  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostickeys, diagnosticvalues)
 
@@ -76,7 +76,7 @@ ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
-  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
   ContinuousUnivariateParameterNState(
     N, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
@@ -95,7 +95,7 @@ function codegen_copy_continuous_univariate_parameter_nstate(
     end
   end
 
-  if size(nstate.diagnosticvalues) != (0, 0)
+  if !isempty(nstate.diagnosticvalues)
     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
@@ -139,7 +139,7 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
-    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+    diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
   ) = begin
     instance = new()
 
@@ -177,7 +177,7 @@ ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
-  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
   ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostickeys, diagnosticvalues)
 
@@ -187,7 +187,7 @@ ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
-  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), length(diagnostickeys) == 0 ? 0 : n)
+  diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
   ContinuousMultivariateParameterNState(
     N, size, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
@@ -250,7 +250,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
     end
   end
 
-  if size(nstate.diagnosticvalues) != (0, 0)
+  if !isempty(nstate.diagnosticvalues)
     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
   end
 
