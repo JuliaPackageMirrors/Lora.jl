@@ -136,3 +136,28 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUni
     writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
   end
 end
+
+function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMultivariateParameterNState)
+  for i in 2:4
+    writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+  end
+  for i in (1, 5, 6, 7)
+    writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i])', ',')
+  end
+  for i in 8:10
+    statelen = abs2(nstate.size)
+    for i in 1:nstate.n
+      write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+    end
+  end
+  for i in 11:13
+    statelen = nstate.size^3
+    for i in 1:nstate.n
+      write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+    end
+  end
+
+  if !isempty(nstate.diagnosticvalues)
+    writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
+  end
+end
