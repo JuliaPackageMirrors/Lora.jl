@@ -51,20 +51,17 @@ function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::Type{N})
   nstate::GenericVariableNState
   l = length(iostream.size)
 
-  if l == 1
-    if iostream.size[1] == 1
-      nstate = UnivariateGenericVariableNState(T, iostream.n)
-    elseif iostream.size[1] > 1
-      nstate = MultivariateGenericVariableNState(T, iostream.size[1], iostream.n)
-    else
-      error("GenericVariableIOStream size must be > 0, got $(iostream.size[1])")
-    end
-  elseif l > 1
+  if l == 0
+    nstate = UnivariateGenericVariableNState(T, iostream.n)
+  elseif l == 1
+    nstate = MultivariateGenericVariableNState(T, iostream.size[1], iostream.n)
+  elseif l == 2
     nstate = MatrixvariateGenericVariableNState(T, iostream.size, iostream.n)
   else
-    error("GenericVariableIOStream.size must be a tuple of length > 0, got $(iostream.size) length")
+    error("GenericVariableIOStream.size must be a tuple of length 0 or 1 or 2, got $(iostream.size) length")
   end
 
   read!(iostream, nstate)
+  
   nstate
 end

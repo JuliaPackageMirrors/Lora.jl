@@ -9,7 +9,7 @@ println("    Testing GenericVariableIOStream constructors and methods...")
 println("      Interaction with UnivariateGenericVariableState...")
 
 nstatev = Float64[1.87, -4.5, 29.55, -0.91, 0.16]
-iostreamsize = (1,)
+iostreamsize = ()
 iostreamn = length(nstatev)
 
 iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
@@ -31,7 +31,7 @@ rm(filename)
 println("      Interaction with UnivariateGenericVariableNState...")
 
 nstatev = Float32[11.5, -41.22, -5.62, 1.98, 7.16]
-iostreamsize = (1,)
+iostreamsize = ()
 iostreamn = length(nstatev)
 
 iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)

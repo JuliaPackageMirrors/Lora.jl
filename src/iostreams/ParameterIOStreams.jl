@@ -226,3 +226,31 @@ function Base.read!{N<:AbstractFloat}(
     nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', Any)'
   end
 end
+
+function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::Type{N})
+  nstate::ContinuousParameterNState
+  l = length(iostream.size)
+
+  if l == 0
+    nstate = ContinuousUnivariateParameterNState(
+      T,
+      iostream.n,
+      [getfield(iostream, main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      iostream.diagnostickeys
+    )
+  elseif l == 1
+    nstate = ContinuousMultivariateParameterNState(
+      T,
+      iostream.size[1],
+      iostream.n,
+      [getfield(iostream, main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      iostream.diagnostickeys
+    )
+  else
+    error("GenericVariableIOStream.size must be a tuple of length 0 or 1, got $(iostream.size) length")
+  end
+
+  read!(iostream, nstate)
+
+  nstate
+end
