@@ -2,9 +2,14 @@ using Base.Test
 using Lora
 
 filename = joinpath(dirname(@__FILE__), "sample.txt")
-# filename = "sample.txt"
 
-println("    Testing GenericVariableIOStream constructors and methods...")
+println("    Testing GenericVariableIOStream constructors and close method...")
+
+iostream = GenericVariableIOStream(filename, "w", (), 10000)
+close(iostream)
+rm(filename)
+
+println("    Testing GenericVariableIOStream IO methods...")
 
 println("      Interaction with UnivariateGenericVariableState...")
 

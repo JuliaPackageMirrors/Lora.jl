@@ -50,7 +50,7 @@ end
 
 ContinuousParameterIOStream(
   size::Tuple,
-  n::Int,
+  n::Int;
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
   filepath::AbstractString="",
@@ -60,17 +60,17 @@ ContinuousParameterIOStream(
     size,
     n,
     [
-      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix))
+      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix), "w")
       for i in 1:13
     ],
     diagnostickeys,
-    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
+    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix), "w")
   )
 
 ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
-  monitor::Vector{Symbol},
+  monitor::Vector{Symbol};
   diagnostickeys::Vector{Symbol}=Symbol[],
   filepath::AbstractString="",
   filesuffix::AbstractString="csv"
@@ -78,21 +78,17 @@ ContinuousParameterIOStream(
   ContinuousParameterIOStream(
     size,
     n,
-    [
-      main_cpstate_fields[i] in monitor ?
-        open(joinpath(filepath, string(main_cpstate_fields[i]), "."*filesuffix)) :
-        nothing
-      for i in 1:13
-    ],
-    diagnostickeys,
-    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix))
+    monitor=[main_cpstate_fields[i] in monitor ? true : false for i in 1:13],
+    diagnostickeys=diagnostickeys,
+    filepath=filepath,
+    filesuffix=filesuffix
   )
 
 function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
   body = []
 
   for i in 1:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
+    if iostream.(main_cpstate_fields[i]) != nothing
       push!(
         body,
         :(write($(iostream).(main_cpstate_fields[$i]), join($(:_state).(main_cpstate_fields[$i]), ','), "\n"))
@@ -115,8 +111,8 @@ end
 
 function Base.close(iostream::ContinuousParameterIOStream)
   for i in 1:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      close(getfield(iostream, main_cpstate_fields[i]))
+    if iostream.(main_cpstate_fields[i]) != nothing
+      close(iostream.(main_cpstate_fields[i]))
     end
   end
 
@@ -127,8 +123,8 @@ end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUnivariateParameterNState)
   for i in 1:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+    if iostream.(main_cpstate_fields[i]) != nothing
+      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i]))
     end
   end
 
@@ -139,17 +135,17 @@ end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMultivariateParameterNState)
   for i in 2:4
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+    if iostream.(main_cpstate_fields[i]) != nothing
+      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i]))
     end
   end
   for i in (1, 5, 6, 7)
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i])', ',')
+    if iostream.(main_cpstate_fields[i]) != nothing
+      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i])', ',')
     end
   end
   for i in 8:10
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
+    if iostream.(main_cpstate_fields[i]) != nothing
       statelen = abs2(iostream.size)
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
@@ -157,7 +153,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
     end
   end
   for i in 11:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
+    if iostream.(main_cpstate_fields[i]) != nothing
       statelen = iostream.size^3
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
@@ -175,8 +171,8 @@ function Base.read!{N<:AbstractFloat}(
   nstate::ContinuousUnivariateParameterNState{N}
 )
   for i in 1:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)))
+    if iostream.(main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(iostream.(main_cpstate_fields[i]), ',', N)))
     end
   end
 
@@ -190,17 +186,17 @@ function Base.read!{N<:AbstractFloat}(
   nstate::ContinuousMultivariateParameterNState{N}
 )
   for i in 2:4
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)))
+    if iostream.(main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(iostream.(main_cpstate_fields[i]), ',', N)))
     end
   end
   for i in (1, 5, 6, 7)
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)')
+    if iostream.(main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], readdlm(iostream.(main_cpstate_fields[i]), ',', N)')
     end
   end
   for i in 8:10
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
+    if iostream.(main_cpstate_fields[i]) != nothing
       statelen = abs2(iostream.size)
       line = 1
       while !eof(iostream.stream)
@@ -211,7 +207,7 @@ function Base.read!{N<:AbstractFloat}(
     end
   end
   for i in 11:13
-    if getfield(iostream, main_cpstate_fields[i]) != nothing
+    if iostream.(main_cpstate_fields[i]) != nothing
       statelen = iostream.size^3
       line = 1
       while !eof(iostream.stream)
@@ -235,7 +231,7 @@ function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::T
     nstate = ContinuousUnivariateParameterNState(
       T,
       iostream.n,
-      [getfield(iostream, main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      [iostream.(main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
       iostream.diagnostickeys
     )
   elseif l == 1
@@ -243,7 +239,7 @@ function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::T
       T,
       iostream.size[1],
       iostream.n,
-      [getfield(iostream, main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      [iostream.(main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
       iostream.diagnostickeys
     )
   else
