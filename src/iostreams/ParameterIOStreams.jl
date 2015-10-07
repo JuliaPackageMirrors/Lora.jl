@@ -127,37 +127,60 @@ end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUnivariateParameterNState)
   for i in 1:13
-    if !isempty(getfield(nstate, main_cpstate_fields[i]))
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
       writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
     end
   end
 
-  if !isempty(nstate.diagnosticvalues)
+  if iostream.diagnosticvalues != nothing
     writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
   end
 end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMultivariateParameterNState)
   for i in 2:4
-    writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i]))
+    end
   end
   for i in (1, 5, 6, 7)
-    writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i])', ',')
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      writedlm(getfield(iostream, main_cpstate_fields[i]), getfield(nstate, main_cpstate_fields[i])', ',')
+    end
   end
   for i in 8:10
-    statelen = abs2(nstate.size)
-    for i in 1:nstate.n
-      write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      statelen = abs2(nstate.size)
+      for i in 1:nstate.n
+        write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+      end
     end
   end
   for i in 11:13
-    statelen = nstate.size^3
-    for i in 1:nstate.n
-      write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      statelen = nstate.size^3
+      for i in 1:nstate.n
+        write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
+      end
     end
   end
 
-  if !isempty(nstate.diagnosticvalues)
+  if iostream.diagnosticvalues != nothing
     writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
+  end
+end
+
+function Base.read!{N<:AbstractFloat}(
+  iostream::ContinuousParameterIOStream,
+  nstate::ContinuousUnivariateParameterNState{N}
+)
+  for i in 1:13
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)))
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', N)'
   end
 end
