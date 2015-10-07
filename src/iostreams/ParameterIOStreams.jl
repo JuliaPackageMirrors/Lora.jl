@@ -150,7 +150,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
   end
   for i in 8:10
     if getfield(iostream, main_cpstate_fields[i]) != nothing
-      statelen = abs2(nstate.size)
+      statelen = abs2(iostream.size)
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
       end
@@ -158,7 +158,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
   end
   for i in 11:13
     if getfield(iostream, main_cpstate_fields[i]) != nothing
-      statelen = nstate.size^3
+      statelen = iostream.size^3
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
       end
@@ -181,6 +181,48 @@ function Base.read!{N<:AbstractFloat}(
   end
 
   if iostream.diagnosticvalues != nothing
-    nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', N)'
+    nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', Any)'
+  end
+end
+
+function Base.read!{N<:AbstractFloat}(
+  iostream::ContinuousParameterIOStream,
+  nstate::ContinuousMultivariateParameterNState{N}
+)
+  for i in 2:4
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)))
+    end
+  end
+  for i in (1, 5, 6, 7)
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      setfield!(nstate, main_cpstate_fields[i], readdlm(getfield(iostream, main_cpstate_fields[i]), ',', N)')
+    end
+  end
+  for i in 8:10
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      statelen = abs2(iostream.size)
+      line = 1
+      while !eof(iostream.stream)
+        nstate.value[1+(line-1)*statelen:line*statelen] =
+          [parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
+        line += 1
+      end
+    end
+  end
+  for i in 11:13
+    if getfield(iostream, main_cpstate_fields[i]) != nothing
+      statelen = iostream.size^3
+      line = 1
+      while !eof(iostream.stream)
+        nstate.value[1+(line-1)*statelen:line*statelen] =
+          [parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
+        line += 1
+      end
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', Any)'
   end
 end
