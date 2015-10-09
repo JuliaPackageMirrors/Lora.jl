@@ -49,6 +49,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
 end
 
 ContinuousParameterIOStream(
+  mode::AbstractString,
   size::Tuple,
   n::Int;
   monitor::Vector{Bool}=[true; fill(false, 12)],
@@ -60,14 +61,15 @@ ContinuousParameterIOStream(
     size,
     n,
     [
-      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix), "w")
+      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix), mode)
       for i in 1:13
     ],
     diagnostickeys,
-    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix), "w")
+    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix), mode)
   )
 
 ContinuousParameterIOStream(
+  mode::AbstractString,
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol};
@@ -76,6 +78,7 @@ ContinuousParameterIOStream(
   filesuffix::AbstractString="csv"
 ) =
   ContinuousParameterIOStream(
+    mode,
     size,
     n,
     monitor=[main_cpstate_fields[i] in monitor ? true : false for i in 1:13],
