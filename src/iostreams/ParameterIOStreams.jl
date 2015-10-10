@@ -100,7 +100,7 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   end
 
   if iostream.diagnosticvalues != nothing
-    push!(body, :(write($(iostream).diagnosticvalues, join(values($(:_state).diagnosticvalues), ','), "\n")))
+    push!(body, :(write($(iostream).diagnosticvalues, join($(:_state).diagnosticvalues, ','), "\n")))
   end
 
   @gensym write_continuous_parameter_iostream
