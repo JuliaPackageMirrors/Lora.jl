@@ -50,7 +50,7 @@ for i in [1, 7, 14]; rm(filenames[i]); end
 iostreamsize = (3,)
 iostreamn = 7
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn, [:value, :logtarget, :diagnostics], diagnostickeys=[:accept], filepath=filepath
+  "w", iostreamsize, iostreamn, [:value, :logtarget], diagnostickeys=[:accept], filepath=filepath
 )
 
 @test isa(iostream.value, IOStream)
@@ -71,7 +71,7 @@ println("      Interaction with ContinuousUnivariateParameterState...")
 
 nstatev = Float64[5.70, 1.44, -1.21, 5.67]
 iostreamsize = ()
-iostreamn = 4
+iostreamn = length(nstatev)
 
 iostream = ContinuousParameterIOStream("w", iostreamsize, iostreamn, filepath=filepath)
 for v in nstatev
@@ -97,36 +97,66 @@ rm(filenames[1])
 
 println("      Interaction with ContinuousUnivariateMCChain...")
 
+nstatev = Float32[1.93, 98.46, -3.61, -0.99, 74.52, 9.90]
+nstated = Any[false, true, true, false, true, false]'
+iostreamsize = ()
+iostreamn = length(nstatev)
+
+iostream = ContinuousParameterIOStream(
+  "w", iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath
+)
+nstatein = ContinuousUnivariateMCChain(Float32, iostreamn)
+nstatein.value = nstatev
+nstatein.diagnosticvalues = nstated
+write(iostream, nstatein)
+
+close(iostream)
+
+iostream = ContinuousParameterIOStream(
+  "r", iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath
+)
+nstateout = read(iostream, Float32)
+
+@test isa(nstateout, ContinuousUnivariateParameterNState{Float32})
+@test nstateout.value == nstatein.value
+for i in 2:13
+  @test length(nstateout.(Lora.main_cpstate_fields[i])) == 0
+end
+@test length(nstateout.diagnostickeys) == 1
+@test nstateout.diagnosticvalues == nstatein.diagnosticvalues
+@test nstateout.n == iostream.n
+
+close(iostream)
+for i in [1, 14]; rm(filenames[i]); end
+
 println("      Interaction with ContinuousMultivariateParameterState...")
 
 nstatev = Float64[1.33 2.44 3.14 -0.82; 7.21 -9.75 -5.26 -0.63]
-nstateglt = Float64[3.13 -12.10 13.11 -0.99; 9.91 -5.25 -8.15 -9.69]
+nstategll = Float64[3.13 -12.10 13.11 -0.99; 9.91 -5.25 -8.15 -9.69]
 nstated = Any[false, true, true, false]'
-iostreamsize = (2,)
-iostreamn = 4
+iostreamsize = (size(nstatev, 1),)
+iostreamn = size(nstatev, 2)
 
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn,
-  monitor=[true; fill(false, 5); true; fill(false, 6); true], diagnostickeys=[:accept], filepath=filepath
+  "w", iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
 )
 for i in 1:iostreamn
   state = ContinuousMultivariateParameterState(nstatev[:, i], Symbol[], [:accept], [nstated[i]])
-  state.gradlogtarget = nstateglt[:, i]
+  state.gradloglikelihood = nstategll[:, i]
   iostream.write(state)
 end
 
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  "r", iostreamsize, iostreamn,
-  monitor=[true; fill(false, 5); true; fill(false, 6); true], diagnostickeys=[:accept], filepath=filepath
+  "r", iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
 )
 nstate = read(iostream, Float64)
 
 @test eltype(nstate) == Float64
 @test nstate.value == nstatev
-@test nstate.gradlogtarget == nstateglt
-for i in [2:6; 8:13]
+@test nstate.gradloglikelihood == nstategll
+for i in [2:4; 6:13]
   @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 1
@@ -135,6 +165,6 @@ end
 @test nstate.n == iostream.n
 
 close(iostream)
-for i in [1, 7, 14]; rm(filenames[i]); end
+for i in [1, 5, 14]; rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateMCChain...")

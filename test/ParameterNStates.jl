@@ -16,7 +16,7 @@ end
 @test nstate.n == nstaten
 
 nstaten = 5
-nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true; fill(false, 5); true; fill(false, 6); true], [:accept])
+nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true; fill(false, 5); true; fill(false, 6)], [:accept])
 
 @test eltype(nstate) == Float32
 @test length(nstate.value) == nstaten
@@ -40,7 +40,7 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == true
 
 nstaten = 10
-nstate = ContinuousUnivariateMCChain(Float64, nstaten, [:value, :logtarget, :diagnostics], [:accept])
+nstate = ContinuousUnivariateMCChain(Float64, nstaten, [:value, :logtarget], [:accept])
 
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
@@ -94,7 +94,7 @@ nstate = ContinuousMultivariateMCChain(
   Float32,
   nstatesize,
   nstaten,
-  [true; fill(false, 3); true; fill(false, 8); true],
+  [true; fill(false, 3); true; fill(false, 8)],
   [:accept]
   )
 
@@ -131,13 +131,7 @@ nstate.diagnosticvalues[savei] == false
 
 nstatesize = 2
 nstaten = 10
-nstate = ContinuousMultivariateMCChain(
-  Float16,
-  nstatesize,
-  nstaten,
-  [:value, :logtarget, :gradlogtarget, :diagnostics],
-  [:accept]
-)
+nstate = ContinuousMultivariateMCChain(Float16, nstatesize, nstaten, [:value, :logtarget, :gradlogtarget],[:accept])
 
 @test eltype(nstate) == Float16
 @test size(nstate.value) == (nstatesize, nstaten)
