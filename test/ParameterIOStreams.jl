@@ -83,7 +83,7 @@ close(iostream)
 iostream = ContinuousParameterIOStream("r", iostreamsize, iostreamn, filepath=filepath)
 nstate = read(iostream, Float64)
 
-@test eltype(nstate) == Float64
+@test isa(nstate, ContinuousUnivariateMCChain{Float64})
 @test nstate.value == nstatev
 for i in 2:13
   @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
@@ -117,14 +117,14 @@ iostream = ContinuousParameterIOStream(
 )
 nstateout = read(iostream, Float32)
 
-@test isa(nstateout, ContinuousUnivariateParameterNState{Float32})
+@test isa(nstateout, ContinuousUnivariateMCChain{Float32})
 @test nstateout.value == nstatein.value
 for i in 2:13
   @test length(nstateout.(Lora.main_cpstate_fields[i])) == 0
 end
 @test length(nstateout.diagnostickeys) == 1
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
-@test nstateout.n == iostream.n
+@test nstateout.n == nstatein.n
 
 close(iostream)
 for i in [1, 14]; rm(filenames[i]); end
@@ -153,7 +153,7 @@ iostream = ContinuousParameterIOStream(
 )
 nstate = read(iostream, Float64)
 
-@test eltype(nstate) == Float64
+@test isa(nstate, ContinuousMultivariateMCChain{Float64})
 @test nstate.value == nstatev
 @test nstate.gradloglikelihood == nstategll
 for i in [2:4; 6:13]
@@ -168,3 +168,47 @@ close(iostream)
 for i in [1, 5, 14]; rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateMCChain...")
+
+nstatev = Float32[-1.85 -0.09 0.36; -0.45 -0.85 1.91]
+nstatell = Float32[-1.30, -1.65, -0.18]
+nstatelt = Float32[-0.44, 0.72, -0.21]
+nstated = Any[false true; true false; true true]'
+iostreamsize = (size(nstatev, 1),)
+iostreamn = size(nstatev, 2)
+
+iostream = ContinuousParameterIOStream(
+  "w", iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
+)
+nstatein = ContinuousMultivariateMCChain(
+  Float32,
+  iostreamsize[1],
+  iostreamn,
+  [:value, :loglikelihood, :logtarget],
+  [:accept]
+)
+nstatein.value = nstatev
+nstatein.loglikelihood = nstatell
+nstatein.logtarget = nstatelt
+nstatein.diagnosticvalues = nstated
+write(iostream, nstatein)
+
+close(iostream)
+
+iostream = ContinuousParameterIOStream(
+  "r", iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
+)
+nstateout = read(iostream, Float32)
+
+@test isa(nstateout, ContinuousMultivariateMCChain{Float32})
+@test nstateout.value == nstatein.value
+@test nstateout.loglikelihood == nstatein.loglikelihood
+@test nstateout.logtarget == nstatein.logtarget
+for i in [3; 5:13]
+  @test length(nstateout.(Lora.main_cpstate_fields[i])) == 0
+end
+@test length(nstateout.diagnostickeys) == 1
+@test nstateout.diagnosticvalues == nstatein.diagnosticvalues
+@test nstateout.n == nstatein.n
+
+close(iostream)
+for i in [1, 2, 4, 14]; rm(filenames[i]); end
