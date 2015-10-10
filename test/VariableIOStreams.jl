@@ -6,6 +6,7 @@ filename = joinpath(dirname(@__FILE__), "sample.txt")
 println("    Testing GenericVariableIOStream constructors and close method...")
 
 iostream = GenericVariableIOStream(filename, "w", (), 10000)
+
 close(iostream)
 rm(filename)
 
@@ -21,17 +22,18 @@ iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 for v in nstatev
   write(iostream, UnivariateGenericVariableState(v))
 end
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstate = read(iostream, Float64)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstate, UnivariateGenericVariableNState{Float64})
 @test nstate.value == nstatev
 @test nstate.n == iostream.n
+
+close(iostream)
+rm(filename)
 
 println("      Interaction with UnivariateGenericVariableNState...")
 
@@ -42,17 +44,18 @@ iostreamn = length(nstatev)
 iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 nstatein = UnivariateGenericVariableNState(nstatev)
 write(iostream, nstatein)
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstateout = read(iostream, Float32)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstateout, UnivariateGenericVariableNState{Float32})
 @test nstateout.value == nstatein.value
 @test nstateout.n == nstatein.n
+
+close(iostream)
+rm(filename)
 
 println("      Interaction with MultivariateGenericVariableState...")
 
@@ -64,18 +67,19 @@ iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 for i in 1:iostreamn
   write(iostream, MultivariateGenericVariableState(nstatev[:, i]))
 end
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstate = read(iostream, Float64)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstate, MultivariateGenericVariableNState{Float64})
 @test nstate.value == nstatev
 @test (nstate.size,) == iostream.size
 @test nstate.n == iostream.n
+
+close(iostream)
+rm(filename)
 
 println("      Interaction with MultivariateGenericVariableNState...")
 
@@ -86,18 +90,19 @@ iostreamn = size(nstatev, 2)
 iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 nstatein = MultivariateGenericVariableNState(nstatev)
 write(iostream, nstatein)
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstateout = read(iostream, Float32)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstateout, MultivariateGenericVariableNState{Float32})
 @test nstateout.value == nstatein.value
 @test nstateout.size == nstatein.size
 @test nstateout.n == nstatein.n
+
+close(iostream)
+rm(filename)
 
 println("      Interaction with MatrixvariateGenericVariableState...")
 
@@ -119,18 +124,19 @@ iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 for i in 1:iostreamn
   write(iostream, MatrixvariateGenericVariableState(nstatev[:, :, i]))
 end
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstate = read(iostream, Float64)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstate, MatrixvariateGenericVariableNState{Float64})
 @test nstate.value == nstatev
 @test nstate.size == iostream.size
 @test nstate.n == iostream.n
+
+close(iostream)
+rm(filename)
 
 println("      Interaction with MatrixvariateGenericVariableNState...")
 
@@ -151,15 +157,16 @@ iostreamn = size(nstatev, 3)
 iostream = GenericVariableIOStream(filename, "w", iostreamsize, iostreamn)
 nstatein = MatrixvariateGenericVariableNState(nstatev)
 write(iostream, nstatein)
+
 close(iostream)
 
 iostream = GenericVariableIOStream(filename, "r", iostreamsize, iostreamn)
 nstateout = read(iostream, Float32)
-close(iostream)
-
-rm(filename)
 
 @test isa(nstateout, MatrixvariateGenericVariableNState{Float32})
 @test nstateout.value == nstatein.value
 @test nstateout.size == nstatein.size
 @test nstateout.n == nstatein.n
+
+close(iostream)
+rm(filename)
