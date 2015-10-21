@@ -76,6 +76,7 @@ export
   ContinuousMultivariateParameter,
   Dependence,
   GenericModel,
+  MCJob,
   ### Functions
   add_dimension,
   save!,
@@ -114,5 +115,8 @@ include("variables/parameters.jl")
 include("variables/dependencies.jl")
 include("models/GenericModel.jl")
 include("models/generators.jl")
+include("jobs/jobs.jl")
+# include("jobs/BasicMCJob.jl")
+# include("jobs/GibbsJob.jl")
 
 end
