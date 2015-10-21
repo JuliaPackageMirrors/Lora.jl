@@ -1,21 +1,19 @@
-# # Placeholder for defining BasicMCJob
-# # Alternative name for BasicMCJob: SingleParameterLikelihoodSerialMCJob
-#
-# type BasicMCJob <: MCJob
-#   model::GenericModel
-#   sampler::MCSampler
-#   runner::SerialMC
-#   tuner::MCTuner
-#   stash::MCSamplerState # MCSamplerState represents the samplers' internal state
-#                         # Alternative names: MCSamplerInternalState, MCSamplerStash
-#   send::Function
-#   receive::Function
-#   reset::Function
-#   plain::Bool # If true then don't use coroutines, otherwise use tasks for controlling flow of Monte Carlo simulation
-#   task::Union{Task, Void}
-#
-#   function BasicMCJob(m::GenericModel s::MCSampler r::MCRunner t::MCTuner)
-#   end
-# end
-#
-# # typealias BasicMCJob SingleParameterLikelihoodSerialMCJob
+### BasicMCJob is used for sampling a single parameter  via serial Monte Carlo
+### It is the most elementary and typical Markov chain Monte Carlo (MCMC) framework
+
+type BasicMCJob <: MCJob
+  model::GenericModel # Likelihood model of a single parameter residing on the first node of model.vertices
+  sampler::MCSampler
+  runner::SerialMC
+  tuner::MCTuner
+  pstate::ContinuousParameterState # State of single parameter of likelihood, i.e. of first node in model.vertices
+  sstate::MCSamplerState # Internal state of MCSampler
+  send::Function
+  receive::Function
+  reset::Function
+  plain::Bool # If job flow is controlled via tasks, then plain=false, otherwise plain=true
+  task::Union{Task, Void}
+
+  function BasicMCJob(m::GenericModel s::MCSampler r::MCRunner t::MCTuner)
+  end
+end

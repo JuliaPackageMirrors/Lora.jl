@@ -1,3 +1,7 @@
+### MCSamplerState represents the Monte Carlo samplers' internal state ("local variables")
+
+abstract MCSamplerState
+
 ### Abstract Monte Carlo sampler typesystem
 
 ## Root Monte Carlo sampler

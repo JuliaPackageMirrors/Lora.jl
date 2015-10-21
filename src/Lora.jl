@@ -38,8 +38,8 @@ import Graphs:
 
 export
   ### Types
-  MCTuner,
   MCTune,
+  MCTuner,
   VariableState,
   BasicVariableState,
   UnivariateBasicVariableState,
@@ -79,10 +79,13 @@ export
   ContinuousMultivariateParameter,
   Dependence,
   GenericModel,
+  MCSamplerState,
   MCSampler,
   MHSampler,
   HMCSampler,
   LMCSampler,
+  MHState,
+  MH,
   MCJob,
   ### Functions
   add_dimension,
@@ -125,6 +128,7 @@ include("variables/dependencies.jl")
 include("models/GenericModel.jl")
 include("models/generators.jl")
 include("samplers/samplers.jl")
+include("samplers/MH.jl")
 include("jobs/jobs.jl")
 # include("jobs/BasicMCJob.jl")
 # include("jobs/GibbsJob.jl")
