@@ -246,7 +246,7 @@ function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::T
       iostream.diagnostickeys
     )
   else
-    error("GenericVariableIOStream.size must be a tuple of length 0 or 1, got $(iostream.size) length")
+    error("BasicVariableIOStream.size must be a tuple of length 0 or 1, got $(iostream.size) length")
   end
 
   read!(iostream, nstate)

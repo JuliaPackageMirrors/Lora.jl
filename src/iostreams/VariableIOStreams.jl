@@ -2,42 +2,42 @@
 
 abstract VariableIOStream
 
-### GenericVariableIOStream
+### BasicVariableIOStream
 
-type GenericVariableIOStream <: VariableIOStream
+type BasicVariableIOStream <: VariableIOStream
   stream::IOStream
   size::Tuple
   n::Int
 end
 
-GenericVariableIOStream(filename::AbstractString, mode::AbstractString, size::Tuple, n::Int) =
-  GenericVariableIOStream(open(filename, mode), size, n)
+BasicVariableIOStream(filename::AbstractString, mode::AbstractString, size::Tuple, n::Int) =
+  BasicVariableIOStream(open(filename, mode), size, n)
 
-Base.close(iostream::GenericVariableIOStream) = close(iostream.stream)
+Base.close(iostream::BasicVariableIOStream) = close(iostream.stream)
 
-Base.write(iostream::GenericVariableIOStream, state::GenericVariableState) =
+Base.write(iostream::BasicVariableIOStream, state::BasicVariableState) =
   write(iostream.stream, join(state.value, ','), "\n")
 
-Base.write(iostream::GenericVariableIOStream, nstate::UnivariateGenericVariableNState) =
+Base.write(iostream::BasicVariableIOStream, nstate::UnivariateBasicVariableNState) =
   writedlm(iostream.stream, nstate.value)
 
-Base.write(iostream::GenericVariableIOStream, nstate::MultivariateGenericVariableNState) =
+Base.write(iostream::BasicVariableIOStream, nstate::MultivariateBasicVariableNState) =
   writedlm(iostream.stream, nstate.value', ',')
 
-function Base.write(iostream::GenericVariableIOStream, nstate::MatrixvariateGenericVariableNState)
+function Base.write(iostream::BasicVariableIOStream, nstate::MatrixvariateBasicVariableNState)
   statelen = prod(nstate.size)
   for i in 1:nstate.n
     write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
   end
 end
 
-Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::UnivariateGenericVariableNState{N}) =
+Base.read!{N<:Number}(iostream::BasicVariableIOStream, nstate::UnivariateBasicVariableNState{N}) =
   nstate.value = vec(readdlm(iostream.stream, ',', N))
 
-Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::MultivariateGenericVariableNState{N}) =
+Base.read!{N<:Number}(iostream::BasicVariableIOStream, nstate::MultivariateBasicVariableNState{N}) =
   nstate.value = readdlm(iostream.stream, ',', N)'
 
-function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::MatrixvariateGenericVariableNState{N})
+function Base.read!{N<:Number}(iostream::BasicVariableIOStream, nstate::MatrixvariateBasicVariableNState{N})
   statelen = prod(iostream.size)
   line = 1
   while !eof(iostream.stream)
@@ -47,21 +47,21 @@ function Base.read!{N<:Number}(iostream::GenericVariableIOStream, nstate::Matrix
   end
 end
 
-function Base.read{N<:Number}(iostream::GenericVariableIOStream, T::Type{N})
-  nstate::GenericVariableNState
+function Base.read{N<:Number}(iostream::BasicVariableIOStream, T::Type{N})
+  nstate::BasicVariableNState
   l = length(iostream.size)
 
   if l == 0
-    nstate = UnivariateGenericVariableNState(T, iostream.n)
+    nstate = UnivariateBasicVariableNState(T, iostream.n)
   elseif l == 1
-    nstate = MultivariateGenericVariableNState(T, iostream.size[1], iostream.n)
+    nstate = MultivariateBasicVariableNState(T, iostream.size[1], iostream.n)
   elseif l == 2
-    nstate = MatrixvariateGenericVariableNState(T, iostream.size, iostream.n)
+    nstate = MatrixvariateBasicVariableNState(T, iostream.size, iostream.n)
   else
-    error("GenericVariableIOStream.size must be a tuple of length 0 or 1 or 2, got $(iostream.size) length")
+    error("BasicVariableIOStream.size must be a tuple of length 0 or 1 or 2, got $(iostream.size) length")
   end
 
   read!(iostream, nstate)
-  
+
   nstate
 end

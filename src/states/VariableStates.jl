@@ -2,50 +2,48 @@
 
 abstract VariableState{F<:VariateForm, N<:Number}
 
-abstract GenericVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
+abstract BasicVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:Number}(::Type{BasicVariableState{F, N}}) = N
 
-### Generic variable state subtypes
+### Basic variable state subtypes
 
-## UnivariateGenericVariableState
+## UnivariateBasicVariableState
 
-type UnivariateGenericVariableState{N<:Number} <: GenericVariableState{Univariate, N}
+type UnivariateBasicVariableState{N<:Number} <: BasicVariableState{Univariate, N}
   value::N
 end
 
-Base.eltype{N<:Number}(::Type{UnivariateGenericVariableState{N}}) = N
-Base.eltype{N<:Number}(s::UnivariateGenericVariableState{N}) = N
+Base.eltype{N<:Number}(::Type{UnivariateBasicVariableState{N}}) = N
+Base.eltype{N<:Number}(s::UnivariateBasicVariableState{N}) = N
 
-## MultivariateGenericVariableState
+## MultivariateBasicVariableState
 
-type MultivariateGenericVariableState{N<:Number} <: GenericVariableState{Multivariate, N}
+type MultivariateBasicVariableState{N<:Number} <: BasicVariableState{Multivariate, N}
   value::Vector{N}
   size::Int
 end
 
-MultivariateGenericVariableState{N<:Number}(value::Vector{N}) =
-  MultivariateGenericVariableState{N}(value, length(value))
+MultivariateBasicVariableState{N<:Number}(value::Vector{N}) = MultivariateBasicVariableState{N}(value, length(value))
 
-MultivariateGenericVariableState{N<:Number}(::Type{N}, size::Int=0) =
-  MultivariateGenericVariableState{N}(Array(N, size), size)
+MultivariateBasicVariableState{N<:Number}(::Type{N}, size::Int=0) =
+  MultivariateBasicVariableState{N}(Array(N, size), size)
 
-Base.eltype{N<:Number}(::Type{MultivariateGenericVariableState{N}}) = N
-Base.eltype{N<:Number}(s::MultivariateGenericVariableState{N}) = N
+Base.eltype{N<:Number}(::Type{MultivariateBasicVariableState{N}}) = N
+Base.eltype{N<:Number}(s::MultivariateBasicVariableState{N}) = N
 
-## MatrixvariateGenericVariableState
+## MatrixvariateBasicVariableState
 
-type MatrixvariateGenericVariableState{N<:Number} <: GenericVariableState{Matrixvariate, N}
+type MatrixvariateBasicVariableState{N<:Number} <: BasicVariableState{Matrixvariate, N}
   value::Matrix{N}
   size::Tuple{Int, Int}
 end
 
-MatrixvariateGenericVariableState{N<:Number}(value::Matrix{N}) =
-  MatrixvariateGenericVariableState{N}(value, size(value))
+MatrixvariateBasicVariableState{N<:Number}(value::Matrix{N}) = MatrixvariateBasicVariableState{N}(value, size(value))
 
-MatrixvariateGenericVariableState{N<:Number}(::Type{N}, size::Tuple=(0, 0)) =
-  MatrixvariateGenericVariableState{N}(Array(N, size...), size)
+MatrixvariateBasicVariableState{N<:Number}(::Type{N}, size::Tuple=(0, 0)) =
+  MatrixvariateBasicVariableState{N}(Array(N, size...), size)
 
-Base.eltype{N<:Number}(::Type{MatrixvariateGenericVariableState{N}}) = N
-Base.eltype{N<:Number}(s::MatrixvariateGenericVariableState{N}) = N
+Base.eltype{N<:Number}(::Type{MatrixvariateBasicVariableState{N}}) = N
+Base.eltype{N<:Number}(s::MatrixvariateBasicVariableState{N}) = N

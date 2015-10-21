@@ -38,7 +38,7 @@ println("      Initialization via pdf field...")
 
 pv = [5.18, -7.76]
 μv = [6.11, -8.5]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(μv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(1, :p, pdf=MvNormal(states[2].value, 1.))
 
@@ -88,7 +88,7 @@ println("      Initialization via prior field...")
 pv = [1.25, 1.8]
 pvlen = length(pv)
 σv = [10., 2.]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(σv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
 
 p = ContinuousMultivariateParameter(1, :p, prior=MvNormal(zeros(pvlen), states[2].value))
 
@@ -142,7 +142,7 @@ println("      Initialization via setpdf field...")
 
 pv = [3.79, 4.64]
 μv = [5.4, 5.3]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(μv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(1, :p, setpdf=(states, i) -> MvNormal(states[2].value, 1.))
 p.setpdf(states, 1)
@@ -193,7 +193,7 @@ println("      Initialization via setprior field...")
 pv = [3.55, 9.5]
 pvlen = length(pv)
 σv = [2., 10.]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(σv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
 
 p = ContinuousMultivariateParameter(1, :p, setprior=(states, i) -> MvNormal(zeros(pvlen), states[2].value))
 p.setprior(states, 1)
@@ -238,10 +238,10 @@ xv = [-1.88, 2.23]
 Σ0v = eye(μvlen)
 states = VariableState[
   ContinuousMultivariateParameterState(μv),
-  MultivariateGenericVariableState(xv),
-  MatrixvariateGenericVariableState(Σv),
-  MultivariateGenericVariableState(μ0v),
-  MatrixvariateGenericVariableState(Σ0v)
+  MultivariateBasicVariableState(xv),
+  MatrixvariateBasicVariableState(Σv),
+  MultivariateBasicVariableState(μ0v),
+  MatrixvariateBasicVariableState(Σ0v)
 ]
 
 llf(states, i) =
@@ -295,7 +295,7 @@ println("      Initialization via logtarget! field...")
 pv = [-1.28, 1.73]
 pvlen = length(pv)
 μv = [9.4, 3.32]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(μv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(
   1,
@@ -329,10 +329,10 @@ xv = [4.11, 8.17]
 Σ0v = eye(μvlen)
 states = VariableState[
   ContinuousMultivariateParameterState(μv),
-  MultivariateGenericVariableState(xv),
-  MatrixvariateGenericVariableState(Σv),
-  MultivariateGenericVariableState(μ0v),
-  MatrixvariateGenericVariableState(Σ0v)
+  MultivariateBasicVariableState(xv),
+  MatrixvariateBasicVariableState(Σv),
+  MultivariateBasicVariableState(μ0v),
+  MatrixvariateBasicVariableState(Σ0v)
 ]
 
 llf(states, i) =
@@ -457,10 +457,10 @@ xv = [5.43, 9.783]
 Σ0v = eye(μvlen)
 states = VariableState[
   ContinuousMultivariateParameterState(μv),
-  MultivariateGenericVariableState(xv),
-  MatrixvariateGenericVariableState(Σv),
-  MultivariateGenericVariableState(μ0v),
-  MatrixvariateGenericVariableState(Σ0v)
+  MultivariateBasicVariableState(xv),
+  MatrixvariateBasicVariableState(Σv),
+  MultivariateBasicVariableState(μ0v),
+  MatrixvariateBasicVariableState(Σ0v)
 ]
 
 llf(states, i) =
@@ -530,7 +530,7 @@ println("      Initialization via logtarget! and gradlogtarget! fields...")
 
 pv = [-4.29, 2.91]
 μv = [2.2, 2.02]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateGenericVariableState(μv)]
+states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(
   1,

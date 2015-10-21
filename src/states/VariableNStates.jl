@@ -2,73 +2,72 @@
 
 abstract VariableNState{F<:VariateForm, N<:Number}
 
-abstract GenericVariableNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
+abstract BasicVariableNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableNState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Number}(::Type{GenericVariableNState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:Number}(::Type{BasicVariableNState{F, N}}) = N
 
 add_dimension(n::Number) = eltype(n)[n]
 add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)
 
-### Generic variable NState subtypes
+### Basic variable NState subtypes
 
-## UnivariateGenericVariableNState
+## UnivariateBasicVariableNState
 
-type UnivariateGenericVariableNState{N<:Number} <: GenericVariableNState{Univariate, N}
+type UnivariateBasicVariableNState{N<:Number} <: BasicVariableNState{Univariate, N}
   value::Vector{N}
   n::Int
 end
 
-UnivariateGenericVariableNState{N<:Number}(value::Vector{N}) = UnivariateGenericVariableNState{N}(value, length(value))
+UnivariateBasicVariableNState{N<:Number}(value::Vector{N}) = UnivariateBasicVariableNState{N}(value, length(value))
 
-UnivariateGenericVariableNState{N<:Number}(::Type{N}, n::Int=0) = UnivariateGenericVariableNState{N}(Array(N, n), n)
+UnivariateBasicVariableNState{N<:Number}(::Type{N}, n::Int=0) = UnivariateBasicVariableNState{N}(Array(N, n), n)
 
-Base.eltype{N<:Number}(::Type{UnivariateGenericVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::UnivariateGenericVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{UnivariateBasicVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::UnivariateBasicVariableNState{N}) = N
 
-Base.copy!(nstate::UnivariateGenericVariableNState, state::UnivariateGenericVariableState, i::Int) =
+Base.copy!(nstate::UnivariateBasicVariableNState, state::UnivariateBasicVariableState, i::Int) =
   (nstate.value[i] = state.value)
 
-## MultivariateGenericVariableNState
+## MultivariateBasicVariableNState
 
-type MultivariateGenericVariableNState{N<:Number} <: GenericVariableNState{Multivariate, N}
+type MultivariateBasicVariableNState{N<:Number} <: BasicVariableNState{Multivariate, N}
   value::Matrix{N}
   size::Int
   n::Int
 end
 
-MultivariateGenericVariableNState{N<:Number}(value::Matrix{N}) =
-  MultivariateGenericVariableNState{N}(value, size(value)...)
+MultivariateBasicVariableNState{N<:Number}(value::Matrix{N}) = MultivariateBasicVariableNState{N}(value, size(value)...)
 
-MultivariateGenericVariableNState{N<:Number}(::Type{N}, size::Int=0, n::Int=0) =
-  MultivariateGenericVariableNState{N}(Array(N, size, n), size, n)
+MultivariateBasicVariableNState{N<:Number}(::Type{N}, size::Int=0, n::Int=0) =
+  MultivariateBasicVariableNState{N}(Array(N, size, n), size, n)
 
-Base.eltype{N<:Number}(::Type{MultivariateGenericVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::MultivariateGenericVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{MultivariateBasicVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::MultivariateBasicVariableNState{N}) = N
 
-Base.copy!(nstate::MultivariateGenericVariableNState, state::MultivariateGenericVariableState, i::Int) =
+Base.copy!(nstate::MultivariateBasicVariableNState, state::MultivariateBasicVariableState, i::Int) =
   (nstate.value[1+(i-1)*state.size:i*state.size] = state.value)
 
-## MatrixvariateGenericVariableNState
+## MatrixvariateBasicVariableNState
 
-type MatrixvariateGenericVariableNState{N<:Number} <: GenericVariableNState{Matrixvariate, N}
+type MatrixvariateBasicVariableNState{N<:Number} <: BasicVariableNState{Matrixvariate, N}
   value::Array{N, 3}
   size::Tuple{Int, Int}
   n::Int
 end
 
-MatrixvariateGenericVariableNState{N<:Number}(value::Array{N, 3}) =
-  MatrixvariateGenericVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
+MatrixvariateBasicVariableNState{N<:Number}(value::Array{N, 3}) =
+  MatrixvariateBasicVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
 
-MatrixvariateGenericVariableNState{N<:Number}(::Type{N}, size::Tuple=(0, 0), n::Int=0) =
-  MatrixvariateGenericVariableNState{N}(Array(N, size..., n), size, n)
+MatrixvariateBasicVariableNState{N<:Number}(::Type{N}, size::Tuple=(0, 0), n::Int=0) =
+  MatrixvariateBasicVariableNState{N}(Array(N, size..., n), size, n)
 
-Base.eltype{N<:Number}(::Type{MatrixvariateGenericVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::MatrixvariateGenericVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{MatrixvariateBasicVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::MatrixvariateBasicVariableNState{N}) = N
 
 Base.copy!(
-  nstate::MatrixvariateGenericVariableNState,
-  state::MatrixvariateGenericVariableState,
+  nstate::MatrixvariateBasicVariableNState,
+  state::MatrixvariateBasicVariableState,
   i::Int,
   statelen::Int=prod(state.size)
 ) =

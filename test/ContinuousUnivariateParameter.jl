@@ -38,7 +38,7 @@ println("      Initialization via pdf field...")
 
 pv = 5.18
 μv = 6.11
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(μv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(μv)]
 
 p = ContinuousUnivariateParameter(1, :p, pdf=Normal(states[2].value))
 
@@ -87,7 +87,7 @@ println("      Initialization via prior field...")
 
 pv = 1.25
 σv = 10.
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(σv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(σv)]
 
 p = ContinuousUnivariateParameter(1, :p, prior=Normal(0., states[2].value))
 
@@ -140,7 +140,7 @@ println("      Initialization via setpdf field...")
 
 pv = 3.79
 μv = 5.4
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(μv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(μv)]
 
 p = ContinuousUnivariateParameter(1, :p, setpdf=(states, i) -> Normal(states[2].value))
 p.setpdf(states, 1)
@@ -190,7 +190,7 @@ println("      Initialization via setprior field...")
 
 pv = 3.55
 σv = 2.
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(σv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(σv)]
 
 p = ContinuousUnivariateParameter(1, :p, setprior=(states, i) -> Normal(0., states[2].value))
 p.setprior(states, 1)
@@ -234,10 +234,10 @@ xv = -1.88
 σ0v = 1.
 states = VariableState[
   ContinuousUnivariateParameterState(μv),
-  UnivariateGenericVariableState(xv),
-  UnivariateGenericVariableState(σv),
-  UnivariateGenericVariableState(μ0v),
-  UnivariateGenericVariableState(σ0v)
+  UnivariateBasicVariableState(xv),
+  UnivariateBasicVariableState(σv),
+  UnivariateBasicVariableState(μ0v),
+  UnivariateBasicVariableState(σ0v)
 ]
 
 llf(states, i) =
@@ -282,7 +282,7 @@ println("      Initialization via logtarget! field...")
 
 pv = -1.28
 μv = 9.4
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(μv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(μv)]
 
 p = ContinuousUnivariateParameter(
   1,
@@ -315,10 +315,10 @@ xv = 4.11
 σ0v = 1.
 states = VariableState[
   ContinuousUnivariateParameterState(μv),
-  UnivariateGenericVariableState(xv),
-  UnivariateGenericVariableState(σv),
-  UnivariateGenericVariableState(μ0v),
-  UnivariateGenericVariableState(σ0v)
+  UnivariateBasicVariableState(xv),
+  UnivariateBasicVariableState(σv),
+  UnivariateBasicVariableState(μ0v),
+  UnivariateBasicVariableState(σ0v)
 ]
 
 llf(states, i) =
@@ -382,10 +382,10 @@ xv = 3.1
 σ0v = 10.
 states = VariableState[
   ContinuousUnivariateParameterState(μv),
-  UnivariateGenericVariableState(xv),
-  UnivariateGenericVariableState(σv),
-  UnivariateGenericVariableState(μ0v),
-  UnivariateGenericVariableState(σ0v)
+  UnivariateBasicVariableState(xv),
+  UnivariateBasicVariableState(σv),
+  UnivariateBasicVariableState(μ0v),
+  UnivariateBasicVariableState(σ0v)
 ]
 
 μ.prior = Normal(states[4].value, states[5].value)
@@ -440,10 +440,10 @@ xv = 5.43
 σ0v = 1.
 states = VariableState[
   ContinuousUnivariateParameterState(μv),
-  UnivariateGenericVariableState(xv),
-  UnivariateGenericVariableState(σv),
-  UnivariateGenericVariableState(μ0v),
-  UnivariateGenericVariableState(σ0v)
+  UnivariateBasicVariableState(xv),
+  UnivariateBasicVariableState(σv),
+  UnivariateBasicVariableState(μ0v),
+  UnivariateBasicVariableState(σ0v)
 ]
 
 llf(states, i) =
@@ -505,7 +505,7 @@ println("      Initialization via logtarget! and gradlogtarget! fields...")
 
 pv = -4.29
 μv = 2.2
-states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateGenericVariableState(μv)]
+states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(μv)]
 
 p = ContinuousUnivariateParameter(
   1,
