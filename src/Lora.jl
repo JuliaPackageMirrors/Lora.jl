@@ -81,6 +81,8 @@ export
   GenericModel,
   VanillaMCTune,
   VanillaMCTuner,
+  AcceptanceRateMCTune,
+  AcceptanceRateMCTuner,
   MCSamplerState,
   MCSampler,
   MHSampler,
@@ -115,6 +117,11 @@ export
   topological_sort_by_dfs,
   likelihood_model,
   single_parameter_likelihood_model,
+  reset!,
+  count!,
+  rate!,
+  sigmoid,
+  tune!,
   run
 
 include("common.jl")
@@ -132,6 +139,7 @@ include("models/generators.jl")
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
 include("tuners/VanillaMCTuner.jl")
+include("tuners/AcceptanceRateMCTuner.jl")
 include("jobs/jobs.jl")
 # include("jobs/BasicMCJob.jl")
 # include("jobs/GibbsJob.jl")
