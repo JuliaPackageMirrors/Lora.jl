@@ -79,6 +79,8 @@ export
   ContinuousMultivariateParameter,
   Dependence,
   GenericModel,
+  VanillaMCTune,
+  VanillaMCTuner,
   MCSamplerState,
   MCSampler,
   MHSampler,
@@ -129,6 +131,7 @@ include("models/GenericModel.jl")
 include("models/generators.jl")
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
+include("tuners/VanillaMCTuner.jl")
 include("jobs/jobs.jl")
 # include("jobs/BasicMCJob.jl")
 # include("jobs/GibbsJob.jl")
