@@ -1,19 +1,26 @@
 ### Auxiliary functions used as scores for penalising deviation of observed from target acceptance rate
 
-sigmoid(x::Number, a::Number=7.) = 2/(1+exp(-a*x))
+## logistic_rate_score
 
-### AcceptanceRateMCTune holds the tuning-related local variables of a MCSampler that uses the AcceptanceRateMCTune
+# logistic_rate_score allows to scale the acceptance rate by a factor ranging from 0 to 2
+# In other words, it allows to nearly eliminate or double the rate depending on its observed value
+
+logistic_rate_score(x::Number, k::Number=7.) = logistic(x, 2., k, 0., 0.)
+
+### AcceptanceRateMCTune
+
+# AcceptanceRateMCTune holds the tuning-related local variables of a MCSampler that uses the AcceptanceRateMCTuner
 
 type AcceptanceRateMCTune <: MCTune
-  step::Float64 # Stepsize of Monte Carlo iteration (for ex leapfrog or drift stepsize)
-  accepted::Int # Number of accepted Monte Carlo samples during current tuning period
-  proposed::Int # Number of proposed Monte Carlo samples during current tuning period
-  rate::Float64 # Observed acceptance rate over tuning period
+  step::Float64 # Stepsize of MCMC iteration (for ex leapfrog or drift stepsize)
+  accepted::Int # Number of accepted MCMC samples during current tuning period
+  proposed::Int # Number of proposed MCMC samples during current tuning period
+  rate::Float64 # Observed acceptance rate over current tuning period
 
   function AcceptanceRateMCTune(step::Float64, accepted::Int, proposed::Int, rate::Float64)
-    @assert step > 0 "Stepsize of Monte Carlo iteration should be positive"
-    @assert accepted >= 0 "Number of accepted Monte Carlo samples should be non-negative"
-    @assert proposed >= 0 "Number of proposed Monte Carlo samples should be non-negative"
+    @assert step > 0 "Stepsize of MCMC iteration should be positive"
+    @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
+    @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
     if !isnan(rate)
       @assert 0 < rate < 1 "Observed acceptance rate should be between 0 and 1"
     end
@@ -30,9 +37,11 @@ count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
 
 rate!(tune::AcceptanceRateMCTune) = (tune.rate = tune.accepted/tune.proposed)
 
-### AcceptanceRateMCTuner tunes empirically on the basis of the discrepancy between observed and target acceptance rate
-### This discrepancy is pernalised via an optional score function
-### The default score function is a stretched sigmoid
+### AcceptanceRateMCTuner
+
+# AcceptanceRateMCTuner tunes empirically on the basis of the discrepancy between observed and target acceptance rate
+# This discrepancy is pernalised via an optional score function
+# The default score function is a stretched sigmoid
 
 immutable AcceptanceRateMCTuner <: MCTuner
   targetrate::Float64 # Target acceptance rate
@@ -49,7 +58,7 @@ end
 
 AcceptanceRateMCTuner(
   targetrate::Float64;
-  score::Function=sigmoid,
+  score::Function=logistic_rate_score,
   period::Int=100,
   verbose::Bool=false
 ) =

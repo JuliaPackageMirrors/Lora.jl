@@ -1,4 +1,6 @@
-### MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
+### MHState
+
+# MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
 type MHState <: MCSamplerState
   pstate::ContinuousParameterState # Parameter state used internally by MH
@@ -13,9 +15,10 @@ end
 # MHHeap(l::Int, t::MCTune=VanillaMCTune()) =
 #   MHHeap(MCState(MCBaseSample(l), MCBaseSample(l)), MCState(MCBaseSample(l), MCBaseSample(l)), t, 0, NaN)
 
-### MH defines the Metropolis-Hastings sampler
-### In its most general case it accommodates an asymmetric proposal density
-### For symetric proposals, the proposal correction factor equals 1, so the logproposal field is set to nothing
+### Metropolis-Hastings (MH) sampler
+
+# In its most general case it accommodates an asymmetric proposal density
+# For symetric proposals, the proposal correction factor equals 1, so the logproposal field is set to nothing
 
 immutable MH <: MHSampler
   symmetric::Bool # If the proposal density is symmetric, then symmetric=true, otherwise symmetric=false

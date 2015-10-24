@@ -38,6 +38,7 @@ import Graphs:
 
 export
   ### Types
+  logistic,
   MCTune,
   MCTuner,
   VariableState,
@@ -120,7 +121,7 @@ export
   reset!,
   count!,
   rate!,
-  sigmoid,
+  logistic_rate_score,
   tune!,
   run
 
