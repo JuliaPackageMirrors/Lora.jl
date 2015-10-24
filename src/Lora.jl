@@ -39,7 +39,6 @@ import Graphs:
 export
   ### Types
   logistic,
-  MCTune,
   MCTuner,
   VariableState,
   BasicVariableState,
@@ -80,9 +79,9 @@ export
   ContinuousMultivariateParameter,
   Dependence,
   GenericModel,
-  VanillaMCTune,
+  MCTune,
+  BasicMCTune,
   VanillaMCTuner,
-  AcceptanceRateMCTune,
   AcceptanceRateMCTuner,
   MCSamplerState,
   MCSampler,
@@ -122,10 +121,12 @@ export
   count!,
   rate!,
   logistic_rate_score,
+  erf_rate_score,
   tune!,
   run
 
 include("common.jl")
+
 include("states/VariableStates.jl")
 include("states/ParameterStates.jl")
 include("states/VariableNStates.jl")
@@ -137,10 +138,15 @@ include("variables/parameters.jl")
 include("variables/dependencies.jl")
 include("models/GenericModel.jl")
 include("models/generators.jl")
-include("samplers/samplers.jl")
-include("samplers/MH.jl")
+
+include("tuners/tuners.jl")
 include("tuners/VanillaMCTuner.jl")
 include("tuners/AcceptanceRateMCTuner.jl")
+include("samplers/samplers.jl")
+include("samplers/MH.jl")
+
+# include("runners/BasicMCRunner.jl")
+
 include("jobs/jobs.jl")
 # include("jobs/BasicMCJob.jl")
 # include("jobs/GibbsJob.jl")

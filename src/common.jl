@@ -9,11 +9,3 @@
 # The logistic function has been defined for tuning purposes
 
 logistic(x::Number, l::Number=1., k::Number=1., x0::Number=0., y0::Number=0.) = l/(1+exp(-k*(x-x0)))+y0
-
-### Tune types hold the samplers' temporary output used for tuning the sampler
-
-abstract MCTune
-
-### MCTuner
-
-abstract MCTuner

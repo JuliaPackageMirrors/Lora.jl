@@ -4,8 +4,8 @@
 # It is the most elementary and typical Markov chain Monte Carlo (MCMC) strategy
 
 type BasicMCJob <: MCJob
+  runner::BasicMCRunner
   model::GenericModel # Model of a single parameter residing on the first node of model.vertices
-  runner::SerialMC
   sampler::MCSampler
   tuner::MCTuner
   vstates::Vector{VariableState} # Vector of variable states ordered in accordance with variables in model.vertices
@@ -21,3 +21,5 @@ type BasicMCJob <: MCJob
   # If check=true, then check isa(model, likelihood) and isa(model.vertices[1], Parameter)
   # end
 end
+
+# Note: it is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob

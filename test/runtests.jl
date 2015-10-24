@@ -1,5 +1,6 @@
 tests =
   [
+    "common",
     "VariableStates",
     "ParameterStates",
     "VariableNStates",
@@ -12,6 +13,7 @@ tests =
     "dependencies",
     "GenericModel",
     "generators",
+    "tuners",
     "VanillaMCTuner",
     "AcceptanceRateMCTuner"
   ]

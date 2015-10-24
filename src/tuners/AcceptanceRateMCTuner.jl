@@ -2,40 +2,19 @@
 
 ## logistic_rate_score
 
-# logistic_rate_score allows to scale the acceptance rate by a factor ranging from 0 to 2
+# logistic_rate_score uses the logistic function to scale the acceptance rate by a factor ranging from 0 to 2
 # In other words, it allows to nearly eliminate or double the rate depending on its observed value
+# k gives the curve's steepness. For larger k, the curve becomes more steep
 
 logistic_rate_score(x::Number, k::Number=7.) = logistic(x, 2., k, 0., 0.)
 
-### AcceptanceRateMCTune
+## erf_rate_score
 
-# AcceptanceRateMCTune holds the tuning-related local variables of a MCSampler that uses the AcceptanceRateMCTuner
+# erf_rate_score uses the error function (erf) to scale the acceptance rate by a factor ranging from 0 to 2
+# In other words, it allows to nearly eliminate or double the rate depending on its observed value
+# k gives the curve's steepness. For larger k, the curve becomes more steep
 
-type AcceptanceRateMCTune <: MCTune
-  step::Float64 # Stepsize of MCMC iteration (for ex leapfrog or drift stepsize)
-  accepted::Int # Number of accepted MCMC samples during current tuning period
-  proposed::Int # Number of proposed MCMC samples during current tuning period
-  rate::Float64 # Observed acceptance rate over current tuning period
-
-  function AcceptanceRateMCTune(step::Float64, accepted::Int, proposed::Int, rate::Float64)
-    @assert step > 0 "Stepsize of MCMC iteration should be positive"
-    @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
-    @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
-    if !isnan(rate)
-      @assert 0 < rate < 1 "Observed acceptance rate should be between 0 and 1"
-    end
-    new(step, accepted, proposed, rate)
-  end
-end
-
-AcceptanceRateMCTune(step::Float64, accepted::Int=0, proposed::Int=0) =
-  AcceptanceRateMCTune(step, accepted, proposed, NaN)
-
-reset!(tune::AcceptanceRateMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
-
-count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
-
-rate!(tune::AcceptanceRateMCTune) = (tune.rate = tune.accepted/tune.proposed)
+erf_rate_score(x::Number, k::Number=3.) = erf(k*x)+1
 
 ### AcceptanceRateMCTuner
 
@@ -64,7 +43,4 @@ AcceptanceRateMCTuner(
 ) =
   AcceptanceRateMCTuner(targetrate, score, period, verbose)
 
-function tune!(tune::AcceptanceRateMCTune, tuner::AcceptanceRateMCTuner)
-  rate!(tune)
-  tune.step *= tuner.score(tune.rate-tuner.targetrate)
-end
+tune!(tune::BasicMCTune, tuner::AcceptanceRateMCTuner) = (tune.rate *= tuner.score(tune.rate-tuner.targetrate))
