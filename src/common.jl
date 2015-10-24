@@ -8,4 +8,4 @@
 # y0 is the y value of the curve's midpoint
 # The logistic function has been defined for tuning purposes
 
-logistic(x::Number, l::Number=1., k::Number=1., x0::Number=0., y0::Number=0.) = l/(1+exp(-k*(x-x0)))+y0
+logistic(x::Real, l::Real=1., k::Real=1., x0::Real=0., y0::Real=0.) = l/(1+exp(-k*(x-x0)))+y0

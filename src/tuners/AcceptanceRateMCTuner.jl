@@ -6,7 +6,7 @@
 # In other words, it allows to nearly eliminate or double the rate depending on its observed value
 # k gives the curve's steepness. For larger k, the curve becomes more steep
 
-logistic_rate_score(x::Number, k::Number=7.) = logistic(x, 2., k, 0., 0.)
+logistic_rate_score(x::Real, k::Real=7.) = logistic(x, 2., k, 0., 0.)
 
 ## erf_rate_score
 
@@ -14,7 +14,7 @@ logistic_rate_score(x::Number, k::Number=7.) = logistic(x, 2., k, 0., 0.)
 # In other words, it allows to nearly eliminate or double the rate depending on its observed value
 # k gives the curve's steepness. For larger k, the curve becomes more steep
 
-erf_rate_score(x::Number, k::Number=3.) = erf(k*x)+1
+erf_rate_score(x::Real, k::Real=3.) = erf(k*x)+1
 
 ### AcceptanceRateMCTuner
 

@@ -7,7 +7,7 @@ tune = BasicMCTune()
 
 @test tune.accepted == 0
 @test tune.proposed == 0
-@test isnan(tune.rate) == true
+@test isnan(tune.rate)
 
 tune.proposed = 10
 for i in 1:4
@@ -23,4 +23,4 @@ reset!(tune)
 
 @test tune.accepted == 0
 @test tune.proposed == 0
-@test isnan(tune.rate) == true
+@test isnan(tune.rate)

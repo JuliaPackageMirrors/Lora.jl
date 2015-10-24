@@ -2,18 +2,25 @@
 
 # MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
-type MHState <: MCSamplerState
-  pstate::ContinuousParameterState # Parameter state used internally by MH
+type MHState{S<:ContinuousParameterState} <: MCSamplerState
+  pstate::S # Parameter state used internally by MH
   tune::MCTune
   count::Int # Current number of iterations
   ratio::Float64 # Acceptance ratio
+
+  function MHState(pstate::S, tune::MCTune, count::Int, ratio::Float64)
+    @assert count >= 0 "Number of elapsed MCMC iterations should be non-negative"
+    if !isnan(ratio)
+      @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
+    end
+    new(pstate, tune, count, ratio)
+  end
 end
 
-# MHHeap() =
-#   MHHeap(MCState(MCBaseSample(), MCBaseSample()), MCState(MCBaseSample(), MCBaseSample()), VanillaMCTune(), 0, NaN)
-#
-# MHHeap(l::Int, t::MCTune=VanillaMCTune()) =
-#   MHHeap(MCState(MCBaseSample(l), MCBaseSample(l)), MCState(MCBaseSample(l), MCBaseSample(l)), t, 0, NaN)
+MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune, count::Int, ratio::Float64) =
+  MHState{S}(pstate, tune, count, ratio)
+
+MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 0, NaN)
 
 ### Metropolis-Hastings (MH) sampler
 

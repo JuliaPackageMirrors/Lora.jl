@@ -4,10 +4,12 @@ using Distributions
 using Graphs
 
 import Base:
+  ==,
   close,
   convert,
   copy!,
   eltype,
+  isequal,
   read,
   read!,
   run,
