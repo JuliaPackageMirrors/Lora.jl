@@ -11,7 +11,9 @@ tests =
     "ContinuousMultivariateParameter",
     "dependencies",
     "GenericModel",
-    "generators"
+    "generators",
+    "VanillaMCTuner",
+    "AcceptanceRateMCTuner"
   ]
 
 println("Running tests:")

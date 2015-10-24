@@ -16,7 +16,7 @@ end
 
 VanillaMCTune(accepted::Int=0, proposed::Int=0) = VanillaMCTune(accepted::Int, proposed::Int, NaN)
 
-reset!(tune::VanillaMCTune) = ((tune.accepted, tune.proposed) = (0, 0))
+reset!(tune::VanillaMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
 
 count!(tune::VanillaMCTune) = (tune.accepted += 1)
 

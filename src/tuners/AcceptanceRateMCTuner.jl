@@ -31,7 +31,7 @@ end
 AcceptanceRateMCTune(step::Float64, accepted::Int=0, proposed::Int=0) =
   AcceptanceRateMCTune(step, accepted, proposed, NaN)
 
-reset!(tune::AcceptanceRateMCTune) = ((tune.accepted, tune.proposed) = (0, 0))
+reset!(tune::AcceptanceRateMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
 
 count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
 
@@ -40,8 +40,8 @@ rate!(tune::AcceptanceRateMCTune) = (tune.rate = tune.accepted/tune.proposed)
 ### AcceptanceRateMCTuner
 
 # AcceptanceRateMCTuner tunes empirically on the basis of the discrepancy between observed and target acceptance rate
-# This discrepancy is pernalised via an optional score function
-# The default score function is a stretched sigmoid
+# This discrepancy is pernalised via a score function set by the user
+# The default score function is a stretched logistic map
 
 immutable AcceptanceRateMCTuner <: MCTuner
   targetrate::Float64 # Target acceptance rate
