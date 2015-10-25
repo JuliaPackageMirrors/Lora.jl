@@ -33,8 +33,9 @@ type ContinuousParameterIOStream <: ParameterIOStream
   ) = begin
     instance = new()
 
+    fnames = fieldnames(ContinuousParameterIOStream)
     for i in 1:13
-      setfield!(instance, main_cpstate_fields[i], streams[i])
+      setfield!(instance, fnames[i], streams[i])
     end
 
     instance.diagnostickeys = diagnostickeys
@@ -48,7 +49,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
   end
 end
 
-ContinuousParameterIOStream(
+function ContinuousParameterIOStream(
   mode::AbstractString,
   size::Tuple,
   n::Int;
@@ -56,19 +57,18 @@ ContinuousParameterIOStream(
   diagnostickeys::Vector{Symbol}=Symbol[],
   filepath::AbstractString="",
   filesuffix::AbstractString="csv"
-) =
+)
+  fnames = fieldnames(ContinuousParameterIOStream)
   ContinuousParameterIOStream(
     size,
     n,
-    [
-      monitor[i] == false ? nothing : open(joinpath(filepath, string(main_cpstate_fields[i])*"."*filesuffix), mode)
-      for i in 1:13
-    ],
+    [monitor[i] == false ? nothing : open(joinpath(filepath, string(fnames[i])*"."*filesuffix), mode) for i in 1:13],
     diagnostickeys,
     isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix), mode)
   )
+end
 
-ContinuousParameterIOStream(
+function ContinuousParameterIOStream(
   mode::AbstractString,
   size::Tuple,
   n::Int,
@@ -76,25 +76,37 @@ ContinuousParameterIOStream(
   diagnostickeys::Vector{Symbol}=Symbol[],
   filepath::AbstractString="",
   filesuffix::AbstractString="csv"
-) =
+)
+  fnames = fieldnames(ContinuousParameterIOStream)
   ContinuousParameterIOStream(
     mode,
     size,
     n,
-    monitor=[main_cpstate_fields[i] in monitor ? true : false for i in 1:13],
+    monitor=[fnames[i] in monitor ? true : false for i in 1:13],
     diagnostickeys=diagnostickeys,
     filepath=filepath,
     filesuffix=filesuffix
   )
+end
+
+# To visually inspect code generation via codegen_write_continuous_parameter_iostream, try for example
+# using Lora
+#
+# iostream = ContinuousParameterIOStream("w", (), 4, filepath="")
+# Lora.codegen_write_continuous_parameter_iostream(iostream)
+# close(iostream)
 
 function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
   body = []
+  fnames = fieldnames(ContinuousParameterIOStream)
+  local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
 
   for i in 1:13
-    if iostream.(main_cpstate_fields[i]) != nothing
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
       push!(
         body,
-        :(write($(iostream).(main_cpstate_fields[$i]), join($(:_state).(main_cpstate_fields[$i]), ','), "\n"))
+        :(write(getfield($(iostream), $(QuoteNode(f))), join(getfield($(:_state), $(QuoteNode(f))), ','), "\n"))
       )
     end
   end
@@ -113,9 +125,10 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
 end
 
 function Base.close(iostream::ContinuousParameterIOStream)
+  fnames = fieldnames(ContinuousParameterIOStream)
   for i in 1:13
-    if iostream.(main_cpstate_fields[i]) != nothing
-      close(iostream.(main_cpstate_fields[i]))
+    if iostream.(fnames[i]) != nothing
+      close(iostream.(fnames[i]))
     end
   end
 
@@ -125,9 +138,10 @@ function Base.close(iostream::ContinuousParameterIOStream)
 end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUnivariateParameterNState)
+  fnames = fieldnames(ContinuousParameterIOStream)
   for i in 1:13
-    if iostream.(main_cpstate_fields[i]) != nothing
-      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i]))
+    if iostream.(fnames[i]) != nothing
+      writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
     end
   end
 
@@ -137,18 +151,19 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUni
 end
 
 function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMultivariateParameterNState)
+  fnames = fieldnames(ContinuousParameterIOStream)
   for i in 2:4
-    if iostream.(main_cpstate_fields[i]) != nothing
-      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i]))
+    if iostream.(fnames[i]) != nothing
+      writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
     end
   end
   for i in (1, 5, 6, 7)
-    if iostream.(main_cpstate_fields[i]) != nothing
-      writedlm(iostream.(main_cpstate_fields[i]), nstate.(main_cpstate_fields[i])', ',')
+    if iostream.(fnames[i]) != nothing
+      writedlm(iostream.(fnames[i]), nstate.(fnames[i])', ',')
     end
   end
   for i in 8:10
-    if iostream.(main_cpstate_fields[i]) != nothing
+    if iostream.(fnames[i]) != nothing
       statelen = abs2(iostream.size)
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
@@ -156,7 +171,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
     end
   end
   for i in 11:13
-    if iostream.(main_cpstate_fields[i]) != nothing
+    if iostream.(fnames[i]) != nothing
       statelen = iostream.size^3
       for i in 1:nstate.n
         write(iostream.stream, join(nstate.value[1+(i-1)*statelen:i*statelen], ','), "\n")
@@ -173,9 +188,10 @@ function Base.read!{N<:AbstractFloat}(
   iostream::ContinuousParameterIOStream,
   nstate::ContinuousUnivariateParameterNState{N}
 )
+  fnames = fieldnames(ContinuousParameterIOStream)
   for i in 1:13
-    if iostream.(main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(iostream.(main_cpstate_fields[i]), ',', N)))
+    if iostream.(fnames[i]) != nothing
+      setfield!(nstate, fnames[i], vec(readdlm(iostream.(fnames[i]), ',', N)))
     end
   end
 
@@ -188,18 +204,19 @@ function Base.read!{N<:AbstractFloat}(
   iostream::ContinuousParameterIOStream,
   nstate::ContinuousMultivariateParameterNState{N}
 )
+  fnames = fieldnames(ContinuousParameterIOStream)
   for i in 2:4
-    if iostream.(main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], vec(readdlm(iostream.(main_cpstate_fields[i]), ',', N)))
+    if iostream.(fnames[i]) != nothing
+      setfield!(nstate, fnames[i], vec(readdlm(iostream.(fnames[i]), ',', N)))
     end
   end
   for i in (1, 5, 6, 7)
-    if iostream.(main_cpstate_fields[i]) != nothing
-      setfield!(nstate, main_cpstate_fields[i], readdlm(iostream.(main_cpstate_fields[i]), ',', N)')
+    if iostream.(fnames[i]) != nothing
+      setfield!(nstate, fnames[i], readdlm(iostream.(fnames[i]), ',', N)')
     end
   end
   for i in 8:10
-    if iostream.(main_cpstate_fields[i]) != nothing
+    if iostream.(fnames[i]) != nothing
       statelen = abs2(iostream.size)
       line = 1
       while !eof(iostream.stream)
@@ -210,7 +227,7 @@ function Base.read!{N<:AbstractFloat}(
     end
   end
   for i in 11:13
-    if iostream.(main_cpstate_fields[i]) != nothing
+    if iostream.(fnames[i]) != nothing
       statelen = iostream.size^3
       line = 1
       while !eof(iostream.stream)
@@ -228,13 +245,14 @@ end
 
 function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::Type{N})
   nstate::ContinuousParameterNState
+  fnames = fieldnames(ContinuousParameterIOStream)
   l = length(iostream.size)
 
   if l == 0
     nstate = ContinuousUnivariateParameterNState(
       T,
       iostream.n,
-      [iostream.(main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],
       iostream.diagnostickeys
     )
   elseif l == 1
@@ -242,7 +260,7 @@ function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::T
       T,
       iostream.size[1],
       iostream.n,
-      [iostream.(main_cpstate_fields[i]) != nothing ? true : false for i in 1:13],
+      [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],
       iostream.diagnostickeys
     )
   else

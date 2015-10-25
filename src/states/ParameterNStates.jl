@@ -48,8 +48,9 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
       l[i] = (monitor[i] == false ? zero(Int) : n)
     end
 
+    fnames = fieldnames(ContinuousUnivariateParameterNState)
     for i in 1:13
-      setfield!(instance, main_cpstate_fields[i], Array(N, l[i]))
+      setfield!(instance, fnames[i], Array(N, l[i]))
     end
 
     instance.diagnostickeys = diagnostickeys
@@ -71,16 +72,18 @@ ContinuousUnivariateParameterNState{N<:AbstractFloat}(
 ) =
   ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousUnivariateParameterNState{N<:AbstractFloat}(
+function ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
-) =
+)
+  fnames = fieldnames(ContinuousUnivariateParameterNState)
   ContinuousUnivariateParameterNState(
-    N, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
+    N, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
   )
+end
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
 
@@ -153,21 +156,22 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
   ) = begin
     instance = new()
 
+    fnames = fieldnames(ContinuousMultivariateParameterNState)
     for i in 2:4
       l = (monitor[i] == false ? zero(Int) : n)
-      setfield!(instance, main_cpstate_fields[i], Array(N, l))
+      setfield!(instance, fnames[i], Array(N, l))
     end
     for i in (1, 5, 6, 7)
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_cpstate_fields[i], Array(N, s, l))
+      setfield!(instance, fnames[i], Array(N, s, l))
     end
     for i in 8:10
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_cpstate_fields[i], Array(N, s, s, l))
+      setfield!(instance, fnames[i], Array(N, s, s, l))
     end
     for i in 11:13
       s, l = (monitor[i] == false ? (zero(Int), zero(Int)) : (size, n))
-      setfield!(instance, main_cpstate_fields[i], Array(N, s, s, s, l))
+      setfield!(instance, fnames[i], Array(N, s, s, s, l))
     end
 
     instance.diagnostickeys = diagnostickeys
@@ -191,17 +195,19 @@ ContinuousMultivariateParameterNState{N<:AbstractFloat}(
 ) =
   ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousMultivariateParameterNState{N<:AbstractFloat}(
+function ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   ::Type{N},
   size::Int,
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
-) =
+)
+  fnames = fieldnames(ContinuousMultivariateParameterNState)
   ContinuousMultivariateParameterNState(
-    N, size, n, [main_cpstate_fields[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
+    N, size, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
   )
+end
 
 typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
 

@@ -1,12 +1,26 @@
 using Base.Test
 using Lora
 
-# filepath = dirname(@__FILE__)
-filepath = ""
+functionnames = (
+  :value,
+  :loglikelihood,
+  :logprior,
+  :logtarget,
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget
+)
+filepath = dirname(@__FILE__)
 filesuffix = "csv"
 filenames = Array(AbstractString, 14)
 for i in 1:13
-  filenames[i] = joinpath(filepath, string(Lora.main_cpstate_fields[i])*"."*filesuffix)
+  filenames[i] = joinpath(filepath, string(functionnames[i])*"."*filesuffix)
 end
 filenames[14] = joinpath(filepath, "diagnostics"*"."*filesuffix)
 
@@ -18,7 +32,7 @@ iostream = ContinuousParameterIOStream("w", iostreamsize, iostreamn, filepath=fi
 
 @test isa(iostream.value, IOStream)
 for i in 2:13
-  @test iostream.(Lora.main_cpstate_fields[i]) == nothing
+  @test iostream.(functionnames[i]) == nothing
 end
 @test length(iostream.diagnostickeys) == 0
 @test iostream.diagnosticvalues == nothing
@@ -38,7 +52,7 @@ iostream = ContinuousParameterIOStream(
 @test isa(iostream.value, IOStream)
 @test isa(iostream.gradlogtarget, IOStream)
 for i in [2:6; 8:13]
-  @test iostream.(Lora.main_cpstate_fields[i]) == nothing
+  @test iostream.(functionnames[i]) == nothing
 end
 @test length(iostream.diagnostickeys) == 1
 @test iostream.size == iostreamsize
@@ -56,7 +70,7 @@ iostream = ContinuousParameterIOStream(
 @test isa(iostream.value, IOStream)
 @test isa(iostream.logtarget, IOStream)
 for i in [2:3; 5:13]
-  @test iostream.(Lora.main_cpstate_fields[i]) == nothing
+  @test iostream.(functionnames[i]) == nothing
 end
 @test length(iostream.diagnostickeys) == 1
 @test iostream.size == iostreamsize
@@ -86,7 +100,7 @@ nstate = read(iostream, Float64)
 @test isa(nstate, ContinuousUnivariateMCChain{Float64})
 @test nstate.value == nstatev
 for i in 2:13
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 0
 @test size(nstate.diagnosticvalues) == (0, 0)
@@ -120,7 +134,7 @@ nstateout = read(iostream, Float32)
 @test isa(nstateout, ContinuousUnivariateMCChain{Float32})
 @test nstateout.value == nstatein.value
 for i in 2:13
-  @test length(nstateout.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstateout.(functionnames[i])) == 0
 end
 @test length(nstateout.diagnostickeys) == 1
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
@@ -157,7 +171,7 @@ nstate = read(iostream, Float64)
 @test nstate.value == nstatev
 @test nstate.gradloglikelihood == nstategll
 for i in [2:4; 6:13]
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 1
 @test nstate.diagnosticvalues == nstated
@@ -204,7 +218,7 @@ nstateout = read(iostream, Float32)
 @test nstateout.loglikelihood == nstatein.loglikelihood
 @test nstateout.logtarget == nstatein.logtarget
 for i in [3; 5:13]
-  @test length(nstateout.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstateout.(functionnames[i])) == 0
 end
 @test length(nstateout.diagnostickeys) == 1
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues

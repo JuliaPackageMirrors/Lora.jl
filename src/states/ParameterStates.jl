@@ -7,24 +7,6 @@ abstract ContinuousParameterState{F<:VariateForm, N<:AbstractFloat} <: Parameter
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:AbstractFloat}(::Type{ContinuousParameterState{F, N}}) = N
 
-### Constants associated with continuous parameter states and NStates
-
-const main_cpstate_fields = (
-  :value,
-  :loglikelihood,
-  :logprior,
-  :logtarget,
-  :gradloglikelihood,
-  :gradlogprior,
-  :gradlogtarget,
-  :tensorloglikelihood,
-  :tensorlogprior,
-  :tensorlogtarget,
-  :dtensorloglikelihood,
-  :dtensorlogprior,
-  :dtensorlogtarget
-)
-
 ### Parameter state subtypes
 
 ## ContinuousUnivariateParameterState
@@ -124,15 +106,17 @@ function ContinuousMultivariateParameterState{N<:AbstractFloat}(
   )
 end
 
-ContinuousMultivariateParameterState{N<:AbstractFloat}(
+function ContinuousMultivariateParameterState{N<:AbstractFloat}(
   value::Vector{N},
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
-) =
+)
+  fnames = fieldnames(ContinuousMultivariateParameterState)
   ContinuousMultivariateParameterState(
-    value, [main_cpstate_fields[i] in monitor ? true : false for i in 5:13], diagnostickeys, diagnosticvalues
+    value, [fnames[i] in monitor ? true : false for i in 5:13], diagnostickeys, diagnosticvalues
   )
+end
 
 ContinuousMultivariateParameterState{N<:AbstractFloat}(
   ::Type{N},

@@ -1,6 +1,22 @@
 using Base.Test
 using Lora
 
+functionnames = (
+  :value,
+  :loglikelihood,
+  :logprior,
+  :logtarget,
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget
+)
+
 println("    Testing ContinuousUnivariateMCChain constructors and methods...")
 
 nstaten = 4
@@ -9,7 +25,7 @@ nstate = ContinuousUnivariateMCChain(Float64, nstaten)
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
 for i in 2:13
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 0
 @test size(nstate.diagnosticvalues) == (0, 0)
@@ -22,7 +38,7 @@ nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true; fill(false, 5); tr
 @test length(nstate.value) == nstaten
 @test length(nstate.gradlogtarget) == nstaten
 for i in [2:6; 8:13]
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 1
 @test size(nstate.diagnosticvalues) == (1, nstaten)
@@ -46,7 +62,7 @@ nstate = ContinuousUnivariateMCChain(Float64, nstaten, [:value, :logtarget], [:a
 @test length(nstate.value) == nstaten
 @test length(nstate.logtarget) == nstaten
 for i in [2:3; 5:13]
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 1
 @test size(nstate.diagnosticvalues) == (1, nstaten)
@@ -72,16 +88,16 @@ nstate = ContinuousMultivariateMCChain(Float64, nstatesize, nstaten)
 @test eltype(nstate) == Float64
 @test size(nstate.value) == (nstatesize, nstaten)
 for i in (2, 3, 4)
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 for i in 5:7
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0)
 end
 for i in 8:10
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0)
 end
 for i in 11:13
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0, 0)
 end
 @test length(nstate.diagnostickeys) == 0
 @test size(nstate.diagnosticvalues) == (0, 0)
@@ -102,16 +118,16 @@ nstate = ContinuousMultivariateMCChain(
 @test size(nstate.value) == (nstatesize, nstaten)
 @test size(nstate.gradloglikelihood) == (nstatesize, nstaten)
 for i in (2, 3, 4)
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 for i in (6, 7)
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0)
 end
 for i in 8:10
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0)
 end
 for i in 11:13
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0, 0)
 end
 @test length(nstate.diagnostickeys) == 1
 @test size(nstate.diagnosticvalues) == (1, nstaten)
@@ -138,16 +154,16 @@ nstate = ContinuousMultivariateMCChain(Float16, nstatesize, nstaten, [:value, :l
 @test length(nstate.logtarget) == nstaten
 @test size(nstate.gradlogtarget) == (nstatesize, nstaten)
 for i in (2, 3)
-  @test length(nstate.(Lora.main_cpstate_fields[i])) == 0
+  @test length(nstate.(functionnames[i])) == 0
 end
 for i in (5, 6)
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0)
 end
 for i in 8:10
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0)
 end
 for i in 11:13
-  @test size(nstate.(Lora.main_cpstate_fields[i])) == (0, 0, 0, 0)
+  @test size(nstate.(functionnames[i])) == (0, 0, 0, 0)
 end
 @test length(nstate.diagnostickeys) == 1
 @test size(nstate.diagnosticvalues) == (1, nstaten)
