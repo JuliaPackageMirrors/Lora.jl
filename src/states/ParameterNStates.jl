@@ -84,15 +84,42 @@ ContinuousUnivariateParameterNState{N<:AbstractFloat}(
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
 
+# function codegen_copy_continuous_univariate_parameter_nstate(
+#   nstate::ContinuousUnivariateParameterNState,
+#   monitor::Vector{Bool}
+# )
+#   body = []
+#   for j in 1:13
+#     if monitor[j]
+#       push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
+#     end
+#   end
+#
+#   if !isempty(nstate.diagnosticvalues)
+#     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
+#   end
+#
+#   @gensym copy_continuous_univariate_parameter_nstate
+#
+#   quote
+#     function $copy_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
+#       $(body...)
+#     end
+#   end
+# end
+
 function codegen_copy_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
 )
   body = []
-  for j in 1:13
+  fields = fieldnames(ContinuousUnivariateParameterNState)
+  j = 1
+  for f in fields[1:13]
     if monitor[j]
-      push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
+      push!(body, :(getfield($nstate, $(QuoteNode(f)))[$(:_i)] = getfield($(:_state), $(QuoteNode(f)))))
     end
+    j += 1
   end
 
   if !isempty(nstate.diagnosticvalues)
