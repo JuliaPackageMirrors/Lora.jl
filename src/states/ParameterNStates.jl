@@ -84,42 +84,25 @@ ContinuousUnivariateParameterNState{N<:AbstractFloat}(
 
 typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
 
-# function codegen_copy_continuous_univariate_parameter_nstate(
-#   nstate::ContinuousUnivariateParameterNState,
-#   monitor::Vector{Bool}
-# )
-#   body = []
-#   for j in 1:13
-#     if monitor[j]
-#       push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
-#     end
-#   end
+# To visually inspect code generation via codegen_copy_continuous_univariate_parameter_nstate, try for example
+# using Lora
 #
-#   if !isempty(nstate.diagnosticvalues)
-#     push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
-#   end
-#
-#   @gensym copy_continuous_univariate_parameter_nstate
-#
-#   quote
-#     function $copy_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
-#       $(body...)
-#     end
-#   end
-# end
+# nstate = ContinuousUnivariateMCChain(Float64, 4)
+# Lora.codegen_copy_continuous_univariate_parameter_nstate(nstate, [true; fill(false, 12)])
 
 function codegen_copy_continuous_univariate_parameter_nstate(
   nstate::ContinuousUnivariateParameterNState,
   monitor::Vector{Bool}
 )
   body = []
-  fields = fieldnames(ContinuousUnivariateParameterNState)
-  j = 1
-  for f in fields[1:13]
+  fnames = fieldnames(ContinuousUnivariateParameterNState)
+  local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
+
+  for j in 1:13
     if monitor[j]
+      f = fnames[j]
       push!(body, :(getfield($nstate, $(QuoteNode(f)))[$(:_i)] = getfield($(:_state), $(QuoteNode(f)))))
     end
-    j += 1
   end
 
   if !isempty(nstate.diagnosticvalues)
@@ -222,26 +205,36 @@ ContinuousMultivariateParameterNState{N<:AbstractFloat}(
 
 typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
 
+# To visually inspect code generation via codegen_copy_continuous_multivariate_parameter_nstate, try for example
+# using Lora
+#
+# nstate = ContinuousMultivariateMCChain(Float64, 2, 4)
+# Lora.codegen_copy_continuous_multivariate_parameter_nstate(nstate, [true; fill(false, 12)])
+
 function codegen_copy_continuous_multivariate_parameter_nstate(
   nstate::ContinuousMultivariateParameterNState,
   monitor::Vector{Bool}
 )
-  statelen::Int
   body = []
+  fnames = fieldnames(ContinuousMultivariateParameterNState)
+  local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
+  statelen::Int
 
   for j in 2:4
     if monitor[j]
-      push!(body, :($(nstate).(main_cpstate_fields[$j])[$(:_i)] = $(:_state).(main_cpstate_fields[$j])))
+      f = fnames[j]
+      push!(body, :(getfield($nstate, $(QuoteNode(f)))[$(:_i)] = getfield($(:_state), $(QuoteNode(f)))))
     end
   end
 
   for j in (1, 5, 6, 7)
     if monitor[j]
+      f = fnames[j]
       push!(
         body,
         :(
-          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
-          $(:_state).(main_cpstate_fields[$j])
+          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
+          getfield($(:_state), $(QuoteNode(f)))
         )
       )
     end
@@ -252,11 +245,12 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   end
   for j in 8:10
     if monitor[j]
+      f = fnames[j]
       push!(
         body,
         :(
-          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          $(:_state).(main_cpstate_fields[$j])
+          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
+          getfield($(:_state), $(QuoteNode(f)))
         )
       )
     end
@@ -267,11 +261,12 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   end
   for j in 11:13
     if monitor[j]
+      f = fnames[j]
       push!(
         body,
         :(
-          $(nstate).(main_cpstate_fields[$j])[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          $(:_state).(main_cpstate_fields[$j])
+          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
+          getfield($(:_state), $(QuoteNode(f)))
         )
       )
     end
