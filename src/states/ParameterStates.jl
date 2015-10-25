@@ -50,6 +50,12 @@ ContinuousUnivariateParameterState{N<:AbstractFloat}(
 Base.eltype{N<:AbstractFloat}(::Type{ContinuousUnivariateParameterState{N}}) = N
 Base.eltype{N<:AbstractFloat}(s::ContinuousUnivariateParameterState{N}) = N
 
+Base.(:(==)){S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+  reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])
+
+Base.isequal{S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+  reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
+
 ## ContinuousMultivariateParameterState
 
 type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Multivariate, N}
@@ -139,8 +145,8 @@ ContinuousMultivariateParameterState{N<:AbstractFloat}(
 Base.eltype{N<:AbstractFloat}(::Type{ContinuousMultivariateParameterState{N}}) = N
 Base.eltype{N<:AbstractFloat}(s::ContinuousMultivariateParameterState{N}) = N
 
-Base.(:(==)){S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+Base.(:(==)){S<:ContinuousMultivariateParameterState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])
 
-Base.isequal{S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+Base.isequal{S<:ContinuousMultivariateParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])

@@ -79,6 +79,12 @@ nstate.copy(state, savei)
 @test nstate.logtarget[savei] == statelt
 nstate.diagnosticvalues[savei] == false
 
+nstatev = Float64[4.39, -9,47]
+z = ContinuousUnivariateMCChain(Float64, length(nstatev))
+z.value = copy(nstatev)
+w = deepcopy(z)
+@test isequal(z, w)
+
 println("    Testing ContinuousMultivariateMCChain constructors and methods...")
 
 nstatesize = 2
@@ -183,3 +189,9 @@ nstate.copy(state, savei)
 @test nstate.logtarget[savei] == statelt
 @test nstate.gradlogtarget[:, savei] == stateglt
 nstate.diagnosticvalues[savei] == true
+
+nstatev = Float64[4.3 9.2 -7.44; -0.2 8.1 4.43]
+z = ContinuousMultivariateMCChain(Float64, size(nstatev)...)
+z.value = copy(nstatev)
+w = deepcopy(z)
+@test isequal(z, w)

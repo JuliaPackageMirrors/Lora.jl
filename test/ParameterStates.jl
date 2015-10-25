@@ -1,32 +1,67 @@
 using Base.Test
 using Lora
 
-println("    Testing ContinuousUnivariateParameterState constructors...")
+functionnames = (
+  :value,
+  :loglikelihood,
+  :logprior,
+  :logtarget,
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget
+)
+
+println("    Testing ContinuousUnivariateParameterState constructors and methods...")
 
 v = Float64(1.5)
 s = ContinuousUnivariateParameterState(v, [:accept], [true])
 
 @test eltype(s) == Float64
 @test s.value == v
-@test isnan(s.logtarget)
+for i in 2:13
+  @test isnan(s.(functionnames[i]))
+end
 @test s.diagnostickeys == [:accept]
 @test s.diagnosticvalues == [true]
 
 s = ContinuousUnivariateParameterState(Float16)
 
 @test isa(s.value, Float16)
+for i in 1:13
+  @test isnan(s.(functionnames[i]))
+end
 @test s.diagnostickeys == Symbol[]
 @test s.diagnosticvalues == []
 
-println("    Testing ContinuousMultivariateParameterState constructors...")
+z = ContinuousUnivariateParameterState(Float64(-3.1), [:accept], [false])
+w = deepcopy(z)
+@test isequal(z, w)
+
+println("    Testing ContinuousMultivariateParameterState constructors and methods...")
 
 v = Float64[1., 1.5]
 s = ContinuousMultivariateParameterState(v)
 
 @test eltype(s) == Float64
 @test s.value == v
-@test isnan(s.logtarget)
-@test length(s.gradlogtarget) == 0
+for i in 2:4
+  @test isnan(s.(functionnames[i]))
+end
+for i in 5:7
+  @test length(s.(functionnames[i])) == 0
+end
+for i in 8:10
+  @test size(s.(functionnames[i])) == (0, 0)
+end
+for i in 11:13
+  @test size(s.(functionnames[i])) == (0, 0, 0)
+end
 @test s.size == length(v)
 
 v = Float16[0.24, 5.5, -6.3]
@@ -35,9 +70,19 @@ s = ContinuousMultivariateParameterState(v, [:gradlogtarget], [:accept], [false]
 
 @test eltype(s) == Float16
 @test s.value == v
-@test isnan(s.logtarget)
-@test length(s.gradloglikelihood) == 0
 @test length(s.gradlogtarget) == ssize
+for i in 2:4
+  @test isnan(s.(functionnames[i]))
+end
+for i in 5:6
+  @test length(s.(functionnames[i])) == 0
+end
+for i in 8:10
+  @test size(s.(functionnames[i])) == (0, 0)
+end
+for i in 11:13
+  @test size(s.(functionnames[i])) == (0, 0, 0)
+end
 @test s.size == ssize
 @test s.diagnostickeys == [:accept]
 @test s.diagnosticvalues == [false]
@@ -45,5 +90,21 @@ s = ContinuousMultivariateParameterState(v, [:gradlogtarget], [:accept], [false]
 s = ContinuousMultivariateParameterState(BigFloat)
 
 @test isa(s.value, Vector{BigFloat})
+for i in 2:4
+  @test isnan(s.(functionnames[i]))
+end
+for i in 5:7
+  @test length(s.(functionnames[i])) == 0
+end
+for i in 8:10
+  @test size(s.(functionnames[i])) == (0, 0)
+end
+for i in 11:13
+  @test size(s.(functionnames[i])) == (0, 0, 0)
+end
 @test s.diagnostickeys == Symbol[]
 @test s.diagnosticvalues == []
+
+z = ContinuousMultivariateParameterState(Float64[-0.12, 12.15])
+w = deepcopy(z)
+@test isequal(z, w)
