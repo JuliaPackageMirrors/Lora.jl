@@ -5,7 +5,7 @@
 
 immutable VanillaMCTuner <: MCTuner
   period::Int # Tuning period over which acceptance rate is computed
-  verbose::Bool # If the tuner is verbose then verbose=true, whereas if the tuner is silent then verbose=false
+  verbose::Bool # If verbose=false then the tuner is silent, else it is verbose
 
   function VanillaMCTuner(period::Int, verbose::Bool)
     @assert period > 0 "Adaptation period should be positive"

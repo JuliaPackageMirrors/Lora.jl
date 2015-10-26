@@ -1,7 +1,7 @@
 ### BasicMCJob
 
 # BasicMCJob is used for sampling a single parameter via serial Monte Carlo
-# It is the most elementary and typical Markov chain Monte Carlo (MCMC) strategy
+# It is the most elementary and typical Markov chain Monte Carlo (MCMC) job
 
 type BasicMCJob <: MCJob
   runner::BasicMCRunner
@@ -10,15 +10,18 @@ type BasicMCJob <: MCJob
   tuner::MCTuner
   vstates::Vector{VariableState} # Vector of variable states ordered in accordance with variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
+  plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
+  inmemory::Bool # If inmemory=true then store output in memory via NStates, else in files via IOStreams
+  checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
+  task::Union{Task, Void}
   send::Function
   receive::Function
   reset::Function
-  plain::Bool # If job flow is controlled via tasks then plain=false, else plain=true
-  task::Union{Task, Void}
-  checkin::Bool # To check validity of job constructors' input arguments set checkin=true, else set checkin=false
+  save::Function
+  close::function
 
   # function BasicMCJob(m::GenericModel s::MCSampler r::MCRunner t::MCTuner)
-  # If check=true, then check isa(model, likelihood) and isa(model.vertices[1], Parameter)
+  #   If checkin=true then check isa(model, likelihood) and isa(model.vertices[1], Parameter)
   # end
 end
 

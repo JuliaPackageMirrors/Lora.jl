@@ -31,7 +31,7 @@ Base.eltype{S<:ContinuousParameterState}(s::MHState{S}) = S
 # For symetric proposals, the proposal correction factor equals 1, so the logproposal field is set to nothing
 
 immutable MH <: MHSampler
-  symmetric::Bool # If the proposal density is symmetric, then symmetric=true, otherwise symmetric=false
+  symmetric::Bool # If symmetric=true then the proposal density is symmetric, else it is asymmetric
   logproposal::Union{Function, Void} # logpdf of asymmetric proposal. For symmetric proposals, logproposal=nothing
   randproposal::Function # random sampling from proposal density
 

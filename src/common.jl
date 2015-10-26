@@ -9,3 +9,7 @@
 # The logistic function has been defined for tuning purposes
 
 logistic(x::Real, l::Real=1., k::Real=1., x0::Real=0., y0::Real=0.) = l/(1+exp(-k*(x-x0)))+y0
+
+### MCRunner
+
+abstract MCRunner

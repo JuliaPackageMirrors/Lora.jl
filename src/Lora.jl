@@ -40,8 +40,7 @@ import Graphs:
 
 export
   ### Types
-  logistic,
-  MCTuner,
+  MCRunner,
   VariableState,
   BasicVariableState,
   UnivariateBasicVariableState,
@@ -83,6 +82,7 @@ export
   GenericModel,
   MCTune,
   BasicMCTune,
+  MCTuner,
   VanillaMCTuner,
   AcceptanceRateMCTuner,
   MCSamplerState,
@@ -92,8 +92,10 @@ export
   LMCSampler,
   MHState,
   MH,
+  BasicMCRunner,
   MCJob,
   ### Functions
+  logistic,
   add_dimension,
   save!,
   save,
@@ -147,7 +149,7 @@ include("tuners/AcceptanceRateMCTuner.jl")
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
 
-# include("runners/BasicMCRunner.jl")
+include("runners/BasicMCRunner.jl")
 
 include("jobs/jobs.jl")
 # include("jobs/BasicMCJob.jl")
