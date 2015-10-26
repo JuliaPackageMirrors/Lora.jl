@@ -22,6 +22,9 @@ MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune, count::Int, ratio:
 
 MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 0, NaN)
 
+Base.eltype{S<:ContinuousParameterState}(::Type{MHState{S}}) = S
+Base.eltype{S<:ContinuousParameterState}(s::MHState{S}) = S
+
 ### Metropolis-Hastings (MH) sampler
 
 # In its most general case it accommodates an asymmetric proposal density
