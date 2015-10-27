@@ -5,12 +5,12 @@
 
 type BasicMCJob <: MCJob
   runner::BasicMCRunner
-  model::GenericModel # Model of a single parameter residing on the first node of model.vertices
+  model::GenericModel # Model of a single parameter
   sampler::MCSampler
   tuner::MCTuner
-  pindex::Int # Index of parameter in vstates
+  pindex::Int # Index of single parameter in vstates
   iooptions::Array{Union{Dict, Void}}
-  vstates::Vector{VariableState} # Vector of variable states ordered in accordance with variables in model.vertices
+  vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
   vnstates::Vector{Union{VariableNState, VariableIOStream, Void}}
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
@@ -27,9 +27,9 @@ type BasicMCJob <: MCJob
     model::GenericModel,
     sampler::MCSampler,
     tuner::MCTuner,
-    vstates::Vector{VariableState},
     pindex::Int,
-    vnstates::Vector{Union{VariableNState, VariableIOStream, Void}},
+    values0::Vector, # Vector of initial values of variable states ordered according to variables in model.vertices
+    iooptions::Array{Union{Dict, Void}},
     plain::Bool,
     checkin::Bool
   )
@@ -39,6 +39,8 @@ type BasicMCJob <: MCJob
     instance.model = model
     instance.sampler = sampler
     instance.tuner = tuner
+
+    # TODO: complete inner constructor
 
     instance
   end
