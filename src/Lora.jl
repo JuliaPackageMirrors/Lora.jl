@@ -76,6 +76,7 @@ export
   Data,
   Transformation,
   Parameter,
+  ContinuousParameter,
   ContinuousUnivariateParameter,
   ContinuousMultivariateParameter,
   Dependence,

@@ -20,7 +20,7 @@ end
 MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune, count::Int, ratio::Float64) =
   MHState{S}(pstate, tune, count, ratio)
 
-MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 0, NaN)
+MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 1, NaN)
 
 Base.eltype{S<:ContinuousParameterState}(::Type{MHState{S}}) = S
 Base.eltype{S<:ContinuousParameterState}(s::MHState{S}) = S
@@ -51,6 +51,21 @@ MH(σ::Matrix{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, 
 MH(σ::Vector{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, σ)))
 MH(σ::AbstractFloat) = MH(x::Vector{AbstractFloat} -> rand(Normal(x, σ)))
 MH() = MH(x::Vector{AbstractFloat} -> rand(Normal(x, 1.0)))
+
+### Initialize Metropolis-Hastings sampler
+
+ContinuousMultivariateParameterState{N<:AbstractFloat}(
+  value::Vector{N},
+  sampler::MHSampler,
+  diagnostickeys::Vector{Symbol}=[:accept],
+  diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
+) =
+  ContinuousMultivariateParameterState(value, fill(false, 9), diagnostickeys, diagnosticvalues)
+
+function initialize!(vstates::Vector{VariableState}, i::Int, parameter::ContinuousParameter, sampler::MHSampler)
+  parameter.logtarget!(vstates, i)
+  @assert isfinite(vstates[i].logtarget) "Initial values out of model support"
+end
 
 # ### Initialize Metropolis-Hastings sampler
 #

@@ -2,6 +2,8 @@
 
 abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 
+abstract ContinuousParameter{S<:ValueSupport, F<:VariateForm} <: Parameter{S, F}
+
 ### Parameter subtypes
 
 ## ContinuousUnivariateParameter
@@ -11,7 +13,7 @@ abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 # 2) Target-related fields have higher priority than implicitly derived likelihood+prior fields
 # 3) Upto-related fields have higher priority than implicitly derived Function tuples
 
-type ContinuousUnivariateParameter <: Parameter{Continuous, Univariate}
+type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate}
   index::Int
   key::Symbol
   pdf::Union{ContinuousUnivariateDistribution, Void}
@@ -308,7 +310,7 @@ end
 
 ## ContinuousMultivariateParameter
 
-type ContinuousMultivariateParameter <: Parameter{Continuous, Multivariate}
+type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivariate}
   index::Int
   key::Symbol
   pdf::Union{ContinuousMultivariateDistribution, Void}
