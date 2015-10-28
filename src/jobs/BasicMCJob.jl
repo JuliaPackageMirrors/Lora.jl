@@ -9,7 +9,6 @@ type BasicMCJob <: MCJob
   sampler::MCSampler
   tuner::MCTuner
   pindex::Int # Index of single parameter in vstates
-  iooptions::Array{Union{Dict, Void}}
   vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
   vnstates::Vector{Union{VariableNState, VariableIOStream, Void}}
@@ -29,7 +28,7 @@ type BasicMCJob <: MCJob
     tuner::MCTuner,
     pindex::Int,
     values0::Vector, # Vector of initial values of variable states ordered according to variables in model.vertices
-    iooptions::Array{Union{Dict, Void}},
+    ioopts::Vector{Union{Dict, Void}}, # Options related to IO
     plain::Bool,
     checkin::Bool
   )
@@ -45,5 +44,15 @@ type BasicMCJob <: MCJob
     instance
   end
 end
+
+# In an outer constructor, values0 will be allowed to contain elements equal to nothing for parameters with prior
+
+# ioopts will include the following fields:
+# 1) :statetype (for ex ContinuousUnivariateParameterState)
+# 2) :diagnostics (these are diagnostic keys, for ex :accept)
+# 3) :destination (:none, :nstate or :iostream)
+# 4) :monitor (names of numeric fields of monitored states, for ex (:value :logtarget))
+# 5) :filepath (for iostreams, for ex "")
+# 6) :filesuffix (for iostreams, for ex "csv")
 
 # Note: it is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
