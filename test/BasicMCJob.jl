@@ -8,7 +8,7 @@ runner = BasicMCRunner(1000:10000)
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(states, j) -> states[j].logtarget = states[j].value*states[j].value
+  logtarget=(states, j) -> states[j].logtarget = -states[j].value*states[j].value
 )
 model = single_parameter_likelihood_model(p)
 

@@ -40,10 +40,10 @@ function initialize_output(
 )
   output::Union{VariableNState, VariableIOStream, Void}
 
-  output = if outopts[:destination] == :nstate
-    ContinuousUnivariateParameterNState(eltype(state), n, outopts[:monitor], outopts[:diagnostics])
+  if outopts[:destination] == :nstate
+    output = ContinuousUnivariateParameterNState(eltype(state), n, outopts[:monitor], outopts[:diagnostics])
   elseif outopts[:destination] == :iostream
-    ContinuousParameterIOStream(
+    output = ContinuousParameterIOStream(
       "w",
       (),
       n,
@@ -52,8 +52,10 @@ function initialize_output(
       filepath=outopts[:filepath],
       filesuffix=outopts[:filesuffix]
     )
+  elseif outopts[:destination] == :none
+    output = nothing
   else
-    error("Error message")
+    error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
   end
 
   output
