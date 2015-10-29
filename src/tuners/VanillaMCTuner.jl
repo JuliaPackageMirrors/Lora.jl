@@ -15,4 +15,4 @@ end
 
 VanillaMCTuner(; period::Int=100, verbose::Bool=false) = VanillaMCTuner(period, verbose)
 
-generate_state(tuner::VanillaMCTuner) = BasicMCTune()
+tune_state(tuner::VanillaMCTuner) = BasicMCTune()

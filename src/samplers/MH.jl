@@ -59,8 +59,8 @@ function initialize!(vstates::Vector{VariableState}, i::Int, parameter::Continuo
   @assert isfinite(vstates[i].logtarget) "Initial values out of model support"
 end
 
-generate_state(pstate::ContinuousParameterState, sampler::MHSampler, tuner::MCTuner) =
-  MHState(minify(pstate), generate_state(tuner))
+sampler_state(pstate::ContinuousParameterState, sampler::MHSampler, tuner::MCTuner) =
+  MHState(reset(pstate), tune_state(tuner))
 
 # ### Initialize Metropolis-Hastings sampler
 #

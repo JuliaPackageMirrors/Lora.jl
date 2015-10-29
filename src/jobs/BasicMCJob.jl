@@ -45,7 +45,7 @@ type BasicMCJob <: MCJob
     println(vstates)
     initialize!(instance.vstates, pindex, model.vertices[pindex], sampler)
 
-    instance.sstate = generate_state(instance.vstates[pindex], sampler, tuner)
+    instance.sstate = sampler_state(instance.vstates[pindex], sampler, tuner)
 
     # TODO: complete inner constructor
 
