@@ -30,6 +30,6 @@ single_parameter_likelihood_model(
   p::Parameter;
   data::Vector{Data}=Array(Data, 0),
   hyperparameters::Vector{Hyperparameter}=Array(Hyperparameter, 0),
-  is_directed::Bool=true
-) = 
+  is_directed::Bool=false
+) =
   likelihood_model(Parameter[p], data=data, hyperparameters=hyperparameters, is_directed=is_directed)

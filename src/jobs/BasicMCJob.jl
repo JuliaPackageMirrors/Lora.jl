@@ -11,27 +11,27 @@ type BasicMCJob <: MCJob
   pindex::Int # Index of single parameter in vstates
   vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
-  vnstates::Vector{Union{VariableNState, VariableIOStream, Void}}
-  plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
-  task::Union{Task, Void}
-  send::Function
-  receive::Function
-  reset::Function
-  save::Function
-  close::function
-  checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
+  #pnstate::Union{VariableNState, VariableIOStream}
+  #plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
+  #task::Union{Task, Void}
+  #send::Function
+  #receive::Function
+  #reset::Function
+  #save::Function
+  #close::function
+  #checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
-  function BasicMCJob(
+  BasicMCJob(
     runner::BasicMCRunner,
     model::GenericModel,
     sampler::MCSampler,
     tuner::MCTuner,
     pindex::Int,
-    values0::Vector, # Vector of initial values of variable states ordered according to variables in model.vertices
-    ioopts::Vector{Union{Dict, Void}}, # Options related to IO
+    vstates::Vector{VariableState},
+    ioopts::Dict{Symbol, Any}, # Options related to IO; use isempty() to avoid Vector{Union{Dict, Void}}
     plain::Bool,
     checkin::Bool
-  )
+  ) = begin
     instance = new()
 
     instance.runner = runner
@@ -39,19 +39,31 @@ type BasicMCJob <: MCJob
     instance.sampler = sampler
     instance.tuner = tuner
 
+    instance.pindex = pindex
+
+    instance.vstates = vstates
+    println(vstates)
+    initialize!(instance.vstates, pindex, model.vertices[pindex], sampler)
+
+    instance.sstate = generate_state(instance.vstates[pindex], sampler, tuner)
+
     # TODO: complete inner constructor
 
     instance
   end
 end
 
+# Example on how to make use of vstatetypes to pass non-default types of variable states
+# d = Dict{Symbol, DataType}()
+# d[:p] = ContinuousUnivariateParameterState
+
 # In an outer constructor, values0 will be allowed to contain elements equal to nothing for parameters with prior
 
 # ioopts will include the following fields:
-# 1) :statetype (for ex ContinuousUnivariateParameterState)
-# 2) :diagnostics (these are diagnostic keys, for ex :accept)
-# 3) :destination (:none, :nstate or :iostream)
-# 4) :monitor (names of numeric fields of monitored states, for ex (:value :logtarget))
+# 1) :statetype (for ex ContinuousUnivariateParameterState); this may become a standalone input argument outside ioopts
+# 2) :destination (:none, :nstate or :iostream)
+# 3) :monitor (names of numeric fields of monitored states, for ex (:value :logtarget))
+# 4) :diagnostics (these are diagnostic keys, for ex :accept)
 # 5) :filepath (for iostreams, for ex "")
 # 6) :filesuffix (for iostreams, for ex "csv")
 

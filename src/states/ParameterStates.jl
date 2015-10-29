@@ -56,6 +56,9 @@ Base.(:(==)){S<:ContinuousUnivariateParameterState}(z::S, w::S) =
 Base.isequal{S<:ContinuousUnivariateParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
 
+minify(state::ContinuousUnivariateParameterState) =
+  ContinuousUnivariateParameterState(eltype(state), state.diagnostickeys)
+
 ## ContinuousMultivariateParameterState
 
 type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Multivariate, N}
@@ -150,3 +153,9 @@ Base.(:(==)){S<:ContinuousMultivariateParameterState}(z::S, w::S) =
 
 Base.isequal{S<:ContinuousMultivariateParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
+
+minify(
+  state::ContinuousMultivariateParameterState,
+  monitor::Vector{Bool}=[isempty(fieldnames(ContinuousMultivariateParameterState)[i]) ? false : true for i in 5:13]
+) =
+  ContinuousMultivariateParameterState(eltype(state), state.size, monitor, state.diagnostickeys)

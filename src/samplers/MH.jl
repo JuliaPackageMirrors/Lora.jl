@@ -49,23 +49,18 @@ MH(r::Function) = MH(true, nothing, r) # Metropolis sampler (symmetric proposal)
 # Random-walk Metropolis, i.e. Metropolis with a normal proposal density
 MH(σ::Matrix{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, σ)))
 MH(σ::Vector{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, σ)))
-MH(σ::AbstractFloat) = MH(x::Vector{AbstractFloat} -> rand(Normal(x, σ)))
-MH() = MH(x::Vector{AbstractFloat} -> rand(Normal(x, 1.0)))
+MH(σ::AbstractFloat) = MH(x::AbstractFloat -> rand(Normal(x, σ)))
+MH() = MH(x::AbstractFloat -> rand(Normal(x, 1.0)))
 
 ### Initialize Metropolis-Hastings sampler
-
-ContinuousMultivariateParameterState{N<:AbstractFloat}(
-  value::Vector{N},
-  sampler::MHSampler,
-  diagnostickeys::Vector{Symbol}=[:accept],
-  diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
-) =
-  ContinuousMultivariateParameterState(value, fill(false, 9), diagnostickeys, diagnosticvalues)
 
 function initialize!(vstates::Vector{VariableState}, i::Int, parameter::ContinuousParameter, sampler::MHSampler)
   parameter.logtarget!(vstates, i)
   @assert isfinite(vstates[i].logtarget) "Initial values out of model support"
 end
+
+generate_state(pstate::ContinuousParameterState, sampler::MHSampler, tuner::MCTuner) =
+  MHState(minify(pstate), generate_state(tuner))
 
 # ### Initialize Metropolis-Hastings sampler
 #
