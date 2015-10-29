@@ -16,14 +16,14 @@ sampler = MH()
 
 tuner = VanillaMCTuner()
 
-BasicMCJob(
+job = BasicMCJob(
   runner,
   model,
   sampler,
   tuner,
   1,
   VariableState[ContinuousUnivariateParameterState(1.25, [:accept])],
-  Dict{Symbol, Any}(),
+  Dict{Symbol, Any}(:diagnostics=>[:accept]),
   true,
   false
 )

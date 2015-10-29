@@ -11,7 +11,7 @@ type BasicMCJob <: MCJob
   pindex::Int # Index of single parameter in vstates
   vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
-  # output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
+  output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
   # plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
   # task::Union{Task, Void}
   # send::Function
@@ -28,7 +28,7 @@ type BasicMCJob <: MCJob
     tuner::MCTuner,
     pindex::Int,
     vstates::Vector{VariableState},
-    outopts::Dict{Symbol, Any}, # Options related to IO; use isempty() to avoid Vector{Union{Dict, Void}}
+    outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
     checkin::Bool
   ) = begin
@@ -47,28 +47,12 @@ type BasicMCJob <: MCJob
     instance.sstate = sampler_state(instance.vstates[pindex], sampler, tuner)
 
     augment!(outopts)
-    # instance.output = initialize_output(instance.vstates[pindex], outopts)
-    # typeof_nstate(), define it in states/ParameterNStates.jl
-    # initialize_output, define it in jobs/jobs.jl
+    instance.output = initialize_output(instance.vstates[pindex], length(runner.postrange), outopts)
 
     # TODO: complete inner constructor
 
     instance
   end
 end
-
-# Example on how to make use of vstatetypes to pass non-default types of variable states
-# d = Dict{Symbol, DataType}()
-# d[:p] = ContinuousUnivariateParameterState
-
-# In an outer constructor, values0 will be allowed to contain elements equal to nothing for parameters with prior
-
-# outopts will include the following fields:
-# 1) :statetype (for ex ContinuousUnivariateParameterState); this may become a standalone input argument outside outopts
-# 2) :destination (:none, :nstate or :iostream)
-# 3) :monitor (names of numeric fields of monitored states, for ex (:value :logtarget))
-# 4) :diagnostics (these are diagnostic keys, for ex :accept)
-# 5) :filepath (for iostreams, for ex "")
-# 6) :filesuffix (for iostreams, for ex "csv")
 
 # Note: it is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob

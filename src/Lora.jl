@@ -102,7 +102,6 @@ export
   add_dimension,
   add_edge!,
   add_vertex!,
-  augment!,
   count!,
   edge_index,
   edges,
@@ -115,7 +114,6 @@ export
   logistic,
   logistic_rate_score,
   make_edge,
-  minify,
   num_edges,
   num_vertices,
   out_degree,
@@ -134,7 +132,6 @@ export
   topological_sort_by_dfs,
   tune!,
   tune_state,
-  variable_nstate,
   vertex_index,
   vertices
 
