@@ -2,7 +2,7 @@
 
 # MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
-type MHState{S<:ContinuousParameterState} <: MCSamplerState
+type MHState{S<:ParameterState} <: MCSamplerState
   pstate::S # Parameter state used internally by MH
   tune::MCTune
   count::Int # Current number of iterations
@@ -17,13 +17,12 @@ type MHState{S<:ContinuousParameterState} <: MCSamplerState
   end
 end
 
-MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune, count::Int, ratio::Float64) =
-  MHState{S}(pstate, tune, count, ratio)
+MHState{S<:ParameterState}(pstate::S, tune::MCTune, count::Int, ratio::Float64) = MHState{S}(pstate, tune, count, ratio)
 
-MHState{S<:ContinuousParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 1, NaN)
+MHState{S<:ParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 1, NaN)
 
-Base.eltype{S<:ContinuousParameterState}(::Type{MHState{S}}) = S
-Base.eltype{S<:ContinuousParameterState}(s::MHState{S}) = S
+Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
+Base.eltype{S<:ParameterState}(s::MHState{S}) = S
 
 ### Metropolis-Hastings (MH) sampler
 
@@ -54,12 +53,16 @@ MH() = MH(x::AbstractFloat -> rand(Normal(x, 1.0)))
 
 ### Initialize Metropolis-Hastings sampler
 
+## Initialize variable states
+
 function initialize!(vstates::Vector{VariableState}, i::Int, parameter::ContinuousParameter, sampler::MHSampler)
   parameter.logtarget!(vstates, i)
   @assert isfinite(vstates[i].logtarget) "Initial values out of model support"
 end
 
-sampler_state(pstate::ContinuousParameterState, sampler::MHSampler, tuner::MCTuner) =
+## Initialize MHState
+
+sampler_state(pstate::ParameterState, sampler::MHSampler, tuner::MCTuner) =
   MHState(reset(pstate), tune_state(tuner))
 
 # ### Initialize Metropolis-Hastings sampler

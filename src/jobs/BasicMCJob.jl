@@ -11,15 +11,15 @@ type BasicMCJob <: MCJob
   pindex::Int # Index of single parameter in vstates
   vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
-  #pnstate::Union{VariableNState, VariableIOStream}
-  #plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
-  #task::Union{Task, Void}
-  #send::Function
-  #receive::Function
-  #reset::Function
-  #save::Function
-  #close::function
-  #checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
+  # output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
+  # plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
+  # task::Union{Task, Void}
+  # send::Function
+  # receive::Function
+  # reset::Function
+  # save::Function
+  # close::function
+  # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   BasicMCJob(
     runner::BasicMCRunner,
@@ -28,7 +28,7 @@ type BasicMCJob <: MCJob
     tuner::MCTuner,
     pindex::Int,
     vstates::Vector{VariableState},
-    ioopts::Dict{Symbol, Any}, # Options related to IO; use isempty() to avoid Vector{Union{Dict, Void}}
+    outopts::Dict{Symbol, Any}, # Options related to IO; use isempty() to avoid Vector{Union{Dict, Void}}
     plain::Bool,
     checkin::Bool
   ) = begin
@@ -42,10 +42,14 @@ type BasicMCJob <: MCJob
     instance.pindex = pindex
 
     instance.vstates = vstates
-    println(vstates)
     initialize!(instance.vstates, pindex, model.vertices[pindex], sampler)
 
     instance.sstate = sampler_state(instance.vstates[pindex], sampler, tuner)
+
+    augment!(outopts)
+    # instance.output = initialize_output(instance.vstates[pindex], outopts)
+    # typeof_nstate(), define it in states/ParameterNStates.jl
+    # initialize_output, define it in jobs/jobs.jl
 
     # TODO: complete inner constructor
 
@@ -59,8 +63,8 @@ end
 
 # In an outer constructor, values0 will be allowed to contain elements equal to nothing for parameters with prior
 
-# ioopts will include the following fields:
-# 1) :statetype (for ex ContinuousUnivariateParameterState); this may become a standalone input argument outside ioopts
+# outopts will include the following fields:
+# 1) :statetype (for ex ContinuousUnivariateParameterState); this may become a standalone input argument outside outopts
 # 2) :destination (:none, :nstate or :iostream)
 # 3) :monitor (names of numeric fields of monitored states, for ex (:value :logtarget))
 # 4) :diagnostics (these are diagnostic keys, for ex :accept)
