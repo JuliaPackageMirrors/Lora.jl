@@ -45,14 +45,14 @@ p = ContinuousUnivariateParameter(1, :p, pdf=Normal(states[2].value))
 distribution = Normal(μv)
 p.pdf == distribution
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test states[1].logtarget == lt
-p.gradlogtarget!(states, 1)
+p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
 states[1] = ContinuousUnivariateParameterState(pv)
 
-p.uptogradlogtarget!(states, 1)
+p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
 
 for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
@@ -69,14 +69,14 @@ p.pdf = Normal(states[2].value)
 distribution = Normal(μv)
 p.pdf == distribution
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test states[1].logtarget == lt
-p.gradlogtarget!(states, 1)
+p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
 states[1] = ContinuousUnivariateParameterState(pv)
 
-p.uptogradlogtarget!(states, 1)
+p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
 
 for field in [:prior, :spdf, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
@@ -93,9 +93,9 @@ p = ContinuousUnivariateParameter(1, :p, prior=Normal(0., states[2].value))
 
 distribution = Normal(0., σv)
 p.prior == distribution
-p.logprior!(states, 1)
+p.logprior!(states[1], states)
 @test states[1].logprior == logpdf(distribution, pv)
-p.gradlogprior!(states, 1)
+p.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == gradlogpdf(distribution, pv)
 
 for field in [
@@ -119,9 +119,9 @@ p.prior = Normal(0., states[2].value)
 
 distribution = Normal(0., σv)
 p.prior == distribution
-p.logprior!(states, 1)
+p.logprior!(states[1], states)
 @test states[1].logprior == logpdf(distribution, pv)
-p.gradlogprior!(states, 1)
+p.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == gradlogpdf(distribution, pv)
 
 for field in [
@@ -142,20 +142,20 @@ pv = 3.79
 μv = 5.4
 states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(μv)]
 
-p = ContinuousUnivariateParameter(1, :p, setpdf=(states, i) -> Normal(states[2].value))
-p.setpdf(states, 1)
+p = ContinuousUnivariateParameter(1, :p, setpdf=(state, states) -> Normal(states[2].value))
+p.setpdf(states[1], states)
 
 distribution = Normal(μv)
 p.pdf == distribution
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test states[1].logtarget == lt
-p.gradlogtarget!(states, 1)
+p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
 states[1] = ContinuousUnivariateParameterState(pv)
 
-p.uptogradlogtarget!(states, 1)
+p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
 
 for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
@@ -167,19 +167,19 @@ states[1].value = pv
 μv = 0.12
 states[2].value = μv
 
-p.setpdf(states, 1)
+p.setpdf(states[1], states)
 
 distribution = Normal(μv)
 p.pdf == distribution
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test states[1].logtarget == lt
-p.gradlogtarget!(states, 1)
+p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
 states[1] = ContinuousUnivariateParameterState(pv)
 
-p.uptogradlogtarget!(states, 1)
+p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
 
 for field in [:prior, :sprior, :ll, :lp, :gll, :glp, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptotlt, :uptodtlt]
@@ -192,14 +192,14 @@ pv = 3.55
 σv = 2.
 states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVariableState(σv)]
 
-p = ContinuousUnivariateParameter(1, :p, setprior=(states, i) -> Normal(0., states[2].value))
-p.setprior(states, 1)
+p = ContinuousUnivariateParameter(1, :p, setprior=(state, states) -> Normal(0., states[2].value))
+p.setprior(states[1], states)
 
 distribution = Normal(0., σv)
 p.prior == distribution
-p.logprior!(states, 1)
+p.logprior!(states[1], states)
 @test states[1].logprior == logpdf(distribution, pv)
-p.gradlogprior!(states, 1)
+p.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == gradlogpdf(distribution, pv)
 
 for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptoglt, :uptotlt, :uptodtlt]
@@ -211,13 +211,13 @@ states[1].value = pv
 σv = 5.
 states[2].value = σv
 
-p.setprior(states, 1)
+p.setprior(states[1], states)
 
 distribution = Normal(0., σv)
 p.prior == distribution
-p.logprior!(states, 1)
+p.logprior!(states[1], states)
 @test states[1].logprior == logpdf(distribution, pv)
-p.gradlogprior!(states, 1)
+p.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == gradlogpdf(distribution, pv)
 
 for field in [:pdf, :spdf, :ll, :lt, :gll, :glt, :tll, :tlp, :tlt, :dtll, :dtlp, :dtlt, :uptoglt, :uptotlt, :uptodtlt]
@@ -240,13 +240,13 @@ states = VariableState[
   UnivariateBasicVariableState(σ0v)
 ]
 
-llf(states, i) =
-  states[i].loglikelihood =
-  -0.5*((states[2].value-states[i].value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+llf(state, states) =
+  state.loglikelihood =
+  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
-lpf(states, i) =
-  states[i].logprior =
-  -0.5*((states[i].value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
+lpf(state, states) =
+  state.logprior =
+  -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
 
 μ = ContinuousUnivariateParameter(1, :μ, loglikelihood=llf, logprior=lpf)
 
@@ -254,14 +254,14 @@ ld = Normal(μv, σv)
 pd = Normal(μ0v, σ0v)
 ll, lp = logpdf(ld, xv), logpdf(pd, μv)
 lt = ll+lp
-μ.loglikelihood!(states, 1)
+μ.loglikelihood!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
-μ.logprior!(states, 1)
+μ.logprior!(states[1], states)
 @test_approx_eq states[1].logprior lp
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.logtarget!(states, 1)
+μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test_approx_eq states[1].logprior lp
 @test_approx_eq states[1].logtarget lt
@@ -287,10 +287,10 @@ states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVa
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(states, i) -> states[i].logtarget = -(states[i].value-states[2].value)^2
+  logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)^2
 )
 
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test_approx_eq 0.5*(states[1].logtarget-log(2*pi)) logpdf(Normal(μv), pv)
 
 for field in [
@@ -321,11 +321,11 @@ states = VariableState[
   UnivariateBasicVariableState(σ0v)
 ]
 
-llf(states, i) =
-  states[i].loglikelihood =
-  -0.5*((states[2].value-states[i].value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+llf(state, states) =
+  state.loglikelihood =
+  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
-gllf(states, i) = states[i].gradloglikelihood = (states[2].value-states[i].value)/(states[3].value^2)
+gllf(state, states) = state.gradloglikelihood = (states[2].value-state.value)/(states[3].value^2)
 
 μ = ContinuousUnivariateParameter(
   1,
@@ -341,29 +341,29 @@ ll, lp = logpdf(ld, xv), logpdf(pd, μv)
 lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
-μ.loglikelihood!(states, 1)
+μ.loglikelihood!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
-μ.logprior!(states, 1)
+μ.logprior!(states[1], states)
 @test states[1].logprior == lp
-μ.gradloglikelihood!(states, 1)
+μ.gradloglikelihood!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
-μ.gradlogprior!(states, 1)
+μ.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == glp
 
 pstate = ContinuousUnivariateParameterState(μv)
 
-μ.logtarget!(states, 1)
+μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test states[1].logprior == lp
 @test_approx_eq states[1].logtarget lt
-μ.gradlogtarget!(states, 1)
+μ.gradlogtarget!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
 @test states[1].gradlogprior == glp
 @test_approx_eq states[1].gradlogtarget glt
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.uptogradlogtarget!(states, 1)
+μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test states[1].logprior == lp
 @test_approx_eq states[1].logtarget lt
@@ -396,29 +396,29 @@ ll, lp = logpdf(ld, xv), logpdf(pd, μv)
 lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
-μ.loglikelihood!(states, 1)
+μ.loglikelihood!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
-μ.logprior!(states, 1)
+μ.logprior!(states[1], states)
 @test states[1].logprior == lp
-μ.gradloglikelihood!(states, 1)
+μ.gradloglikelihood!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
-μ.gradlogprior!(states, 1)
+μ.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == glp
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.logtarget!(states, 1)
+μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test states[1].logprior == lp
 @test_approx_eq states[1].logtarget lt
-μ.gradlogtarget!(states, 1)
+μ.gradlogtarget!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
 @test states[1].gradlogprior == glp
 @test_approx_eq states[1].gradlogtarget glt
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.uptogradlogtarget!(states, 1)
+μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test states[1].logprior == lp
 @test_approx_eq states[1].logtarget lt
@@ -446,17 +446,17 @@ states = VariableState[
   UnivariateBasicVariableState(σ0v)
 ]
 
-llf(states, i) =
-  states[i].loglikelihood =
-  -0.5*((states[2].value-states[i].value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+llf(state, states) =
+  state.loglikelihood =
+  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
-lpf(states, i) =
-  states[i].logprior =
-  -0.5*((states[i].value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
+lpf(state, states) =
+  state.logprior =
+  -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
 
-gllf(states, i) = states[i].gradloglikelihood = (states[2].value-states[i].value)/(states[3].value^2)
+gllf(state, states) = state.gradloglikelihood = (states[2].value-state.value)/(states[3].value^2)
 
-glpf(states, i) = states[i].gradlogprior = -(states[i].value-states[4].value)/(states[5].value^2)
+glpf(state, states) = state.gradlogprior = -(state.value-states[4].value)/(states[5].value^2)
 
 μ = ContinuousUnivariateParameter(1, :μ, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
 
@@ -466,29 +466,29 @@ ll, lp = logpdf(ld, xv), logpdf(pd, μv)
 lt = ll+lp
 gll, glp = -gradlogpdf(ld, xv), gradlogpdf(pd, μv)
 glt = gll+glp
-μ.loglikelihood!(states, 1)
+μ.loglikelihood!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
-μ.logprior!(states, 1)
+μ.logprior!(states[1], states)
 @test_approx_eq states[1].logprior lp
-μ.gradloglikelihood!(states, 1)
+μ.gradloglikelihood!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
-μ.gradlogprior!(states, 1)
+μ.gradlogprior!(states[1], states)
 @test_approx_eq states[1].gradlogprior glp
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.logtarget!(states, 1)
+μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test_approx_eq states[1].logprior lp
 @test_approx_eq states[1].logtarget lt
-μ.gradlogtarget!(states, 1)
+μ.gradlogtarget!(states[1], states)
 @test_approx_eq states[1].gradloglikelihood gll
 @test_approx_eq states[1].gradlogprior glp
 @test_approx_eq states[1].gradlogtarget glt
 
 states[1] = ContinuousUnivariateParameterState(μv)
 
-μ.uptogradlogtarget!(states, 1)
+μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
 @test_approx_eq states[1].logprior lp
 @test_approx_eq states[1].logtarget lt
@@ -510,20 +510,20 @@ states = VariableState[ContinuousUnivariateParameterState(pv), UnivariateBasicVa
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(states, i) -> states[i].logtarget = -(states[i].value-states[2].value)^2,
-  gradlogtarget=(states, i) -> states[i].gradlogtarget = -2*(states[i].value-states[2].value)
+  logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)^2,
+  gradlogtarget=(state, states) -> state.gradlogtarget = -2*(state.value-states[2].value)
 )
 
 distribution = Normal(μv)
 lt, glt = logpdf(distribution, pv), gradlogpdf(distribution, pv)
-p.logtarget!(states, 1)
+p.logtarget!(states[1], states)
 @test_approx_eq 0.5*(states[1].logtarget-log(2*pi)) lt
-p.gradlogtarget!(states, 1)
+p.gradlogtarget!(states[1], states)
 @test_approx_eq 0.5*states[1].gradlogtarget glt
 
 pstate = ContinuousUnivariateParameterState(pv)
 
-p.uptogradlogtarget!(states, 1)
+p.uptogradlogtarget!(states[1], states)
 @test_approx_eq 0.5*(states[1].logtarget-log(2*pi)) lt
 @test_approx_eq 0.5*states[1].gradlogtarget glt
 

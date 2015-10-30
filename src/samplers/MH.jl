@@ -81,20 +81,25 @@ end
 
 # function initialize_task!{N<:AbstractFloat}(
 #   vstates::Vector{VariableState},
-#   parameter::ContinuousMultivariateParameterState{N},
+#   pvstates::Vector{VariableState},
+#   sstate::MHState,
+#   runner::BasicMCRunner,
+#   parameter::ContinuousParameter,
 #   sampler::MHSampler,
+#   tuner::MCTuner,
 #   index::Int
 # )
 #   # Hook inside Task to allow remote resetting
 #   task_local_storage(:reset, (x::Vector{N})->reset!(vstates, x, parameter, sampler, index))
 #
 #   while true
-#     iterate!()
+#     iterate!(vstates, pvstates, sstate, runner, parameter, sampler, tuner, index, produce)
 #   end
 # end
-#
+
 # function iterate!(
 #   vstates::Vector{VariableState},
+#   pvstates::Vector{VariableState},
 #   sstate::MHState,
 #   runner::BasicMCRunner,
 #   parameter::ContinuousParameter,
@@ -107,21 +112,21 @@ end
 #     sstate.tune.proposed += 1
 #   end
 #
-#   sstate.pstate.value = sampler.randproposal(vstates[index].value)
-#   parameter.logtarget!()
-#   heap.instate.successive = MCBaseSample(s.randproposal(heap.instate.current.sample))
-#   logtarget!(heap.instate.successive, m.eval)
+#   pvstates[index].value = sampler.randproposal(vstates[index].value)
+#   parameter.logtarget!(pvstates, index)
 #
-#   if s.symmetric
-#     heap.ratio = heap.instate.successive.logtarget-heap.instate.current.logtarget
+#   if sampler.symmetric
+#     sstate.ratio = pvstates.logtarget-vstates.logtarget
 #   else
-#     heap.ratio = (heap.instate.successive.logtarget
-#       +s.logproposal(heap.instate.successive.sample, heap.instate.current.sample)
-#       -heap.instate.current.logtarget
-#       -s.logproposal(heap.instate.current.sample, heap.instate.successive.sample)
+#     heap.ratio = (
+#       pvstates.logtarget
+#       +sampler.logproposal(pvstates.value, vstates.value)
+#       -vstates.logtarget
+#       -sampler.logproposal(vstates.value, pvstates.value
 #     )
 #   end
-#   if heap.ratio > 0 || (heap.ratio > log(rand()))
+#
+#   if sstate.ratio > 0 || (sstate.ratio > log(rand()))
 #     heap.outstate = MCState(heap.instate.successive, heap.instate.current, Dict{Any, Any}("accept" => true))
 #     heap.instate.current = deepcopy(heap.instate.successive)
 #
@@ -141,7 +146,7 @@ end
 #
 #   send(heap.outstate)
 # end
-
+#
 # ### Initialize Metropolis-Hastings sampler
 #
 # function initialize_heap(m::MCModel, s::MH, r::MCRunner, t::MCTuner)

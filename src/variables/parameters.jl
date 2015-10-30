@@ -89,7 +89,9 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(args[i], Function) && isgeneric(args[i]) && !method_exists(args[i], (Vector{VariableState}, Int))
+      if isa(args[i], Function) && 
+        isgeneric(args[i]) &&
+        !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -100,7 +102,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         setter,
         if isa(args[i], Function)
-          (states::Vector{VariableState}, j::Int) -> setfield!(instance, distribution, args[i](states, j))
+          (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) -> 
+          setfield!(instance, distribution, args[i](state, states))
         else
           args[i]
         end
@@ -124,7 +127,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
           (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), eltype(prior)))) ||
           isa(args[2], Function)
         )
-          (states::Vector{VariableState}, j::Int) -> setfield!(states[j], spfield, f(instance.prior, states[j].value))
+          (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) ->
+          setfield!(state, spfield, f(instance.prior, state.value))
         else
           args[i]
         end
@@ -153,14 +157,15 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         ptfield,
         if args[i] == nothing
           if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
-            function (states::Vector{VariableState}, j::Int)
-              getfield(instance, plfield)(states, j)
-              getfield(instance, ppfield)(states, j)
-              setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
+            function (state::ContinuousUnivariateParameterState, states::Vector{VariableState})
+              getfield(instance, plfield)(state, states)
+              getfield(instance, ppfield)(state, states)
+              setfield!(state, stfield, getfield(state, slfield)+getfield(state, spfield))
             end
           elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), eltype(pdf)))) ||
             isa(args[1], Function)
-            (states::Vector{VariableState}, j::Int) -> setfield!(states[j], stfield, f(instance.pdf, states[j].value))
+            (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) ->
+            setfield!(state, stfield, f(instance.pdf, state.value))
           end
         else
           args[i]
@@ -193,10 +198,10 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         ptfield,
         if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
-          function (states::Vector{VariableState}, j::Int)
-            getfield(instance, plfield)(states, j)
-            getfield(instance, ppfield)(states, j)
-            setfield!(states[j], stfield, getfield(states[j], slfield)+getfield(states[j], spfield))
+          function (state::ContinuousUnivariateParameterState, states::Vector{VariableState})
+            getfield(instance, plfield)(state, states)
+            getfield(instance, ppfield)(state, states)
+            setfield!(state, stfield, getfield(state, slfield)+getfield(state, spfield))
           end
         else
           args[i]
@@ -209,9 +214,9 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
       instance,
       :uptogradlogtarget!,
       if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
-        function (states::Vector{VariableState}, j::Int)
-          instance.logtarget!(states, j)
-          instance.gradlogtarget!(states, j)
+        function (state::ContinuousUnivariateParameterState, states::Vector{VariableState})
+          instance.logtarget!(state, states)
+          instance.gradlogtarget!(state, states)
         end
       else
         args[15]
@@ -226,10 +231,10 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
-        function (states::Vector{VariableState}, j::Int)
-          instance.logtarget!(states, j)
-          instance.gradlogtarget!(states, j)
-          instance.tensorlogtarget!(states, j)
+        function (state::ContinuousUnivariateParameterState, states::Vector{VariableState})
+          instance.logtarget!(state, states)
+          instance.gradlogtarget!(state, states)
+          instance.tensorlogtarget!(state, states)
         end
       else
         args[16]
@@ -245,11 +250,11 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
         isa(instance.dtensorlogtarget!, Function)
-        function (states::Vector{VariableState}, j::Int)
-          instance.logtarget!(states, j)
-          instance.gradlogtarget!(states, j)
-          instance.tensorlogtarget!(states, j)
-          instance.dtensorlogtarget!(states, j)
+        function (state::ContinuousUnivariateParameterState, states::Vector{VariableState})
+          instance.logtarget!(state, states)
+          instance.gradlogtarget!(state, states)
+          instance.tensorlogtarget!(state, states)
+          instance.dtensorlogtarget!(state, states)
         end
       else
         args[17]
