@@ -2,25 +2,19 @@
 
 # MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
-type MHState{S<:ParameterState} <: MCSamplerState
-  pstate::S # Parameter state used internally by MH
+type MHState <: MCSamplerState
   tune::MCTunerState
   ratio::Float64 # Acceptance ratio
 
-  function MHState(pstate::S, tune::MCTunerState, ratio::Float64)
+  function MHState(tune::MCTunerState, ratio::Float64)
     if !isnan(ratio)
       @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
     end
-    new(pstate, tune, ratio)
+    new(tune, ratio)
   end
 end
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Float64) = MHState{S}(pstate, tune, ratio)
-
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
-
-Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
-Base.eltype{S<:ParameterState}(s::MHState{S}) = S
+MHState(tune::MCTunerState=BasicMCTune()) = MHState(tune, NaN)
 
 ### Metropolis-Hastings (MH) sampler
 
@@ -44,6 +38,7 @@ MH(l::Function, r::Function) = MH(false, l, r) # Metropolis-Hastings sampler (as
 MH(r::Function) = MH(true, nothing, r) # Metropolis sampler (symmetric proposal)
 
 # Random-walk Metropolis, i.e. Metropolis with a normal proposal density
+
 MH(σ::Matrix{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, σ)))
 MH(σ::Vector{AbstractFloat}) = MH(x::Vector{AbstractFloat} -> rand(MvNormal(x, σ)))
 MH(σ::AbstractFloat) = MH(x::AbstractFloat -> rand(Normal(x, σ)))
@@ -60,8 +55,7 @@ end
 
 ## Initialize MHState
 
-sampler_state(sampler::MHSampler, tuner::MCTuner, pstate::ParameterState) =
-  MHState(generate_empty(pstate), tuner_state(tuner))
+typeof_state(sampler::MH) = MHState
 
 function reset!{N<:AbstractFloat}(
   vstates::Vector{VariableState},

@@ -19,3 +19,5 @@ abstract HMCSampler <: MCSampler
 ## Family of Langevin Monte Carlo samplers
 
 abstract LMCSampler <: MCSampler
+
+sampler_state{S<:MCSampler}(sampler::S, tuner::MCTuner) = typeof_state(sampler)(tuner_state(tuner))

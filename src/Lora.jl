@@ -131,6 +131,7 @@ export
   topological_sort_by_dfs,
   tune!,
   tuner_state,
+  typeof_state,
   vertex_index,
   vertices
 

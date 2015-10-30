@@ -46,9 +46,15 @@ type BasicMCJob <: MCJob
     instance.vstates = vstates
     initialize!(instance.vstates, model.vertices[index], sampler, index)
 
-    # TODO: initialize pvstates (stands for proposed variable states)
+    # pvstates stands for proposed variable states
+    nvariables = num_vertices(model)
+    instance.pvstates = Array(VariableState, nvariables)
+    for i in [1:(index-1); (index+1):nvariables]
+      instance.pvstates[i] = instance.vstates[i]
+    end
+    instance.pvstates[index] = generate_empty(instance.vstates[index])
 
-    instance.sstate = sampler_state(sampler, tuner, instance.vstates[index])
+    instance.sstate = sampler_state(sampler, tuner)
 
     augment!(outopts)
     instance.output = initialize_output(instance.vstates[index], runner.npoststeps, outopts)

@@ -15,8 +15,8 @@ tests =
     "generators",
     "tuners",
     "VanillaMCTuner",
-    "AcceptanceRateMCTuner",
-    "MH"
+    "AcceptanceRateMCTuner" #,
+    # "MH"
   ]
 
 println("Running tests:")
