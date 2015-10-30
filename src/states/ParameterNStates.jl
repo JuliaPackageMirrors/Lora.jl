@@ -4,9 +4,9 @@ abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
 abstract ContinuousParameterNState{F<:VariateForm, N<:AbstractFloat} <: ParameterNState{F, N}
 
-typealias MCChain ParameterNState
+typealias MarkovChain ParameterNState
 
-typealias ContinuousMCChain ContinuousParameterNState
+typealias ContinuousMarkovChain ContinuousParameterNState
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
 Base.eltype{F<:VariateForm, N<:AbstractFloat}(::Type{ContinuousParameterNState{F, N}}) = N
@@ -85,12 +85,12 @@ function ContinuousUnivariateParameterNState{N<:AbstractFloat}(
   )
 end
 
-typealias ContinuousUnivariateMCChain ContinuousUnivariateParameterNState
+typealias ContinuousUnivariateMarkovChain ContinuousUnivariateParameterNState
 
 # To visually inspect code generation via codegen_copy_continuous_univariate_parameter_nstate, try for example
 # using Lora
 #
-# nstate = ContinuousUnivariateMCChain(Float64, 4)
+# nstate = ContinuousUnivariateMarkovChain(Float64, 4)
 # Lora.codegen_copy_continuous_univariate_parameter_nstate(nstate, [true; fill(false, 12)])
 
 function codegen_copy_continuous_univariate_parameter_nstate(
@@ -215,12 +215,12 @@ function ContinuousMultivariateParameterNState{N<:AbstractFloat}(
   )
 end
 
-typealias ContinuousMultivariateMCChain ContinuousMultivariateParameterNState
+typealias ContinuousMultivariateMarkovChain ContinuousMultivariateParameterNState
 
 # To visually inspect code generation via codegen_copy_continuous_multivariate_parameter_nstate, try for example
 # using Lora
 #
-# nstate = ContinuousMultivariateMCChain(Float64, 2, 4)
+# nstate = ContinuousMultivariateMarkovChain(Float64, 2, 4)
 # Lora.codegen_copy_continuous_multivariate_parameter_nstate(nstate, [true; fill(false, 12)])
 
 function codegen_copy_continuous_multivariate_parameter_nstate(

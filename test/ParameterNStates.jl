@@ -17,10 +17,10 @@ functionnames = (
   :dtensorlogtarget
 )
 
-println("    Testing ContinuousUnivariateMCChain constructors and methods...")
+println("    Testing ContinuousUnivariateMarkovChain constructors and methods...")
 
 nstaten = 4
-nstate = ContinuousUnivariateMCChain(Float64, nstaten)
+nstate = ContinuousUnivariateMarkovChain(Float64, nstaten)
 
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
@@ -32,7 +32,7 @@ end
 @test nstate.n == nstaten
 
 nstaten = 5
-nstate = ContinuousUnivariateMCChain(Float32, nstaten, [true; fill(false, 5); true; fill(false, 6)], [:accept])
+nstate = ContinuousUnivariateMarkovChain(Float32, nstaten, [true; fill(false, 5); true; fill(false, 6)], [:accept])
 
 @test eltype(nstate) == Float32
 @test length(nstate.value) == nstaten
@@ -56,7 +56,7 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == true
 
 nstaten = 10
-nstate = ContinuousUnivariateMCChain(Float64, nstaten, [:value, :logtarget], [:accept])
+nstate = ContinuousUnivariateMarkovChain(Float64, nstaten, [:value, :logtarget], [:accept])
 
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
@@ -80,16 +80,16 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == false
 
 nstatev = Float64[4.39, -9,47]
-z = ContinuousUnivariateMCChain(Float64, length(nstatev))
+z = ContinuousUnivariateMarkovChain(Float64, length(nstatev))
 z.value = copy(nstatev)
 w = deepcopy(z)
 @test isequal(z, w)
 
-println("    Testing ContinuousMultivariateMCChain constructors and methods...")
+println("    Testing ContinuousMultivariateMarkovChain constructors and methods...")
 
 nstatesize = 2
 nstaten = 4
-nstate = ContinuousMultivariateMCChain(Float64, nstatesize, nstaten)
+nstate = ContinuousMultivariateMarkovChain(Float64, nstatesize, nstaten)
 
 @test eltype(nstate) == Float64
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -112,7 +112,7 @@ end
 
 nstatesize = 2
 nstaten = 5
-nstate = ContinuousMultivariateMCChain(
+nstate = ContinuousMultivariateMarkovChain(
   Float32,
   nstatesize,
   nstaten,
@@ -153,7 +153,7 @@ nstate.diagnosticvalues[savei] == false
 
 nstatesize = 2
 nstaten = 10
-nstate = ContinuousMultivariateMCChain(Float16, nstatesize, nstaten, [:value, :logtarget, :gradlogtarget],[:accept])
+nstate = ContinuousMultivariateMarkovChain(Float16, nstatesize, nstaten, [:value, :logtarget, :gradlogtarget],[:accept])
 
 @test eltype(nstate) == Float16
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -191,7 +191,7 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == true
 
 nstatev = Float64[4.3 9.2 -7.44; -0.2 8.1 4.43]
-z = ContinuousMultivariateMCChain(Float64, size(nstatev)...)
+z = ContinuousMultivariateMarkovChain(Float64, size(nstatev)...)
 z.value = copy(nstatev)
 w = deepcopy(z)
 @test isequal(z, w)

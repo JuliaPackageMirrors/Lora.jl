@@ -4,22 +4,20 @@
 
 type MHState{S<:ParameterState} <: MCSamplerState
   pstate::S # Parameter state used internally by MH
-  tune::MCTune
-  count::Int # Current number of iterations
+  tune::MCTunerState
   ratio::Float64 # Acceptance ratio
 
-  function MHState(pstate::S, tune::MCTune, count::Int, ratio::Float64)
-    @assert count >= 0 "Number of elapsed MCMC iterations should be non-negative"
+  function MHState(pstate::S, tune::MCTunerState, ratio::Float64)
     if !isnan(ratio)
       @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
     end
-    new(pstate, tune, count, ratio)
+    new(pstate, tune, ratio)
   end
 end
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTune, count::Int, ratio::Float64) = MHState{S}(pstate, tune, count, ratio)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Float64) = MHState{S}(pstate, tune, ratio)
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTune=BasicMCTune()) = MHState(pstate, tune, 1, NaN)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
 
 Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
 Base.eltype{S<:ParameterState}(s::MHState{S}) = S
@@ -55,15 +53,100 @@ MH() = MH(x::AbstractFloat -> rand(Normal(x, 1.0)))
 
 ## Initialize variable states
 
-function initialize!(vstates::Vector{VariableState}, i::Int, parameter::ContinuousParameter, sampler::MHSampler)
-  parameter.logtarget!(vstates, i)
-  @assert isfinite(vstates[i].logtarget) "Initial values out of model support"
+function initialize!(vstates::Vector{VariableState}, parameter::ContinuousParameter, sampler::MHSampler, index::Int)
+  parameter.logtarget!(vstates, index)
+  @assert isfinite(vstates[index].logtarget) "Initial values out of model support"
 end
 
 ## Initialize MHState
 
-sampler_state(pstate::ParameterState, sampler::MHSampler, tuner::MCTuner) =
-  MHState(reset(pstate), tune_state(tuner))
+sampler_state(sampler::MHSampler, tuner::MCTuner, pstate::ParameterState) =
+  MHState(generate_empty(pstate), tuner_state(tuner))
+
+function reset!{N<:AbstractFloat}(
+  vstates::Vector{VariableState},
+  x::N,
+  parameter::ContinuousUnivariateParameterState{N},
+  sampler::MHSampler,
+  index::Int
+)
+  vstates[index].value = x
+  parameter.logtarget!(vstates, index)
+end
+
+function reset!{N<:AbstractFloat}(
+  vstates::Vector{VariableState},
+  x::Vector{N},
+  parameter::ContinuousMultivariateParameterState{N},
+  sampler::MHSampler,
+  index::Int
+)
+  vstates[index].value = copy(x)
+  parameter.logtarget!(vstates, index)
+end
+
+# function initialize_task!{N<:AbstractFloat}(
+#   vstates::Vector{VariableState},
+#   parameter::ContinuousMultivariateParameterState{N},
+#   sampler::MHSampler,
+#   index::Int
+# )
+#   # Hook inside Task to allow remote resetting
+#   task_local_storage(:reset, (x::Vector{N})->reset!(vstates, x, parameter, sampler, index))
+#
+#   while true
+#     iterate!()
+#   end
+# end
+#
+# function iterate!(
+#   vstates::Vector{VariableState},
+#   sstate::MHState,
+#   runner::BasicMCRunner,
+#   parameter::ContinuousParameter,
+#   sampler::MHSampler,
+#   tuner::MCTuner,
+#   index::Int,
+#   send::Function
+# )
+#   if tuner.verbose
+#     sstate.tune.proposed += 1
+#   end
+#
+#   sstate.pstate.value = sampler.randproposal(vstates[index].value)
+#   parameter.logtarget!()
+#   heap.instate.successive = MCBaseSample(s.randproposal(heap.instate.current.sample))
+#   logtarget!(heap.instate.successive, m.eval)
+#
+#   if s.symmetric
+#     heap.ratio = heap.instate.successive.logtarget-heap.instate.current.logtarget
+#   else
+#     heap.ratio = (heap.instate.successive.logtarget
+#       +s.logproposal(heap.instate.successive.sample, heap.instate.current.sample)
+#       -heap.instate.current.logtarget
+#       -s.logproposal(heap.instate.current.sample, heap.instate.successive.sample)
+#     )
+#   end
+#   if heap.ratio > 0 || (heap.ratio > log(rand()))
+#     heap.outstate = MCState(heap.instate.successive, heap.instate.current, Dict{Any, Any}("accept" => true))
+#     heap.instate.current = deepcopy(heap.instate.successive)
+#
+#     if t.verbose
+#       heap.tune.accepted += 1
+#     end
+#   else
+#     heap.outstate = MCState(heap.instate.current, heap.instate.current, Dict{Any, Any}("accept" => false))
+#   end
+#
+#   if t.verbose && heap.count <= r.burnin && mod(heap.count, t.period) == 0
+#     rate!(heap.tune)
+#     println("Burnin iteration $(heap.count) of $(r.burnin): ", round(100*heap.tune.rate, 2), " % acceptance rate")
+#   end
+#
+#   heap.count += 1
+#
+#   send(heap.outstate)
+# end
 
 # ### Initialize Metropolis-Hastings sampler
 #

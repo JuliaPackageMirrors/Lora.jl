@@ -9,6 +9,7 @@ immutable BasicMCRunner <: MCRunner
   thinning::Int
   nsteps::Int
   postrange::Range{Int}
+  npoststeps::Int
 
   function BasicMCRunner(postrange::Range{Int})
     burnin = first(postrange)-1
@@ -19,7 +20,9 @@ immutable BasicMCRunner <: MCRunner
     @assert thinning >= 1 "Thinning should be >= 1"
     @assert nsteps > burnin "Total number of MCMC iterations should be greater than number of burn-in iterations"
 
-    new(burnin, thinning, nsteps, postrange)
+    npoststeps = length(postrange)
+
+    new(burnin, thinning, nsteps, postrange, npoststeps)
   end
 end
 

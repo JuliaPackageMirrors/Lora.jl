@@ -8,8 +8,9 @@ type BasicMCJob <: MCJob
   model::GenericModel # Model of a single parameter
   sampler::MCSampler
   tuner::MCTuner
-  pindex::Int # Index of single parameter in vstates
+  index::Int # Index of single parameter in vstates
   vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
+  pvstates::Vector{VariableState} # Vector of proposed variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
@@ -19,6 +20,7 @@ type BasicMCJob <: MCJob
   reset::Function
   # save::Function
   # close::function
+  count::Int # Current number of iterations
   # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   BasicMCJob(
@@ -26,7 +28,7 @@ type BasicMCJob <: MCJob
     model::GenericModel,
     sampler::MCSampler,
     tuner::MCTuner,
-    pindex::Int,
+    index::Int,
     vstates::Vector{VariableState},
     outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
@@ -39,15 +41,17 @@ type BasicMCJob <: MCJob
     instance.sampler = sampler
     instance.tuner = tuner
 
-    instance.pindex = pindex
+    instance.index = index
 
     instance.vstates = vstates
-    initialize!(instance.vstates, pindex, model.vertices[pindex], sampler)
+    initialize!(instance.vstates, model.vertices[index], sampler, index)
 
-    instance.sstate = sampler_state(instance.vstates[pindex], sampler, tuner)
+    # TODO: initialize pvstates (stands for proposed variable states)
+
+    instance.sstate = sampler_state(sampler, tuner, instance.vstates[index])
 
     augment!(outopts)
-    instance.output = initialize_output(instance.vstates[pindex], length(runner.postrange), outopts)
+    instance.output = initialize_output(instance.vstates[index], runner.npoststeps, outopts)
 
     instance.plain = plain
     if plain
@@ -62,7 +66,7 @@ type BasicMCJob <: MCJob
       # instance.reset = (i::Int, x::Vector{Float64})->reset(job.task[i], x)
     end
 
-    # TODO: complete inner constructor
+    instance.count = 1
 
     instance
   end

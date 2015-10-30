@@ -1,8 +1,8 @@
-# Tune types hold the samplers' temporary output used for tuning the sampler
+# Tuner state types hold the samplers' temporary output used for tuning the sampler
 
-### MCTune
+### MCTunerState
 
-abstract MCTune
+abstract MCTunerState
 
 ### BasicMCTune
 
@@ -10,7 +10,7 @@ abstract MCTune
 # It monitors the acceptance rate for the current tuning period
 # It stores only the number of accepted and proposed MCMC samples and the observed acceptance rate
 
-type BasicMCTune <: MCTune
+type BasicMCTune <: MCTunerState
   accepted::Int # Number of accepted MCMC samples during current tuning period
   proposed::Int # Number of proposed MCMC samples during current tuning period
   rate::Float64 # Observed acceptance rate over current tuning period

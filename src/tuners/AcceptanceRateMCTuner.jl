@@ -43,6 +43,6 @@ AcceptanceRateMCTuner(
 ) =
   AcceptanceRateMCTuner(targetrate, score, period, verbose)
 
-tune_state(tuner::AcceptanceRateMCTuner) = BasicMCTune()
+tuner_state(tuner::AcceptanceRateMCTuner) = BasicMCTune()
 
 tune!(tune::BasicMCTune, tuner::AcceptanceRateMCTuner) = (tune.rate *= tuner.score(tune.rate-tuner.targetrate))

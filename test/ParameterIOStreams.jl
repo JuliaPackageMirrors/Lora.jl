@@ -97,7 +97,7 @@ close(iostream)
 iostream = ContinuousParameterIOStream("r", iostreamsize, iostreamn, filepath=filepath)
 nstate = read(iostream, Float64)
 
-@test isa(nstate, ContinuousUnivariateMCChain{Float64})
+@test isa(nstate, ContinuousUnivariateMarkovChain{Float64})
 @test nstate.value == nstatev
 for i in 2:13
   @test length(nstate.(functionnames[i])) == 0
@@ -109,7 +109,7 @@ end
 close(iostream)
 rm(filenames[1])
 
-println("      Interaction with ContinuousUnivariateMCChain...")
+println("      Interaction with ContinuousUnivariateMarkovChain...")
 
 nstatev = Float32[1.93, 98.46, -3.61, -0.99, 74.52, 9.90]
 nstated = Any[false, true, true, false, true, false]'
@@ -119,7 +119,7 @@ iostreamn = length(nstatev)
 iostream = ContinuousParameterIOStream(
   "w", iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath
 )
-nstatein = ContinuousUnivariateMCChain(Float32, iostreamn)
+nstatein = ContinuousUnivariateMarkovChain(Float32, iostreamn)
 nstatein.value = nstatev
 nstatein.diagnosticvalues = nstated
 write(iostream, nstatein)
@@ -131,7 +131,7 @@ iostream = ContinuousParameterIOStream(
 )
 nstateout = read(iostream, Float32)
 
-@test isa(nstateout, ContinuousUnivariateMCChain{Float32})
+@test isa(nstateout, ContinuousUnivariateMarkovChain{Float32})
 @test nstateout.value == nstatein.value
 for i in 2:13
   @test length(nstateout.(functionnames[i])) == 0
@@ -167,7 +167,7 @@ iostream = ContinuousParameterIOStream(
 )
 nstate = read(iostream, Float64)
 
-@test isa(nstate, ContinuousMultivariateMCChain{Float64})
+@test isa(nstate, ContinuousMultivariateMarkovChain{Float64})
 @test nstate.value == nstatev
 @test nstate.gradloglikelihood == nstategll
 for i in [2:4; 6:13]
@@ -181,7 +181,7 @@ end
 close(iostream)
 for i in [1, 5, 14]; rm(filenames[i]); end
 
-println("      Interaction with ContinuousMultivariateMCChain...")
+println("      Interaction with ContinuousMultivariateMarkovChain...")
 
 nstatev = Float32[-1.85 -0.09 0.36; -0.45 -0.85 1.91]
 nstatell = Float32[-1.30, -1.65, -0.18]
@@ -193,7 +193,7 @@ iostreamn = size(nstatev, 2)
 iostream = ContinuousParameterIOStream(
   "w", iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
 )
-nstatein = ContinuousMultivariateMCChain(
+nstatein = ContinuousMultivariateMarkovChain(
   Float32,
   iostreamsize[1],
   iostreamn,
@@ -213,7 +213,7 @@ iostream = ContinuousParameterIOStream(
 )
 nstateout = read(iostream, Float32)
 
-@test isa(nstateout, ContinuousMultivariateMCChain{Float32})
+@test isa(nstateout, ContinuousMultivariateMarkovChain{Float32})
 @test nstateout.value == nstatein.value
 @test nstateout.loglikelihood == nstatein.loglikelihood
 @test nstateout.logtarget == nstatein.logtarget
