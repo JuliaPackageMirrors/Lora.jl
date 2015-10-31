@@ -2,19 +2,25 @@
 
 # MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
-type MHState <: MCSamplerState
+type MHState{S<:ParameterState} <: MCSamplerState
+  pstate::S # Parameter state used internally by MH
   tune::MCTunerState
-  ratio::Float64 # Acceptance ratio
+  ratio::Real # Acceptance ratio
 
-  function MHState(tune::MCTunerState, ratio::Float64)
+  function MHState(pstate::S, tune::MCTunerState, ratio::Real)
     if !isnan(ratio)
       @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
     end
-    new(tune, ratio)
+    new(pstate, tune, ratio)
   end
 end
 
-MHState(tune::MCTunerState=BasicMCTune()) = MHState(tune, NaN)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) = MHState{S}(pstate, tune, ratio)
+
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
+
+Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
+Base.eltype{S<:ParameterState}(s::MHState{S}) = S
 
 ### Metropolis-Hastings (MH) sampler
 
@@ -55,7 +61,8 @@ end
 
 ## Initialize MHState
 
-typeof_state(sampler::MH) = MHState
+sampler_state(sampler::MHSampler, tuner::MCTuner, pstate::ParameterState) =
+  MHState(generate_empty(pstate), tuner_state(tuner))
 
 function reset!{N<:AbstractFloat}(
   vstates::Vector{VariableState},
@@ -81,9 +88,8 @@ end
 
 # function initialize_task!{N<:AbstractFloat}(
 #   vstates::Vector{VariableState},
-#   pvstates::Vector{VariableState},
 #   sstate::MHState,
-#   runner::BasicMCRunner,
+#   range::BasicMCRange,
 #   parameter::ContinuousParameter,
 #   sampler::MHSampler,
 #   tuner::MCTuner,
@@ -93,15 +99,15 @@ end
 #   task_local_storage(:reset, (x::Vector{N})->reset!(vstates, x, parameter, sampler, index))
 #
 #   while true
-#     iterate!(vstates, pvstates, sstate, runner, parameter, sampler, tuner, index, produce)
+#     iterate!(vstates, pvstates, sstate, range, parameter, sampler, tuner, index, produce)
 #   end
 # end
-
+#
 # function iterate!(
 #   vstates::Vector{VariableState},
 #   pvstates::Vector{VariableState},
 #   sstate::MHState,
-#   runner::BasicMCRunner,
+#   range::BasicMCRange,
 #   parameter::ContinuousParameter,
 #   sampler::MHSampler,
 #   tuner::MCTuner,
@@ -146,7 +152,7 @@ end
 #
 #   send(heap.outstate)
 # end
-#
+
 # ### Initialize Metropolis-Hastings sampler
 #
 # function initialize_heap(m::MCModel, s::MH, r::MCRunner, t::MCTuner)

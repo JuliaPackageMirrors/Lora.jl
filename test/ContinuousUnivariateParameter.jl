@@ -241,12 +241,10 @@ states = VariableState[
 ]
 
 llf(state, states) =
-  state.loglikelihood =
-  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+  state.loglikelihood = -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
 lpf(state, states) =
-  state.logprior =
-  -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
+  state.logprior = -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
 
 μ = ContinuousUnivariateParameter(1, :μ, loglikelihood=llf, logprior=lpf)
 
@@ -322,8 +320,7 @@ states = VariableState[
 ]
 
 llf(state, states) =
-  state.loglikelihood =
-  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+  state.loglikelihood = -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
 gllf(state, states) = state.gradloglikelihood = (states[2].value-state.value)/(states[3].value^2)
 
@@ -447,12 +444,10 @@ states = VariableState[
 ]
 
 llf(state, states) =
-  state.loglikelihood =
-  -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
+  state.loglikelihood = -0.5*((states[2].value-state.value)^2/(states[3].value^2)+log(2*pi))-log(states[3].value)
 
 lpf(state, states) =
-  state.logprior =
-  -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
+  state.logprior = -0.5*((state.value-states[4].value)^2/(states[5].value^2)+log(2*pi))-log(states[5].value)
 
 gllf(state, states) = state.gradloglikelihood = (states[2].value-state.value)/(states[3].value^2)
 

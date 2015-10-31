@@ -13,9 +13,9 @@ abstract MCTunerState
 type BasicMCTune <: MCTunerState
   accepted::Int # Number of accepted MCMC samples during current tuning period
   proposed::Int # Number of proposed MCMC samples during current tuning period
-  rate::Float64 # Observed acceptance rate over current tuning period
+  rate::Real # Observed acceptance rate over current tuning period
 
-  function BasicMCTune(accepted::Int, proposed::Int, rate::Float64)
+  function BasicMCTune(accepted::Int, proposed::Int, rate::Real)
     @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
     @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
     if !isnan(rate)

@@ -23,12 +23,12 @@ erf_rate_score(x::Real, k::Real=3.) = erf(k*x)+1
 # The default score function is a stretched logistic map
 
 immutable AcceptanceRateMCTuner <: MCTuner
-  targetrate::Float64 # Target acceptance rate
+  targetrate::Real # Target acceptance rate
   score::Function # Score function for penalising discrepancy between observed and target acceptance rate
   period::Int # Tuning period over which acceptance rate is computed
   verbose::Bool # If verbose=false then the tuner is silent, else it is verbose
 
-  function AcceptanceRateMCTuner(targetrate::Float64, score::Function, period::Int, verbose::Bool)
+  function AcceptanceRateMCTuner(targetrate::Real, score::Function, period::Int, verbose::Bool)
     @assert 0 < targetrate < 1 "Target acceptance rate should be between 0 and 1"
     @assert period > 0 "Tuning period should be positive"
     new(targetrate, score, period, verbose)
@@ -36,7 +36,7 @@ immutable AcceptanceRateMCTuner <: MCTuner
 end
 
 AcceptanceRateMCTuner(
-  targetrate::Float64;
+  targetrate::Real;
   score::Function=logistic_rate_score,
   period::Int=100,
   verbose::Bool=false

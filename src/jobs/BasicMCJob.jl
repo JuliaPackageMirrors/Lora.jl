@@ -4,13 +4,12 @@
 # It is the most elementary and typical Markov chain Monte Carlo (MCMC) job
 
 type BasicMCJob <: MCJob
-  runner::BasicMCRunner
   model::GenericModel # Model of a single parameter
   sampler::MCSampler
   tuner::MCTuner
+  range::BasicMCRange
   index::Int # Index of single parameter in vstates
-  vstates::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
-  pvstates::Vector{VariableState} # Vector of proposed variable states ordered according to variables in model.vertices
+  vstates::Vector{VariableState} # Vector of variable states
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
@@ -24,10 +23,10 @@ type BasicMCJob <: MCJob
   # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   BasicMCJob(
-    runner::BasicMCRunner,
     model::GenericModel,
     sampler::MCSampler,
     tuner::MCTuner,
+    range::BasicMCRange,
     index::Int,
     vstates::Vector{VariableState},
     outopts::Dict{Symbol, Any}, # Options related to output
@@ -36,7 +35,7 @@ type BasicMCJob <: MCJob
   ) = begin
     instance = new()
 
-    instance.runner = runner
+    instance.range = range
     instance.model = model
     instance.sampler = sampler
     instance.tuner = tuner
@@ -46,18 +45,10 @@ type BasicMCJob <: MCJob
     instance.vstates = vstates
     initialize!(instance.vstates, model.vertices[index], sampler, index)
 
-    # pvstates stands for proposed variable states
-    nvariables = num_vertices(model)
-    instance.pvstates = Array(VariableState, nvariables)
-    for i in [1:(index-1); (index+1):nvariables]
-      instance.pvstates[i] = instance.vstates[i]
-    end
-    instance.pvstates[index] = generate_empty(instance.vstates[index])
-
-    instance.sstate = sampler_state(sampler, tuner)
+    instance.sstate = sampler_state(instance.vstates[index], sampler, tuner)
 
     augment!(outopts)
-    instance.output = initialize_output(instance.vstates[index], runner.npoststeps, outopts)
+    instance.output = initialize_output(instance.vstates[index], range.npoststeps, outopts)
 
     instance.plain = plain
     if plain

@@ -42,7 +42,7 @@ export
   ### Types
   AcceptanceRateMCTuner,
   BasicMCJob,
-  BasicMCRunner,
+  BasicMCRange,
   BasicMCTune,
   BasicVariableIOStream,
   BasicVariableNState,
@@ -70,7 +70,7 @@ export
   LMCSampler,
   MarkovChain,
   MCJob,
-  MCRunner,
+  MCRange,
   MCSampler,
   MCSamplerState,
   MCTuner,
@@ -131,7 +131,6 @@ export
   topological_sort_by_dfs,
   tune!,
   tuner_state,
-  typeof_state,
   vertex_index,
   vertices
 
@@ -149,13 +148,13 @@ include("variables/dependencies.jl")
 include("models/GenericModel.jl")
 include("models/generators.jl")
 
+include("ranges/BasicMCRange.jl")
+
 include("tuners/tuners.jl")
 include("tuners/VanillaMCTuner.jl")
 include("tuners/AcceptanceRateMCTuner.jl")
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
-
-include("runners/BasicMCRunner.jl")
 
 include("jobs/jobs.jl")
 include("jobs/BasicMCJob.jl")
