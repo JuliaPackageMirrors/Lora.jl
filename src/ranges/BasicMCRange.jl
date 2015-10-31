@@ -8,10 +8,10 @@ immutable BasicMCRange{T<:Int} <: MCRange{T}
   burnin::T
   thinning::T
   nsteps::T
-  postrange::Range{T}
+  postrange::StepRange{T, T}
   npoststeps::T
 
-  function BasicMCRange(postrange::Range{Int})
+  function BasicMCRange(postrange::StepRange{T, T})
     burnin = first(postrange)-1
     thinning = postrange.step
     nsteps = last(postrange)
@@ -26,6 +26,11 @@ immutable BasicMCRange{T<:Int} <: MCRange{T}
   end
 end
 
-BasicMCRange(postrange::UnitRange{Int}) = BasicMCRange(first(postrange):1:last(postrange))
+BasicMCRange{T<:Int}(postrange::StepRange{T, T}) = BasicMCRange{T}(postrange)
 
-BasicMCRange(; burnin::Int=0, thinning::Int=1, nsteps::Int=100) = BasicMCRange((burnin+1):thinning:nsteps)
+BasicMCRange{T<:Int}(postrange::UnitRange{T}) = BasicMCRange{T}(first(postrange):1:last(postrange))
+
+BasicMCRange{T<:Int}(; burnin::T=0, thinning::T=1, nsteps::T=100) = BasicMCRange{T}((burnin+1):thinning:nsteps)
+
+Base.show(io::IO, r::BasicMCRange) =
+  print(io, "nsteps = ", repr(r.nsteps), ", burnin = ", repr(r.burnin), ", thinning = ", repr(r.thinning))

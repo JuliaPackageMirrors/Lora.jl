@@ -3,12 +3,10 @@ using Lora
 
 # println("    Testing BasicMCJob constructors...")
 
-runner = BasicMCRunner(1000:10000)
-
 p = ContinuousUnivariateParameter(
   1,
   :p,
-  logtarget=(states, j) -> states[j].logtarget = -states[j].value*states[j].value
+  logtarget=(state, states) -> state.logtarget = -state.value*state.value
 )
 model = single_parameter_likelihood_model(p)
 
@@ -16,12 +14,14 @@ sampler = MH()
 
 tuner = VanillaMCTuner()
 
+mcrange = BasicMCRange(1000:10000)
+
 job = BasicMCJob(
-  runner,
   model,
+  1,
   sampler,
   tuner,
-  1,
+  mcrange,
   VariableState[ContinuousUnivariateParameterState(1.25, [:accept])],
   Dict{Symbol, Any}(:diagnostics=>[:accept]),
   true,

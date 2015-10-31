@@ -41,14 +41,14 @@ function initialize_output(
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
-    output = ContinuousUnivariateParameterNState(eltype(state), n, outopts[:monitor], outopts[:diagnostics])
+    output = ContinuousUnivariateParameterNState(n, outopts[:monitor], outopts[:diagnostics], eltype(state))
   elseif outopts[:destination] == :iostream
     output = ContinuousParameterIOStream(
-      "w",
       (),
       n,
-      outopts[:monitor];
+      outopts[:monitor],
       diagnostickeys=outopts[:diagnostics],
+      mode="w",
       filepath=outopts[:filepath],
       filesuffix=outopts[:filesuffix]
     )

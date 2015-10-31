@@ -54,9 +54,9 @@ MH{N<:AbstractFloat}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ## Initialize variable states
 
-function initialize!(vstates::Vector{VariableState}, parameter::ContinuousParameter, sampler::MHSampler, index::Int)
-  parameter.logtarget!(vstates, index)
-  @assert isfinite(vstates[index].logtarget) "Initial values out of model support"
+function initialize!(vstate::Vector{VariableState}, parameter::ContinuousParameter, vindex::Int, sampler::MHSampler)
+  parameter.logtarget!(vstate[vindex], vstate)
+  @assert isfinite(vstate[vindex].logtarget) "Initial values out of model support"
 end
 
 ## Initialize MHState

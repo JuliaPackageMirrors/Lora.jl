@@ -4,11 +4,12 @@
 # It is the most elementary and typical Markov chain Monte Carlo (MCMC) job
 
 type BasicMCJob <: MCJob
-  model::GenericModel # Model of a single parameter
+  model::GenericModel # Model of single parameter
+  vindex::Int # Index of single parameter in model.vertices
   sampler::MCSampler
   tuner::MCTuner
   range::BasicMCRange
-  vstates::Vector{VariableState} # Vector of variable states
+  vstate::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
@@ -23,10 +24,11 @@ type BasicMCJob <: MCJob
 
   BasicMCJob(
     model::GenericModel,
+    vindex::Int,
     sampler::MCSampler,
     tuner::MCTuner,
     range::BasicMCRange,
-    vstates::Vector{VariableState},
+    vstate::Vector{VariableState},
     outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
     checkin::Bool
@@ -34,17 +36,19 @@ type BasicMCJob <: MCJob
     instance = new()
 
     instance.model = model
+    instance.vindex = vindex
+    
     instance.sampler = sampler
     instance.tuner = tuner
     instance.range = range
 
-    instance.vstates = vstates
-    initialize!(instance.vstates, model.vertices[index], sampler, index)
+    instance.vstate = vstate
+    initialize!(instance.vstate, model.vertices[vindex], vindex, sampler)
 
-    instance.sstate = sampler_state(instance.vstates[index], sampler, tuner)
+    instance.sstate = sampler_state(sampler, tuner, instance.vstate[vindex])
 
     augment!(outopts)
-    instance.output = initialize_output(instance.vstates[index], range.npoststeps, outopts)
+    instance.output = initialize_output(instance.vstate[vindex], range.npoststeps, outopts)
 
     instance.plain = plain
     if plain
