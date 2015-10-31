@@ -30,7 +30,7 @@ end
 @test s.diagnostickeys == [:accept]
 @test s.diagnosticvalues == [true]
 
-s = ContinuousUnivariateParameterState(Float16)
+s = ContinuousUnivariateParameterState(Symbol[], Float16)
 
 @test isa(s.value, Float16)
 for i in 1:13
@@ -87,9 +87,11 @@ end
 @test s.diagnostickeys == [:accept]
 @test s.diagnosticvalues == [false]
 
-s = ContinuousMultivariateParameterState(BigFloat)
+ssize = 4
+s = ContinuousMultivariateParameterState(ssize, Symbol[], Symbol[], BigFloat)
 
 @test isa(s.value, Vector{BigFloat})
+@test length(s.value) == ssize
 for i in 2:4
   @test isnan(s.(functionnames[i]))
 end

@@ -35,10 +35,10 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
   copy::Function
 
   ContinuousUnivariateParameterNState(
-    ::Type{N},
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
+    ::Type{N}=Float64,
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
   ) = begin
     instance = new()
@@ -64,24 +64,24 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
 end
 
 ContinuousUnivariateParameterNState{N<:AbstractFloat}(
-  ::Type{N},
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
-  ContinuousUnivariateParameterNState{N}(N, n, monitor, diagnostickeys, diagnosticvalues)
+  ContinuousUnivariateParameterNState{N}(n, monitor, diagnostickeys, N, diagnosticvalues)
 
 function ContinuousUnivariateParameterNState{N<:AbstractFloat}(
-  ::Type{N},
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 )
   fnames = fieldnames(ContinuousUnivariateParameterNState)
   ContinuousUnivariateParameterNState(
-    N, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
+    n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, N, diagnosticvalues
   )
 end
 
@@ -153,11 +153,11 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
   copy::Function
 
   ContinuousMultivariateParameterNState(
-    ::Type{N},
     size::Int,
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
+    ::Type{N}=Float64,
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
   ) = begin
     instance = new()
@@ -192,26 +192,26 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
 end
 
 ContinuousMultivariateParameterNState{N<:AbstractFloat}(
-  ::Type{N},
   size::Int,
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
-  ContinuousMultivariateParameterNState{N}(N, size, n, monitor, diagnostickeys, diagnosticvalues)
+  ContinuousMultivariateParameterNState{N}(size, n, monitor, diagnostickeys, N, diagnosticvalues)
 
 function ContinuousMultivariateParameterNState{N<:AbstractFloat}(
-  ::Type{N},
   size::Int,
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 )
   fnames = fieldnames(ContinuousMultivariateParameterNState)
   ContinuousMultivariateParameterNState(
-    N, size, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, diagnosticvalues
+    size, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, N, diagnosticvalues
   )
 end
 

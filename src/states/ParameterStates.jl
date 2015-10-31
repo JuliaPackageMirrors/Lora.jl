@@ -41,8 +41,8 @@ function ContinuousUnivariateParameterState{N<:AbstractFloat}(
 end
 
 ContinuousUnivariateParameterState{N<:AbstractFloat}(
-  ::Type{N},
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
   ContinuousUnivariateParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
@@ -57,7 +57,7 @@ Base.isequal{S<:ContinuousUnivariateParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
 
 generate_empty(state::ContinuousUnivariateParameterState) =
-  ContinuousUnivariateParameterState(eltype(state), state.diagnostickeys)
+  ContinuousUnivariateParameterState(state.diagnostickeys, eltype(state))
 
 ## ContinuousMultivariateParameterState
 
@@ -128,19 +128,19 @@ function ContinuousMultivariateParameterState{N<:AbstractFloat}(
 end
 
 ContinuousMultivariateParameterState{N<:AbstractFloat}(
-  ::Type{N},
-  size::Int=0,
+  size::Int,
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
 ContinuousMultivariateParameterState{N<:AbstractFloat}(
-  ::Type{N},
   size::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
+  ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
@@ -158,4 +158,4 @@ generate_empty(
   state::ContinuousMultivariateParameterState,
   monitor::Vector{Bool}=[isempty(fieldnames(ContinuousMultivariateParameterState)[i]) ? false : true for i in 5:13]
 ) =
-  ContinuousMultivariateParameterState(eltype(state), state.size, monitor, state.diagnostickeys)
+  ContinuousMultivariateParameterState(state.size, monitor, state.diagnostickeys, eltype(state))

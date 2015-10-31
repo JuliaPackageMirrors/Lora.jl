@@ -10,7 +10,7 @@ type BasicVariableIOStream <: VariableIOStream
   n::Int
 end
 
-BasicVariableIOStream(filename::AbstractString, mode::AbstractString, size::Tuple, n::Int) =
+BasicVariableIOStream(filename::AbstractString, size::Tuple, n::Int, mode::AbstractString="w") =
   BasicVariableIOStream(open(filename, mode), size, n)
 
 Base.close(iostream::BasicVariableIOStream) = close(iostream.stream)
@@ -52,11 +52,11 @@ function Base.read{N<:Number}(iostream::BasicVariableIOStream, T::Type{N})
   l = length(iostream.size)
 
   if l == 0
-    nstate = UnivariateBasicVariableNState(T, iostream.n)
+    nstate = UnivariateBasicVariableNState(iostream.n, T)
   elseif l == 1
-    nstate = MultivariateBasicVariableNState(T, iostream.size[1], iostream.n)
+    nstate = MultivariateBasicVariableNState(iostream.size[1], iostream.n, T)
   elseif l == 2
-    nstate = MatrixvariateBasicVariableNState(T, iostream.size, iostream.n)
+    nstate = MatrixvariateBasicVariableNState(iostream.size, iostream.n, T)
   else
     error("BasicVariableIOStream.size must be a tuple of length 0 or 1 or 2, got $(iostream.size) length")
   end

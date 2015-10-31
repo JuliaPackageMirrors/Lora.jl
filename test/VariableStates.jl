@@ -19,7 +19,7 @@ s = MultivariateBasicVariableState(v)
 @test s.size == length(v)
 
 ssize = 3
-s = MultivariateBasicVariableState(Float16, ssize)
+s = MultivariateBasicVariableState(ssize, Float16)
 
 @test eltype(s) == Float16
 @test s.size == ssize
@@ -34,7 +34,7 @@ s = MatrixvariateBasicVariableState(v)
 @test s.size == size(v)
 
 ssize = (3, 5)
-s = MatrixvariateBasicVariableState(Float16, ssize)
+s = MatrixvariateBasicVariableState(ssize, Float16)
 
 @test eltype(s) == Float16
 @test s.size == ssize

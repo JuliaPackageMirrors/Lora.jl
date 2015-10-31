@@ -28,7 +28,7 @@ println("    Testing ContinuousParameterIOStream constructors and close method..
 
 iostreamsize = ()
 iostreamn = 4
-iostream = ContinuousParameterIOStream("w", iostreamsize, iostreamn, filepath=filepath)
+iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath)
 
 @test isa(iostream.value, IOStream)
 for i in 2:13
@@ -45,7 +45,7 @@ rm(filenames[1])
 iostreamsize = (2,)
 iostreamn = 4
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn,
+  iostreamsize, iostreamn,
   monitor=[true; fill(false, 5); true; fill(false, 6); true], diagnostickeys=[:accept], filepath=filepath
 )
 
@@ -64,7 +64,7 @@ for i in [1, 7, 14]; rm(filenames[i]); end
 iostreamsize = (3,)
 iostreamn = 7
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn, [:value, :logtarget], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :logtarget], diagnostickeys=[:accept], filepath=filepath
 )
 
 @test isa(iostream.value, IOStream)
@@ -87,14 +87,14 @@ nstatev = Float64[5.70, 1.44, -1.21, 5.67]
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = ContinuousParameterIOStream("w", iostreamsize, iostreamn, filepath=filepath)
+iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath)
 for v in nstatev
   iostream.write(ContinuousUnivariateParameterState(v))
 end
 
 close(iostream)
 
-iostream = ContinuousParameterIOStream("r", iostreamsize, iostreamn, filepath=filepath)
+iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, mode="r", filepath=filepath)
 nstate = read(iostream, Float64)
 
 @test isa(nstate, ContinuousUnivariateMarkovChain{Float64})
@@ -116,10 +116,8 @@ nstated = Any[false, true, true, false, true, false]'
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath
-)
-nstatein = ContinuousUnivariateMarkovChain(Float32, iostreamn)
+iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath)
+nstatein = ContinuousUnivariateMarkovChain(iostreamn, [:value], [:accept], Float32)
 nstatein.value = nstatev
 nstatein.diagnosticvalues = nstated
 write(iostream, nstatein)
@@ -127,7 +125,7 @@ write(iostream, nstatein)
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  "r", iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], mode="r", filepath=filepath
 )
 nstateout = read(iostream, Float32)
 
@@ -152,7 +150,7 @@ iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
 )
 for i in 1:iostreamn
   state = ContinuousMultivariateParameterState(nstatev[:, i], Symbol[], [:accept], [nstated[i]])
@@ -163,7 +161,7 @@ end
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  "r", iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], mode="r", filepath=filepath
 )
 nstate = read(iostream, Float64)
 
@@ -191,14 +189,14 @@ iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
 iostream = ContinuousParameterIOStream(
-  "w", iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
 )
 nstatein = ContinuousMultivariateMarkovChain(
-  Float32,
   iostreamsize[1],
   iostreamn,
   [:value, :loglikelihood, :logtarget],
-  [:accept]
+  [:accept],
+  Float32
 )
 nstatein.value = nstatev
 nstatein.loglikelihood = nstatell
@@ -209,7 +207,7 @@ write(iostream, nstatein)
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  "r", iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], mode="r", filepath=filepath
 )
 nstateout = read(iostream, Float32)
 

@@ -50,11 +50,11 @@ type ContinuousParameterIOStream <: ParameterIOStream
 end
 
 function ContinuousParameterIOStream(
-  mode::AbstractString,
   size::Tuple,
   n::Int;
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
+  mode::AbstractString="w",
   filepath::AbstractString="",
   filesuffix::AbstractString="csv"
 )
@@ -69,21 +69,21 @@ function ContinuousParameterIOStream(
 end
 
 function ContinuousParameterIOStream(
-  mode::AbstractString,
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol};
   diagnostickeys::Vector{Symbol}=Symbol[],
+  mode::AbstractString="w",
   filepath::AbstractString="",
   filesuffix::AbstractString="csv"
 )
   fnames = fieldnames(ContinuousParameterIOStream)
   ContinuousParameterIOStream(
-    mode,
     size,
     n,
     monitor=[fnames[i] in monitor ? true : false for i in 1:13],
     diagnostickeys=diagnostickeys,
+    mode=mode,
     filepath=filepath,
     filesuffix=filesuffix
   )
@@ -250,18 +250,18 @@ function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::T
 
   if l == 0
     nstate = ContinuousUnivariateParameterNState(
-      T,
       iostream.n,
       [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],
-      iostream.diagnostickeys
+      iostream.diagnostickeys,
+      T
     )
   elseif l == 1
     nstate = ContinuousMultivariateParameterNState(
-      T,
       iostream.size[1],
       iostream.n,
       [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],
-      iostream.diagnostickeys
+      iostream.diagnostickeys,
+      T
     )
   else
     error("BasicVariableIOStream.size must be a tuple of length 0 or 1, got $(iostream.size) length")

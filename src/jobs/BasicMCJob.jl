@@ -8,7 +8,6 @@ type BasicMCJob <: MCJob
   sampler::MCSampler
   tuner::MCTuner
   range::BasicMCRange
-  index::Int # Index of single parameter in vstates
   vstates::Vector{VariableState} # Vector of variable states
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
@@ -27,7 +26,6 @@ type BasicMCJob <: MCJob
     sampler::MCSampler,
     tuner::MCTuner,
     range::BasicMCRange,
-    index::Int,
     vstates::Vector{VariableState},
     outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
@@ -35,12 +33,10 @@ type BasicMCJob <: MCJob
   ) = begin
     instance = new()
 
-    instance.range = range
     instance.model = model
     instance.sampler = sampler
     instance.tuner = tuner
-
-    instance.index = index
+    instance.range = range
 
     instance.vstates = vstates
     initialize!(instance.vstates, model.vertices[index], sampler, index)

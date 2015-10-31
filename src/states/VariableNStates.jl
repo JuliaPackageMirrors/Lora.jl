@@ -21,7 +21,7 @@ end
 
 UnivariateBasicVariableNState{N<:Number}(value::Vector{N}) = UnivariateBasicVariableNState{N}(value, length(value))
 
-UnivariateBasicVariableNState{N<:Number}(::Type{N}, n::Int=0) = UnivariateBasicVariableNState{N}(Array(N, n), n)
+UnivariateBasicVariableNState{N<:Number}(n::Int, ::Type{N}=Float64) = UnivariateBasicVariableNState{N}(Array(N, n), n)
 
 Base.eltype{N<:Number}(::Type{UnivariateBasicVariableNState{N}}) = N
 Base.eltype{N<:Number}(s::UnivariateBasicVariableNState{N}) = N
@@ -39,7 +39,7 @@ end
 
 MultivariateBasicVariableNState{N<:Number}(value::Matrix{N}) = MultivariateBasicVariableNState{N}(value, size(value)...)
 
-MultivariateBasicVariableNState{N<:Number}(::Type{N}, size::Int=0, n::Int=0) =
+MultivariateBasicVariableNState{N<:Number}(size::Int, n::Int, ::Type{N}=Float64) =
   MultivariateBasicVariableNState{N}(Array(N, size, n), size, n)
 
 Base.eltype{N<:Number}(::Type{MultivariateBasicVariableNState{N}}) = N
@@ -59,7 +59,7 @@ end
 MatrixvariateBasicVariableNState{N<:Number}(value::Array{N, 3}) =
   MatrixvariateBasicVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
 
-MatrixvariateBasicVariableNState{N<:Number}(::Type{N}, size::Tuple=(0, 0), n::Int=0) =
+MatrixvariateBasicVariableNState{N<:Number}(size::Tuple, n::Int, ::Type{N}=Float64) =
   MatrixvariateBasicVariableNState{N}(Array(N, size..., n), size, n)
 
 Base.eltype{N<:Number}(::Type{MatrixvariateBasicVariableNState{N}}) = N

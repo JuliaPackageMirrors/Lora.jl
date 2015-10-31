@@ -5,7 +5,7 @@ filename = joinpath(dirname(@__FILE__), "sample.txt")
 
 println("    Testing BasicVariableIOStream constructors and close method...")
 
-iostream = BasicVariableIOStream(filename, "w", (), 10000)
+iostream = BasicVariableIOStream(filename, (), 10000)
 
 close(iostream)
 rm(filename)
@@ -18,14 +18,14 @@ nstatev = Float64[1.87, -4.5, 29.55, -0.91, 0.16]
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "w")
 for v in nstatev
   write(iostream, UnivariateBasicVariableState(v))
 end
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstate = read(iostream, Float64)
 
 @test isa(nstate, UnivariateBasicVariableNState{Float64})
@@ -41,13 +41,13 @@ nstatev = Float32[11.5, -41.22, -5.62, 1.98, 7.16]
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn)
 nstatein = UnivariateBasicVariableNState(nstatev)
 write(iostream, nstatein)
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstateout = read(iostream, Float32)
 
 @test isa(nstateout, UnivariateBasicVariableNState{Float32})
@@ -63,14 +63,14 @@ nstatev = Float64[8.11 -0.99 -4.19 0.1; 0.01 -0.02 1.4 8.47]
 iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn)
 for i in 1:iostreamn
   write(iostream, MultivariateBasicVariableState(nstatev[:, i]))
 end
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstate = read(iostream, Float64)
 
 @test isa(nstate, MultivariateBasicVariableNState{Float64})
@@ -87,13 +87,13 @@ nstatev = Float32[-7.1 -1.19 -7.76 6.1; -3.8 4.2 3.7 2.21]
 iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn)
 nstatein = MultivariateBasicVariableNState(nstatev)
 write(iostream, nstatein)
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstateout = read(iostream, Float32)
 
 @test isa(nstateout, MultivariateBasicVariableNState{Float32})
@@ -120,14 +120,14 @@ nstatev[:, :, 2] = [
 iostreamsize = (size(nstatev, 1), size(nstatev, 2))
 iostreamn = size(nstatev, 3)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn)
 for i in 1:iostreamn
   write(iostream, MatrixvariateBasicVariableState(nstatev[:, :, i]))
 end
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstate = read(iostream, Float64)
 
 @test isa(nstate, MatrixvariateBasicVariableNState{Float64})
@@ -154,13 +154,13 @@ nstatev[:, :, 2] = [
 iostreamsize = (size(nstatev, 1), size(nstatev, 2))
 iostreamn = size(nstatev, 3)
 
-iostream = BasicVariableIOStream(filename, "w", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn)
 nstatein = MatrixvariateBasicVariableNState(nstatev)
 write(iostream, nstatein)
 
 close(iostream)
 
-iostream = BasicVariableIOStream(filename, "r", iostreamsize, iostreamn)
+iostream = BasicVariableIOStream(filename, iostreamsize, iostreamn, "r")
 nstateout = read(iostream, Float32)
 
 @test isa(nstateout, MatrixvariateBasicVariableNState{Float32})

@@ -30,7 +30,7 @@ copy!(nstate, UnivariateBasicVariableState(statev), savei)
 @test nstate.value == [nstatev[1:savei-1]; statev; nstatev[savei+1:end]]
 
 nstaten = 10
-nstate = UnivariateBasicVariableNState(BigFloat, nstaten)
+nstate = UnivariateBasicVariableNState(nstaten, BigFloat)
 
 @test eltype(nstate) == BigFloat
 @test nstate.n == nstaten
@@ -72,7 +72,7 @@ copy!(nstate, MultivariateBasicVariableState(BigFloat[0.0646775, 0.379354, 0.010
 
 nstatesize = 3
 nstaten = 10
-nstate = MultivariateBasicVariableNState(Float16, nstatesize, nstaten)
+nstate = MultivariateBasicVariableNState(nstatesize, nstaten, Float16)
 
 @test eltype(nstate) == Float16
 @test nstate.size == nstatesize
@@ -157,7 +157,7 @@ end
 
 nstatesize = (3, 5)
 nstaten = 12
-nstate = MatrixvariateBasicVariableNState(BigFloat, nstatesize, nstaten)
+nstate = MatrixvariateBasicVariableNState(nstatesize, nstaten, BigFloat)
 
 @test eltype(nstate) == BigFloat
 @test nstate.size == nstatesize
