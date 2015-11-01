@@ -88,6 +88,25 @@ end
 
 function initialize_task!{N<:AbstractFloat}(
   vstate::Vector{VariableState},
+  sstate::MHState{ContinuousUnivariateParameterState{N}},
+  parameter::ContinuousUnivariateParameter,
+  vindex::Int,
+  sampler::MHSampler,
+  tuner::MCTuner,
+  range::BasicMCRange,
+  outopts::Dict{Symbol, Any},
+  count::Int
+)
+  # Hook inside Task to allow remote resetting
+  task_local_storage(:reset, x::N -> reset!(vstate, x, parameter, vindex, sampler))
+
+  while true
+    iterate!(vstate, sstate, parameter, vindex, sampler, tuner, range, outopts, count, produce)
+  end
+end
+
+function initialize_task!{N<:AbstractFloat}(
+  vstate::Vector{VariableState},
   sstate::MHState{ContinuousMultivariateParameterState{N}},
   parameter::ContinuousMultivariateParameter,
   vindex::Int,
@@ -108,7 +127,7 @@ end
 function iterate!(
   vstate::Vector{VariableState},
   sstate::MHState,
-  parameter::ContinuousMultivariateParameter,
+  parameter::ContinuousParameter,
   vindex::Int,
   sampler::MHSampler,
   tuner::MCTuner,
@@ -136,8 +155,8 @@ function iterate!(
   end
 
   if sstate.ratio > 0 || (sstate.ratio > log(rand()))
-    vstate[vindex].value = copy(sstate.pstate.value)  
-    vstate[vindex].logtarget = copy(sstate.pstate.logtarget)  
+    vstate[vindex].value = copy(sstate.pstate.value)
+    vstate[vindex].logtarget = copy(sstate.pstate.logtarget)
 
     if tuner.verbose
       sstate.tune.accepted += 1
