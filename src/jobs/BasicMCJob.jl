@@ -50,12 +50,12 @@ type BasicMCJob <: MCJob
     augment!(outopts)
     instance.output = initialize_output(instance.vstate[vindex], range.npoststeps, outopts)
 
-    instance.count = 0
+    instance.count = 1
 
     instance.plain = plain
     if plain
       instance.task = nothing
-      instance.send = identity
+      instance.send = () -> ()
       instance.receive = () -> iterate!(
         instance.vstate,
         instance.sstate,
@@ -66,7 +66,7 @@ type BasicMCJob <: MCJob
         range,
         outopts,
         instance.count,
-        identity
+        () -> ()
       )
       instance.reset = x::Vector -> reset!(instance.vstate, x, model.vertices[vindex], vindex, sampler)
     else
@@ -75,14 +75,14 @@ type BasicMCJob <: MCJob
       )
       instance.send = produce
       instance.receive = () -> consume(instance.task)
-      instance.reset = x::Vector -> reset(instancd.task, x)
+      instance.reset = x::Vector -> reset(instance.task, x)
     end
 
     if outopts[:destination] == :nstate
-      instance.save = (state::ParameterState, i::Int) -> instance.output.copy(state, i)
+      instance.save = (i::Int) -> instance.output.copy(instance.vstate[vindex], i)
       instance.close = () -> ()
     elseif outopts[:destination] == :iostream
-      instance.save = (state::ParameterState, i::Int) -> instance.output.write(state)
+      instance.save = (i::Int) -> instance.output.write(instance.vstate[vindex])
       instance.close = () -> close(instance.output)
     end
 
@@ -92,3 +92,19 @@ end
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument
+
+function Base.run(job::BasicMCJob)
+  for i in 1:job.range.nsteps
+    job.receive()
+    
+    if in(i, job.range.postrange)
+      job.save(job.count)
+      
+      job.count += 1
+    end
+  end
+
+  job.close()
+  
+  job.output
+end

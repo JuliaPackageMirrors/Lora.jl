@@ -149,5 +149,5 @@ function iterate!(
     println("Burnin iteration $count of $(range.burnin): ", round(100*sstate.tune.rate, 2), " % acceptance rate")
   end
 
-  send(count+1)
+  send()
 end
