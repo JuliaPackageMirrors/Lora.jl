@@ -156,6 +156,7 @@ Base.isequal{S<:ContinuousMultivariateParameterState}(z::S, w::S) =
 
 generate_empty(
   state::ContinuousMultivariateParameterState,
-  monitor::Vector{Bool}=[isempty(fieldnames(ContinuousMultivariateParameterState)[i]) ? false : true for i in 5:13]
+  monitor::Vector{Bool}=
+    [isempty(getfield(state, fieldnames(ContinuousMultivariateParameterState)[i])) ? false : true for i in 5:13]
 ) =
   ContinuousMultivariateParameterState(state.size, monitor, state.diagnostickeys, eltype(state))

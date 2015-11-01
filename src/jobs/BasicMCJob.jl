@@ -12,14 +12,14 @@ type BasicMCJob <: MCJob
   vstate::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
+  count::Int # Current number of iterations
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
   task::Union{Task, Void}
   send::Function
   receive::Function
   reset::Function
-  # save::Function
-  # close::function
-  count::Int # Current number of iterations
+  save::Function
+  close::Function
   # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   BasicMCJob(
@@ -37,7 +37,7 @@ type BasicMCJob <: MCJob
 
     instance.model = model
     instance.vindex = vindex
-    
+
     instance.sampler = sampler
     instance.tuner = tuner
     instance.range = range
@@ -50,23 +50,45 @@ type BasicMCJob <: MCJob
     augment!(outopts)
     instance.output = initialize_output(instance.vstate[vindex], range.npoststeps, outopts)
 
+    instance.count = 0
+
     instance.plain = plain
     if plain
       instance.task = nothing
       instance.send = identity
-      # instance.receive = (i::Int)->iterate!(job.heap[i], m[i], s[i], r[i], t[i], identity)
-      # instance.reset = (i::Int, x::Vector{Float64})->reset!(job.heap[i], x)
+      instance.receive = () -> iterate!(
+        instance.vstate,
+        instance.sstate,
+        model.vertices[vindex],
+        vindex,
+        sampler,
+        tuner,
+        range,
+        outopts,
+        instance.count,
+        identity
+      )
+      instance.reset = x::Vector -> reset!(instance.vstate, x, model.vertices[vindex], vindex, sampler)
     else
-      # instance.task = Task[Task(()->initialize_task!(job.heap[i], m[i], s[i], r[i], t[i])) for i = 1:job.dim]
+      instance.task = Task(() -> initialize_task!(
+        instance.vstate, instance.sstate, parameter, vindex, sampler, tuner, range, outopts, count)
+      )
       instance.send = produce
-      # instance.receive = (i::Int)->consume(job.task[i])
-      # instance.reset = (i::Int, x::Vector{Float64})->reset(job.task[i], x)
+      instance.receive = () -> consume(instance.task)
+      instance.reset = x::Vector -> reset(instancd.task, x)
     end
 
-    instance.count = 1
+    if outopts[:destination] == :nstate
+      instance.save = (state::ParameterState, i::Int) -> instance.output.copy(state, i)
+      instance.close = () -> ()
+    elseif outopts[:destination] == :iostream
+      instance.save = (state::ParameterState, i::Int) -> instance.output.write(state)
+      instance.close = () -> close(instance.output)
+    end
 
     instance
   end
 end
 
-# Note: it is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
+# It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
+# In that case the iterate!() function will take a second variable (transformation) as input argument

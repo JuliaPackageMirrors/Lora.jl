@@ -16,3 +16,5 @@ end
 VanillaMCTuner(; period::Int=100, verbose::Bool=false) = VanillaMCTuner(period, verbose)
 
 tuner_state(tuner::VanillaMCTuner) = BasicMCTune()
+
+tune!(tune::BasicMCTune, tuner::VanillaMCTuner) = ()

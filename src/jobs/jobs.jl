@@ -61,4 +61,34 @@ function initialize_output(
   output
 end
 
+
+function initialize_output(
+  state::ContinuousMultivariateParameterState,
+  n::Int,
+  outopts::Dict{Symbol, Any}
+)
+  output::Union{VariableNState, VariableIOStream, Void}
+
+  if outopts[:destination] == :nstate
+    output =
+      ContinuousMultivariateParameterNState(state.size, n, outopts[:monitor], outopts[:diagnostics], eltype(state))
+  elseif outopts[:destination] == :iostream
+    output = ContinuousParameterIOStream(
+      (),
+      n,
+      outopts[:monitor],
+      diagnostickeys=outopts[:diagnostics],
+      mode="w",
+      filepath=outopts[:filepath],
+      filesuffix=outopts[:filesuffix]
+    )
+  elseif outopts[:destination] == :none
+    output = nothing
+  else
+    error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
+  end
+
+  output
+end
+
 Base.run{J<:MCJob}(job::Vector{J}) = map(run, job)

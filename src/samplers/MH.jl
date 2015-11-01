@@ -65,160 +65,89 @@ sampler_state(sampler::MHSampler, tuner::MCTuner, pstate::ParameterState) =
   MHState(generate_empty(pstate), tuner_state(tuner))
 
 function reset!{N<:AbstractFloat}(
-  vstates::Vector{VariableState},
+  vstate::Vector{VariableState},
   x::N,
-  parameter::ContinuousUnivariateParameterState{N},
-  sampler::MHSampler,
-  index::Int
+  parameter::ContinuousUnivariateParameter,
+  vindex::Int,
+  sampler::MHSampler
 )
-  vstates[index].value = x
-  parameter.logtarget!(vstates, index)
+  vstate[vindex].value = x
+  parameter.logtarget!(vstate[vindex], vstate)
 end
 
 function reset!{N<:AbstractFloat}(
-  vstates::Vector{VariableState},
+  vstate::Vector{VariableState},
   x::Vector{N},
-  parameter::ContinuousMultivariateParameterState{N},
-  sampler::MHSampler,
-  index::Int
+  parameter::ContinuousMultivariateParameter,
+  vindex::Int,
+  sampler::MHSampler
 )
-  vstates[index].value = copy(x)
-  parameter.logtarget!(vstates, index)
+  vstate[vindex].value = copy(x)
+  parameter.logtarget!(vstate[vindex], vstate)
 end
 
-# function initialize_task!{N<:AbstractFloat}(
-#   vstates::Vector{VariableState},
-#   sstate::MHState,
-#   range::BasicMCRange,
-#   parameter::ContinuousParameter,
-#   sampler::MHSampler,
-#   tuner::MCTuner,
-#   index::Int
-# )
-#   # Hook inside Task to allow remote resetting
-#   task_local_storage(:reset, (x::Vector{N})->reset!(vstates, x, parameter, sampler, index))
-#
-#   while true
-#     iterate!(vstates, pvstates, sstate, range, parameter, sampler, tuner, index, produce)
-#   end
-# end
-#
-# function iterate!(
-#   vstates::Vector{VariableState},
-#   pvstates::Vector{VariableState},
-#   sstate::MHState,
-#   range::BasicMCRange,
-#   parameter::ContinuousParameter,
-#   sampler::MHSampler,
-#   tuner::MCTuner,
-#   index::Int,
-#   send::Function
-# )
-#   if tuner.verbose
-#     sstate.tune.proposed += 1
-#   end
-#
-#   pvstates[index].value = sampler.randproposal(vstates[index].value)
-#   parameter.logtarget!(pvstates, index)
-#
-#   if sampler.symmetric
-#     sstate.ratio = pvstates.logtarget-vstates.logtarget
-#   else
-#     heap.ratio = (
-#       pvstates.logtarget
-#       +sampler.logproposal(pvstates.value, vstates.value)
-#       -vstates.logtarget
-#       -sampler.logproposal(vstates.value, pvstates.value
-#     )
-#   end
-#
-#   if sstate.ratio > 0 || (sstate.ratio > log(rand()))
-#     heap.outstate = MCState(heap.instate.successive, heap.instate.current, Dict{Any, Any}("accept" => true))
-#     heap.instate.current = deepcopy(heap.instate.successive)
-#
-#     if t.verbose
-#       heap.tune.accepted += 1
-#     end
-#   else
-#     heap.outstate = MCState(heap.instate.current, heap.instate.current, Dict{Any, Any}("accept" => false))
-#   end
-#
-#   if t.verbose && heap.count <= r.burnin && mod(heap.count, t.period) == 0
-#     rate!(heap.tune)
-#     println("Burnin iteration $(heap.count) of $(r.burnin): ", round(100*heap.tune.rate, 2), " % acceptance rate")
-#   end
-#
-#   heap.count += 1
-#
-#   send(heap.outstate)
-# end
+function initialize_task!{N<:AbstractFloat}(
+  vstate::Vector{VariableState},
+  sstate::MHState{ContinuousMultivariateParameterState{N}},
+  parameter::ContinuousMultivariateParameter,
+  vindex::Int,
+  sampler::MHSampler,
+  tuner::MCTuner,
+  range::BasicMCRange,
+  outopts::Dict{Symbol, Any},
+  count::Int
+)
+  # Hook inside Task to allow remote resetting
+  task_local_storage(:reset, x::Vector{N} -> reset!(vstate, x, parameter, vindex, sampler))
 
-# ### Initialize Metropolis-Hastings sampler
-#
-# function initialize_heap(m::MCModel, s::MH, r::MCRunner, t::MCTuner)
-#   heap::MHHeap = MHHeap(m.size)
-#
-#   heap.instate.current = MCBaseSample(copy(m.init))
-#   logtarget!(heap.instate.current, m.eval)
-#   @assert isfinite(heap.instate.current.logtarget) "Initial values out of model support."
-#
-#   heap.tune = VanillaMCTune()
-#
-#   heap.count = 1
-#
-#   heap
-# end
-#
-# function reset!(heap::MHHeap, x::Vector{Float64}, m::MCModel)
-#   heap.instate.current = MCBaseSample(copy(x))
-#   logtarget!(heap.instate.current, m.eval)
-# end
-#
-# function initialize_task!(heap::MHHeap, m::MCModel, s::MH, r::MCRunner, t::MCTuner)
-#   # Hook inside Task to allow remote resetting
-#   task_local_storage(:reset, (x::Vector{Float64})->reset!(heap, x, m))
-#
-#   while true
-#     iterate!(heap, m, s, r, t, produce)
-#   end
-# end
-#
-# ### Perform iteration for Metropolis-Hastings sampler
-#
-# function iterate!(heap::MHHeap, m::MCModel, s::MH, r::MCRunner, t::MCTuner, send::Function)
-#   if t.verbose
-#     heap.tune.proposed += 1
-#   end
-#
-#   heap.instate.successive = MCBaseSample(s.randproposal(heap.instate.current.sample))
-#   logtarget!(heap.instate.successive, m.eval)
-#
-#   if s.symmetric
-#     heap.ratio = heap.instate.successive.logtarget-heap.instate.current.logtarget
-#   else
-#     heap.ratio = (heap.instate.successive.logtarget
-#       +s.logproposal(heap.instate.successive.sample, heap.instate.current.sample)
-#       -heap.instate.current.logtarget
-#       -s.logproposal(heap.instate.current.sample, heap.instate.successive.sample)
-#     )
-#   end
-#   if heap.ratio > 0 || (heap.ratio > log(rand()))
-#     heap.outstate = MCState(heap.instate.successive, heap.instate.current, Dict{Any, Any}("accept" => true))
-#     heap.instate.current = deepcopy(heap.instate.successive)
-#
-#     if t.verbose
-#       heap.tune.accepted += 1
-#     end
-#   else
-#     heap.outstate = MCState(heap.instate.current, heap.instate.current, Dict{Any, Any}("accept" => false))
-#   end
-#
-#   if t.verbose && heap.count <= r.burnin && mod(heap.count, t.period) == 0
-#     rate!(heap.tune)
-#     println("Burnin iteration $(heap.count) of $(r.burnin): ", round(100*heap.tune.rate, 2), " % acceptance rate")
-#   end
-#
-#   heap.count += 1
-#
-#   send(heap.outstate)
-# end
+  while true
+    iterate!(vstate, sstate, parameter, vindex, sampler, tuner, range, outopts, count, produce)
+  end
+end
+
+function iterate!(
+  vstate::Vector{VariableState},
+  sstate::MHState,
+  parameter::ContinuousMultivariateParameter,
+  vindex::Int,
+  sampler::MHSampler,
+  tuner::MCTuner,
+  range::BasicMCRange,
+  outopts::Dict{Symbol, Any},
+  count::Int,
+  send::Function
+)
+  if tuner.verbose
+    sstate.tune.proposed += 1
+  end
+
+  sstate.pstate.value = sampler.randproposal(vstate[vindex].value)
+  parameter.logtarget!(sstate.pstate, vstate)
+
+  if sampler.symmetric
+    sstate.ratio = sstate.pstate.logtarget-vstate[vindex].logtarget
+  else
+    sstate.ratio = (
+      sstate.pstate.logtarget
+      +sampler.logproposal(sstate.pstate.value, vstate[vindex].value)
+      -vstate[vindex].logtarget
+      -sampler.logproposal(vstate[vindex].value, sstate.pstate.value)
+    )
+  end
+
+  if sstate.ratio > 0 || (sstate.ratio > log(rand()))
+    vstate[vindex].value = copy(sstate.pstate.value)  
+    vstate[vindex].logtarget = copy(sstate.pstate.logtarget)  
+
+    if tuner.verbose
+      sstate.tune.accepted += 1
+    end
+  end
+
+  if tuner.verbose && count <= range.burnin && mod(count, tuner.period) == 0
+    tune!(sstate.tune, tuner)
+    println("Burnin iteration $count of $(range.burnin): ", round(100*sstate.tune.rate, 2), " % acceptance rate")
+  end
+
+  send(count+1)
+end
