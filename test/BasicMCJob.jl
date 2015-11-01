@@ -34,7 +34,7 @@ job = BasicMCJob(
   false
 )
 
-chain = run(job)
+@time chain = run(job)
 
 # Example 2: univariate parameter
 
@@ -67,4 +67,4 @@ job = BasicMCJob(
   false
 )
 
-chain = run(job)
+@time chain = run(job)

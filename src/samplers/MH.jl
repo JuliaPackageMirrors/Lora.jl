@@ -124,49 +124,72 @@ function initialize_task!{N<:AbstractFloat}(
   end
 end
 
-# function iterate!(
-#   vstate::Vector{VariableState},
-#   sstate::MHState,
-#   parameter::ContinuousParameter,
-#   vindex::Int,
-#   sampler::MHSampler,
-#   tuner::MCTuner,
-#   range::BasicMCRange,
-#   outopts::Dict{Symbol, Any},
-#   count::Int,
-#   send::Function
-# )
-#   if tuner.verbose
-#     sstate.tune.proposed += 1
-#   end
-#
-#   sstate.pstate.value = sampler.randproposal(vstate[vindex].value)
-#   parameter.logtarget!(sstate.pstate, vstate)
-#
-#   if sampler.symmetric
-#     sstate.ratio = sstate.pstate.logtarget-vstate[vindex].logtarget
-#   else
-#     sstate.ratio = (
-#       sstate.pstate.logtarget
-#       +sampler.logproposal(sstate.pstate.value, vstate[vindex].value)
-#       -vstate[vindex].logtarget
-#       -sampler.logproposal(vstate[vindex].value, sstate.pstate.value)
-#     )
-#   end
-#
-#   if sstate.ratio > 0 || (sstate.ratio > log(rand()))
-#     vstate[vindex].value = copy(sstate.pstate.value)
-#     vstate[vindex].logtarget = copy(sstate.pstate.logtarget)
-#
-#     if tuner.verbose
-#       sstate.tune.accepted += 1
-#     end
-#   end
-#
-#   if tuner.verbose && count <= range.burnin && mod(count, tuner.period) == 0
-#     tune!(sstate.tune, tuner)
-#     println("Burnin iteration $count of $(range.burnin): ", round(100*sstate.tune.rate, 2), " % acceptance rate")
-#   end
-#
-#   send()
-# end
+function codegen_iterate_basic_mcjob(
+  vstate::Vector{VariableState},
+  sstate::MHState,
+  parameter::ContinuousParameter,
+  vindex::Int,
+  sampler::MHSampler,
+  tuner::MCTuner,
+  range::BasicMCRange,
+  outopts::Dict{Symbol, Any},
+  count::Int,
+  plain::Bool
+)
+  body = []
+
+  if tuner.verbose
+    push!(body, :($(sstate).tune.proposed += 1))
+  end
+
+  push!(body, :($(sstate).pstate.value = $(sampler).randproposal($(vstate)[$(vindex)].value)))
+  push!(body, :($(parameter).logtarget!($(sstate).pstate, $(vstate))))
+
+  if sampler.symmetric
+    push!(body, :($(sstate).ratio = $(sstate).pstate.logtarget-$(vstate)[$(vindex)].logtarget))
+  else
+    push!(body, :($(sstate).ratio = (
+      $(sstate).pstate.logtarget
+      +$(sampler).logproposal($(sstate).pstate.value, $(vstate)[$(vindex)].value)
+      -$(vstate)[$(vindex)].logtarget
+      -$(sampler).logproposal($(vstate)[$(vindex)].value, $(sstate).pstate.value)
+    )))
+  end
+
+  if tuner.verbose
+    push!(body, :(
+      if $(sstate).ratio > 0 || ($(sstate).ratio > log(rand()))
+        $(vstate)[$(vindex)].value = copy($(sstate).pstate.value)
+        $(vstate)[$(vindex)].logtarget = copy($(sstate).pstate.logtarget)
+
+        $(sstate).tune.accepted += 1
+      end
+    ))
+
+    #push!(body, :(
+    #  if $(count) <= $(job).range.burnin && mod($(count), $(tuner).period) == 0
+    #    tune!($(sstate).tune, $(tuner))
+    #    println("Burnin iteration $(job.count) of $(job.range.burnin): ", round(100*$(sstate).tune.rate, 2), " % acceptance rate")
+    #  end
+    #end
+  else
+    push!(body, :(
+      if $(sstate).ratio > 0 || ($(sstate).ratio > log(rand()))
+        $(vstate)[$(vindex)].value = copy($(sstate).pstate.value)
+        $(vstate)[$(vindex)].logtarget = copy($(sstate).pstate.logtarget)
+      end
+    ))
+  end
+
+  if !plain
+    push!(body, :(produce()))
+  end
+
+  @gensym iterate_basic_mcjob
+
+  quote
+    function $iterate_basic_mcjob()
+      $(body...)
+    end
+  end
+end
