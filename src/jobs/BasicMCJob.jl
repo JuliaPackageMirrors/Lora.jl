@@ -52,20 +52,10 @@ type BasicMCJob <: MCJob
     instance.count = 1
     instance.plain = plain
 
+    instance.iterate! = eval(codegen_iterate_basic_mcjob(instance, outopts))
+
     if plain
       instance.task = nothing
-      instance.iterate! = eval(codegen_iterate_basic_mcjob(
-        instance.vstate,
-        instance.sstate,
-        instance.model.vertices[instance.vindex],
-        instance.vindex,
-        instance.sampler,
-        instance.tuner,
-        instance.range,
-        outopts,
-        instance.count,
-        instance.plain
-      ))
       instance.reset! =
         x::Vector -> reset!(instance.vstate, x, instance.model.vertices[instance.vindex], instance.vindex, instance.sampler)
     else
