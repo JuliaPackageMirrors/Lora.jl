@@ -1,1 +1,3 @@
 doc/sphinx/build
+test/compound_expressions.jl
+test/speed_up_parameter_access.jl

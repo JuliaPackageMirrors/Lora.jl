@@ -5,17 +5,20 @@
 
 type BasicMCJob <: MCJob
   model::GenericModel # Model of single parameter
-  vindex::Int # Index of single parameter in model.vertices
+  pindex::Int # Index of single parameter in model.vertices
+  parameter::Parameter # Points to model.vertices[pindex] for faster access
   sampler::MCSampler
   tuner::MCTuner
   range::BasicMCRange
   vstate::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
+  pstate::ParameterState # Points to vstate[pindex] for faster access
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
   count::Int # Current number of post-burnin iterations
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
   task::Union{Task, Void}
   iterate!::Function
+  consume!::Function
   reset!::Function
   save!::Function
   close::Function
@@ -23,7 +26,7 @@ type BasicMCJob <: MCJob
 
   BasicMCJob(
     model::GenericModel,
-    vindex::Int,
+    pindex::Int,
     sampler::MCSampler,
     tuner::MCTuner,
     range::BasicMCRange,
@@ -35,42 +38,47 @@ type BasicMCJob <: MCJob
     instance = new()
 
     instance.model = model
-    instance.vindex = vindex
+    instance.pindex = pindex
+    instance.parameter = instance.model.vertices[instance.pindex]
 
     instance.sampler = sampler
     instance.tuner = tuner
+
     instance.range = range
 
     instance.vstate = vstate
-    initialize!(instance.vstate, model.vertices[vindex], vindex, sampler)
+    instance.pstate = instance.vstate[instance.pindex]
+    initialize!(instance.pstate, instance.vstate, instance.parameter, sampler)
 
-    instance.sstate = sampler_state(sampler, tuner, instance.vstate[vindex])
+    instance.sstate = sampler_state(sampler, tuner, instance.pstate)
 
     augment!(outopts)
-    instance.output = initialize_output(instance.vstate[vindex], range.npoststeps, outopts)
+    instance.output = initialize_output(instance.pstate, range.npoststeps, outopts)
 
     instance.count = 1
+
     instance.plain = plain
 
     instance.iterate! = eval(codegen_iterate_basic_mcjob(instance, outopts))
 
     if plain
       instance.task = nothing
+      instance.consume! = instance.iterate!
       instance.reset! =
-        x::Vector -> reset!(instance.vstate, x, instance.model.vertices[instance.vindex], instance.vindex, instance.sampler)
+        x::Vector -> reset!(instance.vstate, x, instance.model.vertices[instance.pindex], instance.pindex, instance.sampler)
     else
       instance.task = Task(() -> initialize_task!(
-        instance.vstate, instance.sstate, instance.model.vertices[instance.vindex], instance.vindex, instance.sampler, instance.tuner, instance.range, outopts, instance.count)
+        instance.vstate, instance.sstate, instance.model.vertices[instance.pindex], instance.pindex, instance.sampler, instance.tuner, instance.range, outopts, instance.count)
       )
-      instance.iterate! = () -> consume(instance.task)
+      instance.consume! = () -> consume(instance.task)
       instance.reset! = x::Vector -> reset(instance.task, x)
     end
 
     if outopts[:destination] == :nstate
-      instance.save! = (i::Int) -> instance.output.copy(instance.vstate[instance.vindex], i)
+      instance.save! = (i::Int) -> instance.output.copy(instance.vstate[instance.pindex], i)
       instance.close = () -> ()
     elseif outopts[:destination] == :iostream
-      instance.save! = (i::Int) -> instance.output.write(instance.vstate[instance.vindex])
+      instance.save! = (i::Int) -> instance.output.write(instance.vstate[instance.pindex])
       instance.close = () -> close(instance.output)
     end
 
@@ -83,7 +91,7 @@ end
 
 function Base.run(job::BasicMCJob)
   for i in 1:job.range.nsteps
-    job.iterate!()
+    job.consume!()
 
     if in(i, job.range.postrange)
       job.save!(job.count)

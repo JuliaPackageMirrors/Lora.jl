@@ -52,74 +52,82 @@ MH{N<:AbstractFloat}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ### Initialize Metropolis-Hastings sampler
 
-## Initialize variable states
+## Initialize parameter state
 
-function initialize!(vstate::Vector{VariableState}, parameter::ContinuousParameter, vindex::Int, sampler::MHSampler)
-  parameter.logtarget!(vstate[vindex], vstate)
-  @assert isfinite(vstate[vindex].logtarget) "Initial values out of model support"
+function initialize!(
+  pstate::ContinuousParameterState,
+  vstate::Vector{VariableState},
+  parameter::ContinuousParameter,
+  sampler::MH
+)
+  parameter.logtarget!(pstate, vstate)
+  @assert isfinite(pstate.logtarget) "Initial values out of parameter support"
 end
 
 ## Initialize MHState
 
-sampler_state(sampler::MHSampler, tuner::MCTuner, pstate::ParameterState) =
-  MHState(generate_empty(pstate), tuner_state(tuner))
+sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) = MHState(generate_empty(pstate), tuner_state(tuner))
+
+## Reset parameter state
 
 function reset!{N<:AbstractFloat}(
+  pstate::ContinuousUnivariateParameterState,
   vstate::Vector{VariableState},
   x::N,
   parameter::ContinuousUnivariateParameter,
-  vindex::Int,
-  sampler::MHSampler
+  sampler::MH
 )
-  vstate[vindex].value = x
-  parameter.logtarget!(vstate[vindex], vstate)
+  pstate.value = x
+  parameter.logtarget!(pstate, vstate)
 end
 
 function reset!{N<:AbstractFloat}(
+  pstate::ContinuousMultivariateParameterState,
   vstate::Vector{VariableState},
   x::Vector{N},
   parameter::ContinuousMultivariateParameter,
-  vindex::Int,
-  sampler::MHSampler
+  sampler::MH
 )
-  vstate[vindex].value = copy(x)
-  parameter.logtarget!(vstate[vindex], vstate)
+  pstate.value = copy(x)
+  parameter.logtarget!(pstate, vstate)
 end
 
+## Initialize task
+
 function initialize_task!{N<:AbstractFloat}(
+  pstate::ContinuousUnivariateParameterState{N},
   vstate::Vector{VariableState},
   sstate::MHState{ContinuousUnivariateParameterState{N}},
   parameter::ContinuousUnivariateParameter,
-  vindex::Int,
-  sampler::MHSampler,
+  sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
   outopts::Dict{Symbol, Any},
   count::Int
 )
-  # Hook inside Task to allow remote resetting
-  task_local_storage(:reset, x::N -> reset!(vstate, x, parameter, vindex, sampler))
+  # Hook inside task to allow remote resetting
+  task_local_storage(:reset, x::N -> reset!(pstate, vstate, x, parameter, sampler))
 
   while true
-    iterate!(vstate, sstate, parameter, vindex, sampler, tuner, range, outopts, count, produce)
+    iterate!(vstate, sstate, parameter, pindex, sampler, tuner, range, outopts, count, produce)
   end
 end
 
 function initialize_task!{N<:AbstractFloat}(
+  pstate::ContinuousMultivariateParameterState{N},
   vstate::Vector{VariableState},
   sstate::MHState{ContinuousMultivariateParameterState{N}},
   parameter::ContinuousMultivariateParameter,
-  vindex::Int,
-  sampler::MHSampler,
+  sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
   outopts::Dict{Symbol, Any},
   count::Int
 )
-  # Hook inside Task to allow remote resetting
-  task_local_storage(:reset, x::Vector{N} -> reset!(vstate, x, parameter, vindex, sampler))
+  # Hook inside task to allow remote resetting
+  task_local_storage(:reset, x::Vector{N} -> reset!(pstate, vstate, x, parameter, sampler))
 
   while true
-    iterate!(vstate, sstate, parameter, vindex, sampler, tuner, range, outopts, count, produce)
+    iterate!(vstate, sstate, parameter, pindex, sampler, tuner, range, outopts, count, produce)
   end
 end

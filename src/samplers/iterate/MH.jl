@@ -5,25 +5,25 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     push!(body, :($(job).sstate.tune.proposed += 1))
   end
 
-  push!(body, :($(job).sstate.pstate.value = $(job).sampler.randproposal($(job).vstate[$(job).vindex].value)))
-  push!(body, :($(job).model.vertices[$(job).vindex].logtarget!($(job).sstate.pstate, $(job).vstate)))
+  push!(body, :($(job).sstate.pstate.value = $(job).sampler.randproposal($(job).vstate[$(job).pindex].value)))
+  push!(body, :($(job).model.vertices[$(job).pindex].logtarget!($(job).sstate.pstate, $(job).vstate)))
 
   if job.sampler.symmetric
-    push!(body, :($(job).sstate.ratio = $(job).sstate.pstate.logtarget-$(job).vstate[$(job).vindex].logtarget))
+    push!(body, :($(job).sstate.ratio = $(job).sstate.pstate.logtarget-$(job).vstate[$(job).pindex].logtarget))
   else
     push!(body, :($(job).sstate.ratio = (
       $(job).sstate.pstate.logtarget
-      +$(job).sampler.logproposal($(job).sstate.pstate.value, $(job).vstate[$(job).vindex].value)
-      -$(job).vstate[$(job).vindex].logtarget
-      -$(job).sampler.logproposal($(job).vstate[$(job).vindex].value, $(job).sstate.pstate.value)
+      +$(job).sampler.logproposal($(job).sstate.pstate.value, $(job).vstate[$(job).pindex].value)
+      -$(job).vstate[$(job).pindex].logtarget
+      -$(job).sampler.logproposal($(job).vstate[$(job).pindex].value, $(job).sstate.pstate.value)
     )))
   end
 
   if job.tuner.verbose
     push!(body, :(
       if $(job).sstate.ratio > 0 || ($(job).sstate.ratio > log(rand()))
-        $(job).vstate[$(job).vindex].value = copy($(job).sstate.pstate.value)
-        $(job).vstate[$(job).vindex].logtarget = copy($(job).sstate.pstate.logtarget)
+        $(job).vstate[$(job).pindex].value = copy($(job).sstate.pstate.value)
+        $(job).vstate[$(job).pindex].logtarget = copy($(job).sstate.pstate.logtarget)
 
         $(job).sstate.tune.accepted += 1
       end
@@ -38,8 +38,8 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
   else
     push!(body, :(
       if $(job).sstate.ratio > 0 || ($(job).sstate.ratio > log(rand()))
-        $(job).vstate[$(job).vindex].value = copy($(job).sstate.pstate.value)
-        $(job).vstate[$(job).vindex].logtarget = copy($(job).sstate.pstate.logtarget)
+        $(job).vstate[$(job).pindex].value = copy($(job).sstate.pstate.value)
+        $(job).vstate[$(job).pindex].logtarget = copy($(job).sstate.pstate.logtarget)
       end
     ))
   end
@@ -53,14 +53,4 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
       $(body...)
     end
   end
-end
-
-function codegen_iterate_basic_mcjob(job::BasicMCJob, outopts::Dict{Symbol, Any})
-  result::Expr
-
-  if isa(job.sampler, MH)
-    result = codegen_iterate_mh(job, outopts)
-  end
-
-  result
 end

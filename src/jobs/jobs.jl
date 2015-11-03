@@ -61,7 +61,6 @@ function initialize_output(
   output
 end
 
-
 function initialize_output(
   state::ContinuousMultivariateParameterState,
   n::Int,
