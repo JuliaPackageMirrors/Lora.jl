@@ -63,7 +63,17 @@ type BasicMCJob <: MCJob
 
     if plain
       instance.task = nothing
-      instance.consume! = instance.iterate!
+      instance.consume! = () -> instance.iterate!(
+        instance.pstate,
+        instance.vstate,
+        instance.sstate,
+        instance.parameter,
+        instance.sampler,
+        instance.tuner,
+        instance.range,
+        instance.count,
+        instance.plain
+      )
       instance.reset! =
         x::Vector -> reset!(instance.vstate, x, instance.model.vertices[instance.pindex], instance.pindex, instance.sampler)
     else
