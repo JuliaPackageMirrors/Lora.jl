@@ -31,11 +31,11 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     ))
 
     push!(body, :(
-      if $(:_count) <= $(:_range).burnin && mod($(:_count), $(:_tuner).period) == 0
+      if $(:_sstate).tune.proposed <= $(:_range).burnin && mod($(:_sstate).tune.proposed, $(:_tuner).period) == 0
         rate!($(:_sstate).tune)
         println(
           "Burnin iteration ",
-          $(:_count),
+          $(:_sstate).tune.proposed,
           " of ",
           $(:_range).burnin,
           ": ",
@@ -53,7 +53,13 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     ))
   end
 
-  # push!(body, :(println($(:_count))))
+  if !job.plain
+    push!(body, :(produce()))
+    println("Task based")
+  end
+
+  #push!(body, :(println($(:_pstate))))
+  #push!(body, :(println($(:_sstate).tune.proposed)))
 
   @gensym iterate_mh
 
@@ -68,9 +74,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
         _parameter::ContinuousUnivariateParameter,
         _sampler::MH,
         _tuner::MCTuner,
-        _range::BasicMCRange,
-        _count::Int,
-        _plain::Bool
+        _range::BasicMCRange
       )
         $(body...)
       end
@@ -86,15 +90,13 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
         _parameter::ContinuousMultivariateParameter,
         _sampler::MH,
         _tuner::MCTuner,
-        _range::BasicMCRange,
-        _count::Int,
-        _plain::Bool
+        _range::BasicMCRange
       )
         $(body...)
       end
     end
-    else
-      error("It is not possible to define MH iterate!() for given job")
+  else
+      error("It is not possible to define iterate!() for given job")
   end
 
   result

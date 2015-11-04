@@ -55,7 +55,7 @@ type BasicMCJob <: MCJob
     augment!(outopts)
     instance.output = initialize_output(instance.pstate, range.npoststeps, outopts)
 
-    instance.count = 1
+    instance.count = 0
 
     instance.plain = plain
 
@@ -70,26 +70,32 @@ type BasicMCJob <: MCJob
         instance.parameter,
         instance.sampler,
         instance.tuner,
-        instance.range,
-        instance.count,
-        instance.plain
+        instance.range
       )
-      instance.reset! =
-        x::Vector -> reset!(instance.vstate, x, instance.model.vertices[instance.pindex], instance.pindex, instance.sampler)
+      instance.reset! = x::Vector -> reset!(instance.pstate, instance.vstate, x, instance.parameter, instance.sampler)
     else
       instance.task = Task(() -> initialize_task!(
-        instance.vstate, instance.sstate, instance.model.vertices[instance.pindex], instance.pindex, instance.sampler, instance.tuner, instance.range, outopts, instance.count)
-      )
+        instance.pstate,
+        instance.vstate,
+        instance.sstate,
+        instance.parameter,
+        instance.sampler,
+        instance.tuner,
+        instance.range,
+        instance.iterate!
+      ))
       instance.consume! = () -> consume(instance.task)
       instance.reset! = x::Vector -> reset(instance.task, x)
     end
 
     if outopts[:destination] == :nstate
-      instance.save! = (i::Int) -> instance.output.copy(instance.vstate[instance.pindex], i)
+      instance.save! = (i::Int) -> instance.output.copy(instance.pstate, i)
       instance.close = () -> ()
     elseif outopts[:destination] == :iostream
-      instance.save! = (i::Int) -> instance.output.write(instance.vstate[instance.pindex])
+      instance.save! = (i::Int) -> instance.output.write(instance.pstate)
       instance.close = () -> close(instance.output)
+    else
+      error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
     end
 
     instance
@@ -104,9 +110,7 @@ function Base.run(job::BasicMCJob)
     job.consume!()
 
     if in(i, job.range.postrange)
-      job.save!(job.count)
-
-      job.count += 1
+      job.save!(job.count+=1)
     end
   end
 

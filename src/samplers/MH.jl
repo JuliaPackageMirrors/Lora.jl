@@ -15,7 +15,8 @@ type MHState{S<:ParameterState} <: MCSamplerState
   end
 end
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) = MHState{S}(pstate, tune, ratio)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) =
+  MHState{S}(pstate, tune, ratio)
 
 MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
 
@@ -102,14 +103,13 @@ function initialize_task!{N<:AbstractFloat}(
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
-  outopts::Dict{Symbol, Any},
-  count::Int
+  iterate!::Function
 )
   # Hook inside task to allow remote resetting
   task_local_storage(:reset, x::N -> reset!(pstate, vstate, x, parameter, sampler))
 
   while true
-    iterate!(vstate, sstate, parameter, pindex, sampler, tuner, range, outopts, count, produce)
+    iterate!(pstate, vstate, sstate, parameter, sampler, tuner, range)
   end
 end
 
@@ -121,13 +121,12 @@ function initialize_task!{N<:AbstractFloat}(
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
-  outopts::Dict{Symbol, Any},
-  count::Int
+  iterate!::Function
 )
   # Hook inside task to allow remote resetting
   task_local_storage(:reset, x::Vector{N} -> reset!(pstate, vstate, x, parameter, sampler))
 
   while true
-    iterate!(vstate, sstate, parameter, pindex, sampler, tuner, range, outopts, count, produce)
+    iterate!(pstate, vstate, sstate, parameter, sampler, tuner, range)
   end
 end
