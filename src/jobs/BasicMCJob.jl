@@ -3,14 +3,14 @@
 # BasicMCJob is used for sampling a single parameter via serial Monte Carlo
 # It is the most elementary and typical Markov chain Monte Carlo (MCMC) job
 
-type BasicMCJob <: MCJob
+type BasicMCJob{S<:VariableState} <: MCJob
   model::GenericModel # Model of single parameter
   pindex::Int # Index of single parameter in model.vertices
   parameter::Parameter # Points to model.vertices[pindex] for faster access
   sampler::MCSampler
   tuner::MCTuner
   range::BasicMCRange
-  vstate::Vector{VariableState} # Vector of variable states ordered according to variables in model.vertices
+  vstate::Vector{S} # Vector of variable states ordered according to variables in model.vertices
   pstate::ParameterState # Points to vstate[pindex] for faster access
   sstate::MCSamplerState # Internal state of MCSampler
   output::Union{VariableNState, VariableIOStream} # Output of model's single parameter
@@ -30,7 +30,7 @@ type BasicMCJob <: MCJob
     sampler::MCSampler,
     tuner::MCTuner,
     range::BasicMCRange,
-    vstate::Vector{VariableState},
+    vstate::Vector{S},
     outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
     checkin::Bool
@@ -101,6 +101,19 @@ type BasicMCJob <: MCJob
     instance
   end
 end
+
+BasicMCJob{S<:VariableState}(
+  model::GenericModel,
+  pindex::Int,
+  sampler::MCSampler,
+  tuner::MCTuner,
+  range::BasicMCRange,
+  vstate::Vector{S},
+  outopts::Dict{Symbol, Any}, # Options related to output
+  plain::Bool,
+  checkin::Bool
+) =
+  BasicMCJob{S}(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument

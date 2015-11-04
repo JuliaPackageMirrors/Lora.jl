@@ -19,7 +19,7 @@ tuner = VanillaMCTuner()
 
 mcrange = BasicMCRange(nsteps=10000, burnin=1000)
 
-vstate = VariableState[ContinuousMultivariateParameterState([1.25, 3.11], [:value, :logtarget])]
+vstate = [ContinuousMultivariateParameterState([1.25, 3.11], [:value, :logtarget])]
 
 outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget])
 
@@ -52,7 +52,7 @@ tuner = VanillaMCTuner()
 
 mcrange = BasicMCRange(nsteps=10000, burnin=1000)
 
-vstate = VariableState[ContinuousUnivariateParameterState(5.1, [:value, :logtarget])]
+vstate = [ContinuousUnivariateParameterState(5.1, [:value, :logtarget])]
 
 outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget])
 

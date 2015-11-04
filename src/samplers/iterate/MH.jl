@@ -55,11 +55,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
 
   if !job.plain
     push!(body, :(produce()))
-    println("Task based")
   end
-
-  #push!(body, :(println($(:_pstate))))
-  #push!(body, :(println($(:_sstate).tune.proposed)))
 
   @gensym iterate_mh
 
@@ -67,9 +63,9 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
     isa(job.parameter, ContinuousUnivariateParameter)
     result = quote
-      function $iterate_mh{N<:AbstractFloat}(
+      function $iterate_mh{N<:AbstractFloat, S<:VariableState}(
         _pstate::ContinuousUnivariateParameterState{N},
-        _vstate::Vector{VariableState},
+        _vstate::Vector{S},
         _sstate::MHState{ContinuousUnivariateParameterState{N}},
         _parameter::ContinuousUnivariateParameter,
         _sampler::MH,
@@ -83,9 +79,9 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
     isa(job.parameter, ContinuousMultivariateParameter)
     result = quote
-      function $iterate_mh{N<:AbstractFloat}(
+      function $iterate_mh{N<:AbstractFloat, S<:VariableState}(
         _pstate::ContinuousMultivariateParameterState{N},
-        _vstate::Vector{VariableState},
+        _vstate::Vector{S},
         _sstate::MHState{ContinuousMultivariateParameterState{N}},
         _parameter::ContinuousMultivariateParameter,
         _sampler::MH,

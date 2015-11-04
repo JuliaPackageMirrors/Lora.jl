@@ -15,8 +15,7 @@ type MHState{S<:ParameterState} <: MCSamplerState
   end
 end
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) =
-  MHState{S}(pstate, tune, ratio)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) = MHState{S}(pstate, tune, ratio)
 
 MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
 
@@ -55,9 +54,9 @@ MH{N<:AbstractFloat}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ## Initialize parameter state
 
-function initialize!(
+function initialize!{S<:VariableState}(
   pstate::ContinuousParameterState,
-  vstate::Vector{VariableState},
+  vstate::Vector{S},
   parameter::ContinuousParameter,
   sampler::MH
 )
