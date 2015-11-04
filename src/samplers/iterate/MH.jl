@@ -1,5 +1,7 @@
 function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
   result::Expr
+  update::Vector{Expr}
+  noupdate = []
   body = []
 
   if job.tuner.verbose
@@ -20,16 +22,23 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
     )))
   end
 
+  update = [
+    :($(:_pstate).value = copy($(:_sstate).pstate.value)),
+    :($(:_pstate).logtarget = copy($(:_sstate).pstate.logtarget))
+  ]
+  if in(:accept, outopts[:diagnostics])
+    push!(update, :($(:_pstate).diagnosticvalues[1] = true))
+    push!(noupdate, :($(:_pstate).diagnosticvalues[1] = false))
+  end
   if job.tuner.verbose
-    push!(body, :(
-      if $(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))
-        $(:_pstate).value = copy($(:_sstate).pstate.value)
-        $(:_pstate).logtarget = copy($(:_sstate).pstate.logtarget)
+    push!(update, :($(:_sstate).tune.accepted += 1))
+  end
+  push!(
+    body,
+    Expr(:if, :($(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))), Expr(:block, update...), noupdate...)
+  )
 
-        $(:_sstate).tune.accepted += 1
-      end
-    ))
-
+  if job.tuner.verbose
     push!(body, :(
       if $(:_sstate).tune.proposed <= $(:_range).burnin && mod($(:_sstate).tune.proposed, $(:_tuner).period) == 0
         rate!($(:_sstate).tune)
@@ -42,13 +51,6 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
           round(100*$(:_sstate).tune.rate, 2),
           " % acceptance rate"
         )
-      end
-    ))
-  else
-    push!(body, :(
-      if $(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))
-        $(:_pstate).value = copy($(:_sstate).pstate.value)
-        $(:_pstate).logtarget = copy($(:_sstate).pstate.logtarget)
       end
     ))
   end

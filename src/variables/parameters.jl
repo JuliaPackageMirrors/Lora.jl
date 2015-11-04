@@ -36,7 +36,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
   uptotensorlogtarget!::Union{Function, Void}
   uptodtensorlogtarget!::Union{Function, Void}
 
-  ContinuousUnivariateParameter(
+  function ContinuousUnivariateParameter(
     index::Int,
     key::Symbol,
     pdf::Union{ContinuousUnivariateDistribution, Void},
@@ -58,7 +58,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     uptoglt::Union{Function, Void},
     uptotlt::Union{Function, Void},
     uptodtlt::Union{Function, Void}
-  ) = begin
+  )
     instance = new()
     instance.index = index
     instance.key = key
@@ -89,7 +89,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
 
     # Check that all generic functions have correct signature
     for i = 1:nf
-      if isa(args[i], Function) && 
+      if isa(args[i], Function) &&
         isgeneric(args[i]) &&
         !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
         error("$(fnames[i]) has wrong signature")
@@ -102,7 +102,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         setter,
         if isa(args[i], Function)
-          (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) -> 
+          (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) ->
           setfield!(instance, distribution, args[i](state, states))
         else
           args[i]
@@ -338,7 +338,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
   uptotensorlogtarget!::Union{Function, Void}
   uptodtensorlogtarget!::Union{Function, Void}
 
-  ContinuousMultivariateParameter(
+  function ContinuousMultivariateParameter(
     index::Int,
     key::Symbol,
     pdf::Union{ContinuousMultivariateDistribution, Void},
@@ -360,7 +360,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     uptoglt::Union{Function, Void},
     uptotlt::Union{Function, Void},
     uptodtlt::Union{Function, Void}
-  ) = begin
+  )
     instance = new()
     instance.index = index
     instance.key = key

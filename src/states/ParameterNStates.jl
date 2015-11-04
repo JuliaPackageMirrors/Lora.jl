@@ -34,13 +34,13 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
   n::Int
   copy::Function
 
-  ContinuousUnivariateParameterNState(
+  function ContinuousUnivariateParameterNState(
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
     ::Type{N}=Float64,
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
-  ) = begin
+  )
     instance = new()
 
     l = Array(Int, 13)
@@ -152,14 +152,14 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
   n::Int
   copy::Function
 
-  ContinuousMultivariateParameterNState(
+  function ContinuousMultivariateParameterNState(
     size::Int,
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
     ::Type{N}=Float64,
     diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
-  ) = begin
+  )
     instance = new()
 
     fnames = fieldnames(ContinuousMultivariateParameterNState)

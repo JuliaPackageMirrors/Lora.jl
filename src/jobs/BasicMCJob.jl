@@ -24,7 +24,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
   close::Function
   # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
-  BasicMCJob(
+  function BasicMCJob(
     model::GenericModel,
     pindex::Int,
     sampler::MCSampler,
@@ -34,7 +34,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
     outopts::Dict{Symbol, Any}, # Options related to output
     plain::Bool,
     checkin::Bool
-  ) = begin
+  )
     instance = new()
 
     instance.model = model

@@ -19,9 +19,9 @@ tuner = VanillaMCTuner()
 
 mcrange = BasicMCRange(nsteps=10000, burnin=1000)
 
-vstate = [ContinuousMultivariateParameterState([1.25, 3.11], [:value, :logtarget])]
+vstate = [ContinuousMultivariateParameterState([1.25, 3.11], [:value, :logtarget], [:accept])]
 
-outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget])
+outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget], :diagnostics=>[:accept])
 
 job = BasicMCJob(
   model,

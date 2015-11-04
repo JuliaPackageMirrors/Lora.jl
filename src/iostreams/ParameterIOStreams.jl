@@ -24,13 +24,13 @@ type ContinuousParameterIOStream <: ParameterIOStream
   n::Int
   write::Function
 
-  ContinuousParameterIOStream(
+  function ContinuousParameterIOStream(
     size::Tuple,
     n::Int,
     streams::Vector{Union{IOStream, Void}},
     diagnostickeys::Vector{Symbol}=Symbol[],
     diagnosticvalues::Union{IOStream, Void}=nothing
-  ) = begin
+  )
     instance = new()
 
     fnames = fieldnames(ContinuousParameterIOStream)
