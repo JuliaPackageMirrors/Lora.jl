@@ -1,4 +1,5 @@
 function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
+  result::Expr
   body = []
 
   if job.tuner.verbose
@@ -56,19 +57,45 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
 
   @gensym iterate_mh
 
-  quote
-    function $iterate_mh(
-      _pstate::ContinuousMultivariateParameterState,
-      _vstate::Vector{VariableState},
-      _sstate::MHState,
-      _parameter::ContinuousMultivariateParameter,
-      _sampler::MH,
-      _tuner::MCTuner,
-      _range::BasicMCRange,
-      _count::Int,
-      _plain::Bool
-    )
-      $(body...)
+  if isa(job.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.parameter, ContinuousUnivariateParameter)
+    result = quote
+      function $iterate_mh{N<:AbstractFloat}(
+        _pstate::ContinuousUnivariateParameterState{N},
+        _vstate::Vector{VariableState},
+        _sstate::MHState{ContinuousUnivariateParameterState{N}},
+        _parameter::ContinuousUnivariateParameter,
+        _sampler::MH,
+        _tuner::MCTuner,
+        _range::BasicMCRange,
+        _count::Int,
+        _plain::Bool
+      )
+        $(body...)
+      end
     end
+  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.parameter, ContinuousMultivariateParameter)
+    result = quote
+      function $iterate_mh{N<:AbstractFloat}(
+        _pstate::ContinuousMultivariateParameterState{N},
+        _vstate::Vector{VariableState},
+        _sstate::MHState{ContinuousMultivariateParameterState{N}},
+        _parameter::ContinuousMultivariateParameter,
+        _sampler::MH,
+        _tuner::MCTuner,
+        _range::BasicMCRange,
+        _count::Int,
+        _plain::Bool
+      )
+        $(body...)
+      end
+    end
+    else
+      error("It is not possible to define MH iterate!() for given job")
   end
+
+  result
 end

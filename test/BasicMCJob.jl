@@ -14,7 +14,8 @@ model = single_parameter_likelihood_model(p)
 
 sampler = MH([1., 1.])
 
-tuner = VanillaMCTuner(verbose=true)
+tuner = VanillaMCTuner()
+# tuner = VanillaMCTuner(verbose=true)
 
 mcrange = BasicMCRange(nsteps=10000, burnin=1000)
 
