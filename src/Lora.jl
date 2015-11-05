@@ -9,9 +9,13 @@ import Base:
   convert,
   copy!,
   eltype,
+  flush,
   isequal,
+  mark,
+  open,
   read!,
   read,
+  reset,
   run,
   show,
   write

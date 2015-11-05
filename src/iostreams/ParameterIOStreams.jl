@@ -124,6 +124,19 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   end
 end
 
+function Base.flush(iostream::ContinuousParameterIOStream)
+  fnames = fieldnames(ContinuousParameterIOStream)
+  for i in 1:13
+    if iostream.(fnames[i]) != nothing
+      flush(iostream.(fnames[i]))
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    flush(iostream.diagnosticvalues)
+  end
+end
+
 function Base.close(iostream::ContinuousParameterIOStream)
   fnames = fieldnames(ContinuousParameterIOStream)
   for i in 1:13
@@ -134,6 +147,45 @@ function Base.close(iostream::ContinuousParameterIOStream)
 
   if iostream.diagnosticvalues != nothing
     close(iostream.diagnosticvalues)
+  end
+end
+
+function Base.open(iostream::ContinuousParameterIOStream, mode::AbstractString="w")
+  fnames = fieldnames(ContinuousParameterIOStream)
+  for i in 1:13
+    if iostream.(fnames[i]) != nothing
+      iostream.(fnames[i]) = open(iostream.(fnames[i]).name[7:end-1], mode)
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    iostream.diagnosticvalues = open(iostream.diagnosticvalues.name[7:end-1], mode)
+  end
+end
+
+function Base.mark(iostream::ContinuousParameterIOStream)
+  fnames = fieldnames(ContinuousParameterIOStream)
+  for i in 1:13
+    if iostream.(fnames[i]) != nothing
+      mark(iostream.(fnames[i]))
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    mark(iostream.diagnosticvalues)
+  end
+end
+
+function Base.reset(iostream::ContinuousParameterIOStream)
+  fnames = fieldnames(ContinuousParameterIOStream)
+  for i in 1:13
+    if iostream.(fnames[i]) != nothing
+      reset(iostream.(fnames[i]))
+    end
+  end
+
+  if iostream.diagnosticvalues != nothing
+    reset(iostream.diagnosticvalues)
   end
 end
 
