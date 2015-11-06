@@ -1,28 +1,14 @@
 using Base.Test
 using Lora
 
-functionnames = (
-  :value,
-  :loglikelihood,
-  :logprior,
-  :logtarget,
-  :gradloglikelihood,
-  :gradlogprior,
-  :gradlogtarget,
-  :tensorloglikelihood,
-  :tensorlogprior,
-  :tensorlogtarget,
-  :dtensorloglikelihood,
-  :dtensorlogprior,
-  :dtensorlogtarget
-)
-filepath = dirname(@__FILE__)
+fnames = fieldnames(ContinuousParameterIOStream)
+# filepath = dirname(@__FILE__)
+filepath = ""
 filesuffix = "csv"
 filenames = Array(AbstractString, 14)
-for i in 1:13
-  filenames[i] = joinpath(filepath, string(functionnames[i])*"."*filesuffix)
+for i in 1:14
+  filenames[i] = joinpath(filepath, string(fnames[i])*"."*filesuffix)
 end
-filenames[14] = joinpath(filepath, "diagnostics"*"."*filesuffix)
 
 println("    Testing ContinuousParameterIOStream constructors and close method...")
 
@@ -31,13 +17,12 @@ iostreamn = 4
 iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath)
 
 @test isa(iostream.value, IOStream)
-for i in 2:13
-  @test iostream.(functionnames[i]) == nothing
+for i in 2:14
+  @test iostream.(fnames[i]) == nothing
 end
-@test length(iostream.diagnostickeys) == 0
-@test iostream.diagnosticvalues == nothing
 @test iostream.size == iostreamsize
 @test iostream.n == iostreamn
+@test length(iostream.diagnostickeys) == 0
 
 close(iostream)
 rm(filenames[1])
@@ -45,36 +30,41 @@ rm(filenames[1])
 iostreamsize = (2,)
 iostreamn = 4
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn,
-  monitor=[true; fill(false, 5); true; fill(false, 6); true], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize,
+  iostreamn,
+  monitor=[true; fill(false, 5); true; fill(false, 6); true],
+  filepath=filepath,
+  diagnostickeys=[:accept]
 )
 
-@test isa(iostream.value, IOStream)
-@test isa(iostream.gradlogtarget, IOStream)
-for i in [2:6; 8:13]
-  @test iostream.(functionnames[i]) == nothing
+for i in (1, 7, 14)
+  @test isa(iostream.(fnames[i]), IOStream)
 end
-@test length(iostream.diagnostickeys) == 1
+for i in [2:6; 8:13]
+  @test iostream.(fnames[i]) == nothing
+end
 @test iostream.size == iostreamsize
 @test iostream.n == iostreamn
+@test length(iostream.diagnostickeys) == 1
 
 close(iostream)
-for i in [1, 7, 14]; rm(filenames[i]); end
+for i in (1, 7, 14); rm(filenames[i]); end
 
 iostreamsize = (3,)
 iostreamn = 7
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :logtarget], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :logtarget, :diagnosticvalues], filepath=filepath, diagnostickeys=[:accept]
 )
 
-@test isa(iostream.value, IOStream)
-@test isa(iostream.logtarget, IOStream)
-for i in [2:3; 5:13]
-  @test iostream.(functionnames[i]) == nothing
+for i in (1, 4, 14)
+  @test isa(iostream.(fnames[i]), IOStream)
 end
-@test length(iostream.diagnostickeys) == 1
+for i in [2:3; 5:13]
+  @test iostream.(fnames[i]) == nothing
+end
 @test iostream.size == iostreamsize
 @test iostream.n == iostreamn
+@test length(iostream.diagnostickeys) == 1
 
 close(iostream)
 for i in [1, 4, 14]; rm(filenames[i]); end
@@ -94,13 +84,13 @@ end
 
 close(iostream)
 
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, mode="r", filepath=filepath)
+iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath, mode="r")
 nstate = read(iostream, Float64)
 
 @test isa(nstate, ContinuousUnivariateMarkovChain{Float64})
 @test nstate.value == nstatev
 for i in 2:13
-  @test length(nstate.(functionnames[i])) == 0
+  @test length(nstate.(fnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 0
 @test size(nstate.diagnosticvalues) == (0, 0)
@@ -116,7 +106,13 @@ nstated = Any[false, true, true, false, true, false]'
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], filepath=filepath)
+iostream = ContinuousParameterIOStream(
+  iostreamsize,
+  iostreamn,
+  [:value, :diagnosticvalues],
+  filepath=filepath,
+  diagnostickeys=[:accept]
+)
 nstatein = ContinuousUnivariateMarkovChain(iostreamn, [:value], [:accept], Float32)
 nstatein.value = nstatev
 nstatein.diagnosticvalues = nstated
@@ -125,21 +121,21 @@ write(iostream, nstatein)
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value], diagnostickeys=[:accept], mode="r", filepath=filepath
+  iostreamsize, iostreamn, [:value, :diagnosticvalues], filepath=filepath, diagnostickeys=[:accept], mode="r"
 )
 nstateout = read(iostream, Float32)
 
 @test isa(nstateout, ContinuousUnivariateMarkovChain{Float32})
 @test nstateout.value == nstatein.value
 for i in 2:13
-  @test length(nstateout.(functionnames[i])) == 0
+  @test length(nstateout.(fnames[i])) == 0
 end
 @test length(nstateout.diagnostickeys) == 1
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
 @test nstateout.n == nstatein.n
 
 close(iostream)
-for i in [1, 14]; rm(filenames[i]); end
+for i in (1, 14); rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateParameterState...")
 
@@ -150,7 +146,7 @@ iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize, iostreamn, [:value, :gradloglikelihood, :diagnosticvalues], filepath=filepath, diagnostickeys=[:accept]
 )
 for i in 1:iostreamn
   state = ContinuousMultivariateParameterState(nstatev[:, i], Symbol[], [:accept], [nstated[i]])
@@ -161,7 +157,12 @@ end
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :gradloglikelihood], diagnostickeys=[:accept], mode="r", filepath=filepath
+  iostreamsize,
+  iostreamn,
+  [:value, :gradloglikelihood, :diagnosticvalues],
+  filepath=filepath,
+  diagnostickeys=[:accept],
+  mode="r"
 )
 nstate = read(iostream, Float64)
 
@@ -169,7 +170,7 @@ nstate = read(iostream, Float64)
 @test nstate.value == nstatev
 @test nstate.gradloglikelihood == nstategll
 for i in [2:4; 6:13]
-  @test length(nstate.(functionnames[i])) == 0
+  @test length(nstate.(fnames[i])) == 0
 end
 @test length(nstate.diagnostickeys) == 1
 @test nstate.diagnosticvalues == nstated
@@ -177,7 +178,7 @@ end
 @test nstate.n == iostream.n
 
 close(iostream)
-for i in [1, 5, 14]; rm(filenames[i]); end
+for i in (1, 5, 14); rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateMarkovChain...")
 
@@ -189,7 +190,11 @@ iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], filepath=filepath
+  iostreamsize,
+  iostreamn,
+  [:value, :loglikelihood, :logtarget, :diagnosticvalues],
+  filepath=filepath,
+  diagnostickeys=[:accept]
 )
 nstatein = ContinuousMultivariateMarkovChain(
   iostreamsize[1],
@@ -207,7 +212,12 @@ write(iostream, nstatein)
 close(iostream)
 
 iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], diagnostickeys=[:accept], mode="r", filepath=filepath
+  iostreamsize,
+  iostreamn,
+  [:value, :loglikelihood, :logtarget, :diagnosticvalues],
+  filepath=filepath,
+  diagnostickeys=[:accept],
+  mode="r"
 )
 nstateout = read(iostream, Float32)
 
@@ -216,11 +226,11 @@ nstateout = read(iostream, Float32)
 @test nstateout.loglikelihood == nstatein.loglikelihood
 @test nstateout.logtarget == nstatein.logtarget
 for i in [3; 5:13]
-  @test length(nstateout.(functionnames[i])) == 0
+  @test length(nstateout.(fnames[i])) == 0
 end
 @test length(nstateout.diagnostickeys) == 1
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
 @test nstateout.n == nstatein.n
 
 close(iostream)
-for i in [1, 2, 4, 14]; rm(filenames[i]); end
+for i in (1, 2, 4, 14); rm(filenames[i]); end

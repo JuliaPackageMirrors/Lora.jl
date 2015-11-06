@@ -18,11 +18,11 @@ type ContinuousParameterIOStream <: ParameterIOStream
   dtensorloglikelihood::Union{IOStream, Void}
   dtensorlogprior::Union{IOStream, Void}
   dtensorlogtarget::Union{IOStream, Void}
-  diagnostickeys::Vector{Symbol}
   diagnosticvalues::Union{IOStream, Void}
   names::Vector{AbstractString}
   size::Tuple
   n::Int
+  diagnostickeys::Vector{Symbol}
   write::Function
 
   function ContinuousParameterIOStream(
@@ -30,26 +30,20 @@ type ContinuousParameterIOStream <: ParameterIOStream
     n::Int,
     streams::Vector{Union{IOStream, Void}},
     diagnostickeys::Vector{Symbol}=Symbol[],
-    diagnosticvalues::Union{IOStream, Void}=nothing
+    filenames::Vector{AbstractString}=[(streams[i] == nothing) ? "" : streams[i].name[7:end-1] for i in 1:14]
   )
     instance = new()
 
     fnames = fieldnames(ContinuousParameterIOStream)
-    for i in 1:13
+    for i in 1:14
       setfield!(instance, fnames[i], streams[i])
     end
 
-    instance.diagnostickeys = diagnostickeys
-    instance.diagnosticvalues = diagnosticvalues
-
-    instance.names = Array(AbstractString, 14)
-    for i in 1:13
-      instance.names[i] = (instance.(fnames[i]) == nothing) ? "" : instance.(fnames[i]).name[7:end-1]
-    end
-    instance.names[14] = (instance.diagnosticvalues == nothing) ? "" : instance.diagnosticvalues.name[7:end-1]
+    instance.names = filenames
 
     instance.size = size
     instance.n = n
+    instance.diagnostickeys = diagnostickeys
 
     instance.write = eval(codegen_write_continuous_parameter_iostream(instance))
 
@@ -59,41 +53,54 @@ end
 
 function ContinuousParameterIOStream(
   size::Tuple,
-  n::Int;
-  monitor::Vector{Bool}=[true; fill(false, 12)],
+  n::Int,
+  filenames::Vector{AbstractString},
   diagnostickeys::Vector{Symbol}=Symbol[],
-  mode::AbstractString="w",
-  filepath::AbstractString="",
-  filesuffix::AbstractString="csv"
+  mode::AbstractString="w"
 )
   fnames = fieldnames(ContinuousParameterIOStream)
   ContinuousParameterIOStream(
     size,
     n,
-    [monitor[i] == false ? nothing : open(joinpath(filepath, string(fnames[i])*"."*filesuffix), mode) for i in 1:13],
+    [isempty(filenames[i]) ? nothing : open(filenames[i], mode) for i in 1:14],
     diagnostickeys,
-    isempty(diagnostickeys) ? nothing : open(joinpath(filepath, "diagnostics"*"."*filesuffix), mode)
+    filenames
   )
+end
+
+function ContinuousParameterIOStream(
+  size::Tuple,
+  n::Int;
+  monitor::Vector{Bool}=[true; fill(false, 13)],
+  filepath::AbstractString="",
+  filesuffix::AbstractString="csv",
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  mode::AbstractString="w"
+)
+  fnames = fieldnames(ContinuousParameterIOStream)
+  filenames = AbstractString[monitor[i] == false ? "" : joinpath(filepath, string(fnames[i])*"."*filesuffix) for i in 1:14]
+
+  ContinuousParameterIOStream(size, n, filenames, diagnostickeys, mode)
 end
 
 function ContinuousParameterIOStream(
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol};
-  diagnostickeys::Vector{Symbol}=Symbol[],
-  mode::AbstractString="w",
   filepath::AbstractString="",
-  filesuffix::AbstractString="csv"
+  filesuffix::AbstractString="csv",
+  diagnostickeys::Vector{Symbol}=Symbol[],
+  mode::AbstractString="w"
 )
   fnames = fieldnames(ContinuousParameterIOStream)
   ContinuousParameterIOStream(
     size,
     n,
-    monitor=[fnames[i] in monitor ? true : false for i in 1:13],
-    diagnostickeys=diagnostickeys,
-    mode=mode,
+    monitor=[fnames[i] in monitor ? true : false for i in 1:14],
     filepath=filepath,
-    filesuffix=filesuffix
+    filesuffix=filesuffix,
+    diagnostickeys=diagnostickeys,
+    mode=mode
   )
 end
 

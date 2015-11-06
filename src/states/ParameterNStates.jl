@@ -29,9 +29,9 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
   dtensorloglikelihood::Vector{N}
   dtensorlogprior::Vector{N}
   dtensorlogtarget::Vector{N}
-  diagnostickeys::Vector{Symbol}
   diagnosticvalues::Matrix
   n::Int
+  diagnostickeys::Vector{Symbol}
   copy::Function
 
   function ContinuousUnivariateParameterNState(
@@ -53,9 +53,10 @@ type ContinuousUnivariateParameterNState{N<:AbstractFloat} <: ContinuousParamete
       setfield!(instance, fnames[i], Array(N, l[i]))
     end
 
-    instance.diagnostickeys = diagnostickeys
     instance.diagnosticvalues = diagnosticvalues
+
     instance.n = n
+    instance.diagnostickeys = diagnostickeys
 
     instance.copy = eval(codegen_copy_continuous_univariate_parameter_nstate(instance, monitor))
 
@@ -146,10 +147,10 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
   dtensorloglikelihood::Array{N, 4}
   dtensorlogprior::Array{N, 4}
   dtensorlogtarget::Array{N, 4}
-  diagnostickeys::Vector{Symbol}
   diagnosticvalues::Matrix
   size::Int
   n::Int
+  diagnostickeys::Vector{Symbol}
   copy::Function
 
   function ContinuousMultivariateParameterNState(
@@ -180,11 +181,12 @@ type ContinuousMultivariateParameterNState{N<:AbstractFloat} <: ContinuousParame
       setfield!(instance, fnames[i], Array(N, s, s, s, l))
     end
 
-    instance.diagnostickeys = diagnostickeys
     instance.diagnosticvalues = diagnosticvalues
+
     instance.size = size
     instance.n = n
-
+    instance.diagnostickeys = diagnostickeys
+    
     instance.copy = eval(codegen_copy_continuous_multivariate_parameter_nstate(instance, monitor))
 
     instance

@@ -25,8 +25,8 @@ type ContinuousUnivariateParameterState{N<:AbstractFloat} <: ContinuousParameter
   dtensorloglikelihood::N
   dtensorlogprior::N
   dtensorlogtarget::N
-  diagnostickeys::Vector{Symbol}
   diagnosticvalues::Vector
+  diagnostickeys::Vector{Symbol}
 end
 
 function ContinuousUnivariateParameterState{N<:AbstractFloat}(
@@ -36,7 +36,7 @@ function ContinuousUnivariateParameterState{N<:AbstractFloat}(
 )
   v = convert(N, NaN)
   ContinuousUnivariateParameterState{N}(
-    value, v, v, v, v, v, v, v, v, v, v, v, v, diagnostickeys, diagnosticvalues
+    value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys
   )
 end
 
@@ -75,9 +75,9 @@ type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParamet
   dtensorloglikelihood::Array{N, 3}
   dtensorlogprior::Array{N, 3}
   dtensorlogtarget::Array{N, 3}
+  diagnosticvalues::Vector
   size::Int
   diagnostickeys::Vector{Symbol}
-  diagnosticvalues::Vector
 end
 
 function ContinuousMultivariateParameterState{N<:AbstractFloat}(
@@ -109,9 +109,9 @@ function ContinuousMultivariateParameterState{N<:AbstractFloat}(
     Array(N, l[7], l[7], l[7]),
     Array(N, l[8], l[8], l[8]),
     Array(N, l[9], l[9], l[9]),
+    diagnosticvalues,
     s,
-    diagnostickeys,
-    diagnosticvalues
+    diagnostickeys
   )
 end
 
