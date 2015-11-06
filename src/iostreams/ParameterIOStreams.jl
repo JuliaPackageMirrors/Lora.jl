@@ -20,6 +20,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
   dtensorlogtarget::Union{IOStream, Void}
   diagnostickeys::Vector{Symbol}
   diagnosticvalues::Union{IOStream, Void}
+  names::Vector{AbstractString}
   size::Tuple
   n::Int
   write::Function
@@ -40,6 +41,13 @@ type ContinuousParameterIOStream <: ParameterIOStream
 
     instance.diagnostickeys = diagnostickeys
     instance.diagnosticvalues = diagnosticvalues
+
+    instance.names = Array(AbstractString, 14)
+    for i in 1:13
+      instance.names[i] = (instance.(fnames[i]) == nothing) ? "" : instance.(fnames[i]).name[7:end-1]
+    end
+    instance.names[14] = (instance.diagnosticvalues == nothing) ? "" : instance.diagnosticvalues.name[7:end-1]
+
     instance.size = size
     instance.n = n
 
@@ -154,12 +162,12 @@ function Base.open(iostream::ContinuousParameterIOStream, mode::AbstractString="
   fnames = fieldnames(ContinuousParameterIOStream)
   for i in 1:13
     if iostream.(fnames[i]) != nothing
-      iostream.(fnames[i]) = open(iostream.(fnames[i]).name[7:end-1], mode)
+      iostream.(fnames[i]) = open(iostream.names[i], mode)
     end
   end
 
   if iostream.diagnosticvalues != nothing
-    iostream.diagnosticvalues = open(iostream.diagnosticvalues.name[7:end-1], mode)
+    iostream.diagnosticvalues = open(iostream.names[14], mode)
   end
 end
 
