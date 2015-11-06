@@ -71,14 +71,19 @@ end
 function ContinuousParameterIOStream(
   size::Tuple,
   n::Int;
-  monitor::Vector{Bool}=[true; fill(false, 13)],
+  monitor::Vector{Bool}=[true; fill(false, 12)],
   filepath::AbstractString="",
   filesuffix::AbstractString="csv",
   diagnostickeys::Vector{Symbol}=Symbol[],
   mode::AbstractString="w"
 )
   fnames = fieldnames(ContinuousParameterIOStream)
-  filenames = AbstractString[monitor[i] == false ? "" : joinpath(filepath, string(fnames[i])*"."*filesuffix) for i in 1:14]
+
+  filenames = Array(AbstractString, 14)
+  for i in 1:13
+    filenames[i] = (monitor[i] == false ? "" : joinpath(filepath, string(fnames[i])*"."*filesuffix))
+  end
+  filenames[14] = (isempty(diagnostickeys) ? "" : joinpath(filepath, "diagnosticvalues."*filesuffix))
 
   ContinuousParameterIOStream(size, n, filenames, diagnostickeys, mode)
 end
@@ -96,7 +101,7 @@ function ContinuousParameterIOStream(
   ContinuousParameterIOStream(
     size,
     n,
-    monitor=[fnames[i] in monitor ? true : false for i in 1:14],
+    monitor=[fnames[i] in monitor ? true : false for i in 1:13],
     filepath=filepath,
     filesuffix=filesuffix,
     diagnostickeys=diagnostickeys,
@@ -116,7 +121,7 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   fnames = fieldnames(ContinuousParameterIOStream)
   local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
 
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       f = fnames[i]
       push!(
@@ -124,10 +129,6 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
         :(write(getfield($(iostream), $(QuoteNode(f))), join(getfield($(:_state), $(QuoteNode(f))), ','), "\n"))
       )
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    push!(body, :(write($(iostream).diagnosticvalues, join($(:_state).diagnosticvalues, ','), "\n")))
   end
 
   @gensym write_continuous_parameter_iostream
@@ -141,66 +142,46 @@ end
 
 function Base.flush(iostream::ContinuousParameterIOStream)
   fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       flush(iostream.(fnames[i]))
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    flush(iostream.diagnosticvalues)
   end
 end
 
 function Base.close(iostream::ContinuousParameterIOStream)
   fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       close(iostream.(fnames[i]))
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    close(iostream.diagnosticvalues)
   end
 end
 
 function Base.open(iostream::ContinuousParameterIOStream, mode::AbstractString="w")
   fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       iostream.(fnames[i]) = open(iostream.names[i], mode)
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    iostream.diagnosticvalues = open(iostream.names[14], mode)
   end
 end
 
 function Base.mark(iostream::ContinuousParameterIOStream)
   fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       mark(iostream.(fnames[i]))
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    mark(iostream.diagnosticvalues)
   end
 end
 
 function Base.reset(iostream::ContinuousParameterIOStream)
   fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:13
+  for i in 1:14
     if iostream.(fnames[i]) != nothing
       reset(iostream.(fnames[i]))
     end
-  end
-
-  if iostream.diagnosticvalues != nothing
-    reset(iostream.diagnosticvalues)
   end
 end
 
@@ -211,7 +192,6 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUni
       writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
     end
   end
-
   if iostream.diagnosticvalues != nothing
     writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
   end
@@ -224,7 +204,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
       writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
     end
   end
-  for i in (1, 5, 6, 7)
+  for i in (1, 5, 6, 7, 14)
     if iostream.(fnames[i]) != nothing
       writedlm(iostream.(fnames[i]), nstate.(fnames[i])', ',')
     end
@@ -245,10 +225,6 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
       end
     end
   end
-
-  if iostream.diagnosticvalues != nothing
-    writedlm(iostream.diagnosticvalues, nstate.diagnosticvalues', ',')
-  end
 end
 
 function Base.read!{N<:AbstractFloat}(
@@ -261,7 +237,6 @@ function Base.read!{N<:AbstractFloat}(
       setfield!(nstate, fnames[i], vec(readdlm(iostream.(fnames[i]), ',', N)))
     end
   end
-
   if iostream.diagnosticvalues != nothing
     nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', Any)'
   end
@@ -304,7 +279,6 @@ function Base.read!{N<:AbstractFloat}(
       end
     end
   end
-
   if iostream.diagnosticvalues != nothing
     nstate.diagnosticvalues = readdlm(iostream.diagnosticvalues, ',', Any)'
   end
