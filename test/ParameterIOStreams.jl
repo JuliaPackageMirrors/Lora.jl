@@ -1,7 +1,22 @@
 using Base.Test
 using Lora
 
-fnames = fieldnames(ContinuousParameterIOStream)
+fnames = (
+  :value,
+  :loglikelihood,
+  :logprior,
+  :logtarget,
+  :gradloglikelihood,
+  :gradlogprior,
+  :gradlogtarget,
+  :tensorloglikelihood,
+  :tensorlogprior,
+  :tensorlogtarget,
+  :dtensorloglikelihood,
+  :dtensorlogprior,
+  :dtensorlogtarget,
+  :diagnosticvalues
+)
 filepath = dirname(@__FILE__)
 filesuffix = "csv"
 filenames = Array(AbstractString, 14)

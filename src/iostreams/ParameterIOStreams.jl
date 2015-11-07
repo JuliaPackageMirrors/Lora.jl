@@ -143,17 +143,19 @@ function codegen_open_continuous_parameter_iostream(iostream::ContinuousParamete
   body = []
   local f::Symbol
 
+  push!(body,:($(iostream).names = $(:_names)))
+
   for i in 1:14
     if iostream.(fnames[i]) != nothing
       f = fnames[i]
-      push!(body, :(open(getfield($(iostream), $(QuoteNode(f))), $(:_mode))))
+      push!(body, :(setfield!($(iostream), $(QuoteNode(f)), open($(:_names)[$i], $(:_mode)))))
     end
   end
 
   @gensym open_continuous_parameter_iostream
 
   quote
-    function $open_continuous_parameter_iostream(_mode::AbstractString="w")
+    function $open_continuous_parameter_iostream{S<:AbstractString}(_names::Vector{S}, _mode::AbstractString="w")
       $(body...)
     end
   end
