@@ -2,8 +2,7 @@ using Base.Test
 using Lora
 
 fnames = fieldnames(ContinuousParameterIOStream)
-# filepath = dirname(@__FILE__)
-filepath = ""
+filepath = dirname(@__FILE__)
 filesuffix = "csv"
 filenames = Array(AbstractString, 14)
 for i in 1:14
@@ -24,7 +23,7 @@ end
 @test iostream.n == iostreamn
 @test length(iostream.diagnostickeys) == 0
 
-close(iostream)
+iostream.close()
 rm(filenames[1])
 
 iostreamsize = (2,)
@@ -47,7 +46,7 @@ end
 @test iostream.n == iostreamn
 @test length(iostream.diagnostickeys) == 1
 
-close(iostream)
+iostream.close()
 for i in (1, 7, 14); rm(filenames[i]); end
 
 iostreamsize = (3,)
@@ -66,7 +65,7 @@ end
 @test iostream.n == iostreamn
 @test length(iostream.diagnostickeys) == 1
 
-close(iostream)
+iostream.close()
 for i in [1, 4, 14]; rm(filenames[i]); end
 
 println("    Testing ContinuousParameterIOStream IO methods...")
@@ -82,7 +81,7 @@ for v in nstatev
   iostream.write(ContinuousUnivariateParameterState(v))
 end
 
-close(iostream)
+iostream.close()
 
 iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath, mode="r")
 nstate = read(iostream, Float64)
@@ -96,7 +95,7 @@ end
 @test size(nstate.diagnosticvalues) == (0, 0)
 @test nstate.n == iostream.n
 
-close(iostream)
+iostream.close()
 rm(filenames[1])
 
 println("      Interaction with ContinuousUnivariateMarkovChain...")
@@ -112,7 +111,7 @@ nstatein.value = nstatev
 nstatein.diagnosticvalues = nstated
 write(iostream, nstatein)
 
-close(iostream)
+iostream.close()
 
 iostream = ContinuousParameterIOStream(
   iostreamsize, iostreamn, [:value], filepath=filepath, diagnostickeys=[:accept], mode="r"
@@ -128,7 +127,7 @@ end
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
 @test nstateout.n == nstatein.n
 
-close(iostream)
+iostream.close()
 for i in (1, 14); rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateParameterState...")
@@ -148,7 +147,7 @@ for i in 1:iostreamn
   iostream.write(state)
 end
 
-close(iostream)
+iostream.close()
 
 iostream = ContinuousParameterIOStream(
   iostreamsize, iostreamn, [:value, :gradloglikelihood], filepath=filepath, diagnostickeys=[:accept], mode="r"
@@ -166,7 +165,7 @@ end
 @test nstate.size == iostream.size[1]
 @test nstate.n == iostream.n
 
-close(iostream)
+iostream.close()
 for i in (1, 5, 14); rm(filenames[i]); end
 
 println("      Interaction with ContinuousMultivariateMarkovChain...")
@@ -194,7 +193,7 @@ nstatein.logtarget = nstatelt
 nstatein.diagnosticvalues = nstated
 write(iostream, nstatein)
 
-close(iostream)
+iostream.close()
 
 iostream = ContinuousParameterIOStream(
   iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], filepath=filepath, diagnostickeys=[:accept], mode="r"
@@ -212,5 +211,5 @@ end
 @test nstateout.diagnosticvalues == nstatein.diagnosticvalues
 @test nstateout.n == nstatein.n
 
-close(iostream)
+iostream.close()
 for i in (1, 2, 4, 14); rm(filenames[i]); end

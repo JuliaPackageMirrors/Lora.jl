@@ -23,6 +23,11 @@ type ContinuousParameterIOStream <: ParameterIOStream
   size::Tuple
   n::Int
   diagnostickeys::Vector{Symbol}
+  close::Function
+  open::Function
+  mark::Function
+  reset::Function
+  flush::Function
   write::Function
 
   function ContinuousParameterIOStream(
@@ -45,7 +50,12 @@ type ContinuousParameterIOStream <: ParameterIOStream
     instance.n = n
     instance.diagnostickeys = diagnostickeys
 
-    instance.write = eval(codegen_write_continuous_parameter_iostream(instance))
+    instance.close = eval(codegen_close_continuous_parameter_iostream(instance, fnames))
+    instance.open = eval(codegen_open_continuous_parameter_iostream(instance, fnames))
+    instance.mark = eval(codegen_mark_continuous_parameter_iostream(instance, fnames))
+    instance.reset = eval(codegen_reset_continuous_parameter_iostream(instance, fnames))
+    instance.flush = eval(codegen_flush_continuous_parameter_iostream(instance, fnames))
+    instance.write = eval(codegen_write_continuous_parameter_iostream(instance, fnames))
 
     instance
   end
@@ -109,16 +119,115 @@ function ContinuousParameterIOStream(
   )
 end
 
+function codegen_close_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+  body = []
+  local f::Symbol
+
+  for i in 1:14
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
+      push!(body, :(close(getfield($(iostream), $(QuoteNode(f))))))
+    end
+  end
+
+  @gensym close_continuous_parameter_iostream
+
+  quote
+    function $close_continuous_parameter_iostream()
+      $(body...)
+    end
+  end
+end
+
+function codegen_open_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+  body = []
+  local f::Symbol
+
+  for i in 1:14
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
+      push!(body, :(open(getfield($(iostream), $(QuoteNode(f))), $(:_mode))))
+    end
+  end
+
+  @gensym open_continuous_parameter_iostream
+
+  quote
+    function $open_continuous_parameter_iostream(_mode::AbstractString="w")
+      $(body...)
+    end
+  end
+end
+
+function codegen_mark_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+  body = []
+  local f::Symbol
+
+  for i in 1:14
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
+      push!(body, :(mark(getfield($(iostream), $(QuoteNode(f))))))
+    end
+  end
+
+  @gensym mark_continuous_parameter_iostream
+
+  quote
+    function $mark_continuous_parameter_iostream()
+      $(body...)
+    end
+  end
+end
+
+function codegen_reset_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+  body = []
+  local f::Symbol
+
+  for i in 1:14
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
+      push!(body, :(reset(getfield($(iostream), $(QuoteNode(f))))))
+    end
+  end
+
+  @gensym reset_continuous_parameter_iostream
+
+  quote
+    function $reset_continuous_parameter_iostream()
+      $(body...)
+    end
+  end
+end
+
+function codegen_flush_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+  body = []
+  local f::Symbol
+
+  for i in 1:14
+    if iostream.(fnames[i]) != nothing
+      f = fnames[i]
+      push!(body, :(flush(getfield($(iostream), $(QuoteNode(f))))))
+    end
+  end
+
+  @gensym flush_continuous_parameter_iostream
+
+  quote
+    function $flush_continuous_parameter_iostream()
+      $(body...)
+    end
+  end
+end
+
 # To visually inspect code generation via codegen_write_continuous_parameter_iostream, try for example
 # using Lora
 #
-# iostream = ContinuousParameterIOStream("w", (), 4, filepath="")
-# Lora.codegen_write_continuous_parameter_iostream(iostream)
+# iostream = ContinuousParameterIOStream((), 4, filepath="", "w")
+# Lora.codegen_write_continuous_parameter_iostream(iostream, fieldnames(ContinuousParameterIOStream))
 # close(iostream)
 
-function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream)
+function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
   body = []
-  fnames = fieldnames(ContinuousParameterIOStream)
   local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
 
   for i in 1:14
@@ -136,51 +245,6 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   quote
     function $write_continuous_parameter_iostream(_state::ContinuousParameterState)
       $(body...)
-    end
-  end
-end
-
-function Base.flush(iostream::ContinuousParameterIOStream)
-  fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:14
-    if iostream.(fnames[i]) != nothing
-      flush(iostream.(fnames[i]))
-    end
-  end
-end
-
-function Base.close(iostream::ContinuousParameterIOStream)
-  fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:14
-    if iostream.(fnames[i]) != nothing
-      close(iostream.(fnames[i]))
-    end
-  end
-end
-
-function Base.open(iostream::ContinuousParameterIOStream, mode::AbstractString="w")
-  fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:14
-    if iostream.(fnames[i]) != nothing
-      iostream.(fnames[i]) = open(iostream.names[i], mode)
-    end
-  end
-end
-
-function Base.mark(iostream::ContinuousParameterIOStream)
-  fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:14
-    if iostream.(fnames[i]) != nothing
-      mark(iostream.(fnames[i]))
-    end
-  end
-end
-
-function Base.reset(iostream::ContinuousParameterIOStream)
-  fnames = fieldnames(ContinuousParameterIOStream)
-  for i in 1:14
-    if iostream.(fnames[i]) != nothing
-      reset(iostream.(fnames[i]))
     end
   end
 end
