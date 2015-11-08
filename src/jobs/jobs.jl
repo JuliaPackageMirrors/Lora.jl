@@ -24,6 +24,10 @@ function augment!(outopts::Dict{Symbol, Any})
       if !haskey(outopts, :filesuffix)
         outopts[:filesuffix] = "csv"
       end
+
+      if !haskey(outopts, :flush)
+        outopts[:flush] = false
+      end
     end
   end
 end
@@ -81,6 +85,7 @@ function initialize_output(
       filepath=outopts[:filepath],
       filesuffix=outopts[:filesuffix]
     )
+    output.mark()
   elseif outopts[:destination] == :none
     output = nothing
   else

@@ -65,7 +65,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
       instance.save! = (i::Int) -> instance.output.copy(instance.pstate, i)
     elseif outopts[:destination] == :iostream
       instance.close = () -> close(instance.output)
-      instance.save! = (i::Int) -> instance.output.write(instance.pstate)
+      instance.save! = eval(codegen_save_iostream_basic_mcjob(instance, outopts))
     else
       error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
     end
@@ -97,7 +97,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
         instance.resetplain!,
         instance.iterate!
       ))
-      instance.reset! = eval(codegen_reset_basic_mcjob(instance))
+      instance.reset! = eval(codegen_reset_task_basic_mcjob(instance))
       instance.consume! = () -> consume(instance.task)
     end
 
@@ -120,6 +120,24 @@ BasicMCJob{S<:VariableState}(
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument
+
+function codegen_save_iostream_basic_mcjob(job::BasicMCJob, outopts::Dict{Symbol, Any})
+  body = []
+
+  push!(body, :($(job).output.write($(job).pstate)))
+
+  if outopts[:flush]
+    push!(body, :($(job).output.flush()))
+  end
+
+  @gensym save_iostream_basic_mcjob
+
+  quote
+    function $save_iostream_basic_mcjob()
+      $(body...)
+    end
+  end
+end
 
 function codegen_resetplain_basic_mcjob(job::BasicMCJob)
   body = []
@@ -154,18 +172,18 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
   end
 end
 
-function codegen_reset_basic_mcjob(job::BasicMCJob)
+function codegen_reset_task_basic_mcjob(job::BasicMCJob)
   body = []
 
   push!(body, :($(job).task.storage[:reset]($(:_x))))
 
-  @gensym reset_basic_mcjob
+  @gensym reset_task_basic_mcjob
 
   if isa(job.pstate, ContinuousUnivariateParameterState) &&
     isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
     isa(job.parameter, ContinuousUnivariateParameter)
     result = quote
-      function $reset_basic_mcjob{N<:AbstractFloat}(_x::N)
+      function $reset_task_basic_mcjob{N<:AbstractFloat}(_x::N)
         $(body...)
       end
     end
@@ -173,7 +191,7 @@ function codegen_reset_basic_mcjob(job::BasicMCJob)
     isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
     isa(job.parameter, ContinuousMultivariateParameter)
     result = quote
-      function $reset_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
+      function $reset_task_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
         $(body...)
       end
     end
