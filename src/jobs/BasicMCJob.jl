@@ -17,11 +17,12 @@ type BasicMCJob{S<:VariableState} <: MCJob
   count::Int # Current number of post-burnin iterations
   plain::Bool # If plain=false then job flow is controlled via tasks, else it is controlled without tasks
   task::Union{Task, Void}
+  resetplain!::Function
   iterate!::Function
-  consume!::Function
-  reset!::Function
-  save!::Function
   close::Function
+  reset!::Function
+  consume!::Function
+  save!::Function
   # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   function BasicMCJob(
@@ -59,10 +60,22 @@ type BasicMCJob{S<:VariableState} <: MCJob
 
     instance.plain = plain
 
+    if outopts[:destination] == :nstate
+      instance.close = () -> ()
+      instance.save! = (i::Int) -> instance.output.copy(instance.pstate, i)
+    elseif outopts[:destination] == :iostream
+      instance.close = () -> close(instance.output)
+      instance.save! = (i::Int) -> instance.output.write(instance.pstate)
+    else
+      error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
+    end
+
+    instance.resetplain! = eval(codegen_resetplain_basic_mcjob(instance))
     instance.iterate! = eval(codegen_iterate_basic_mcjob(instance, outopts))
 
     if plain
       instance.task = nothing
+      instance.reset! = instance.resetplain!
       instance.consume! = () -> instance.iterate!(
         instance.pstate,
         instance.vstate,
@@ -72,7 +85,6 @@ type BasicMCJob{S<:VariableState} <: MCJob
         instance.tuner,
         instance.range
       )
-      instance.reset! = x::Vector -> reset!(instance.pstate, instance.vstate, x, instance.parameter, instance.sampler)
     else
       instance.task = Task(() -> initialize_task!(
         instance.pstate,
@@ -82,20 +94,11 @@ type BasicMCJob{S<:VariableState} <: MCJob
         instance.sampler,
         instance.tuner,
         instance.range,
+        instance.resetplain!,
         instance.iterate!
       ))
+      instance.reset! = eval(codegen_reset_basic_mcjob(instance))
       instance.consume! = () -> consume(instance.task)
-      instance.reset! = x::Vector -> reset(instance.task, x)
-    end
-
-    if outopts[:destination] == :nstate
-      instance.save! = (i::Int) -> instance.output.copy(instance.pstate, i)
-      instance.close = () -> ()
-    elseif outopts[:destination] == :iostream
-      instance.save! = (i::Int) -> instance.output.write(instance.pstate)
-      instance.close = () -> close(instance.output)
-    else
-      error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
     end
 
     instance
@@ -117,6 +120,65 @@ BasicMCJob{S<:VariableState}(
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument
+
+function codegen_resetplain_basic_mcjob(job::BasicMCJob)
+  body = []
+
+  push!(body, :(reset!($(job).pstate, $(job).vstate, $(:_x), $(job).parameter, $(job).sampler)))
+
+  if isa(job.output, VariableIOStream)
+    push!(body, :($(job).output.reset()))
+    push!(body, :($(job).output.mark()))
+  end
+
+  push!(body, :($(job).count = 0))
+
+  @gensym resetplain_basic_mcjob
+
+  if isa(job.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.parameter, ContinuousUnivariateParameter)
+    result = quote
+      function $resetplain_basic_mcjob{N<:AbstractFloat}(_x::N)
+        $(body...)
+      end
+    end
+  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.parameter, ContinuousMultivariateParameter)
+    result = quote
+      function $resetplain_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
+        $(body...)
+      end
+    end
+  end
+end
+
+function codegen_reset_basic_mcjob(job::BasicMCJob)
+  body = []
+
+  push!(body, :($(job).task.storage[:reset]($(:_x))))
+
+  @gensym reset_basic_mcjob
+
+  if isa(job.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
+    isa(job.parameter, ContinuousUnivariateParameter)
+    result = quote
+      function $reset_basic_mcjob{N<:AbstractFloat}(_x::N)
+        $(body...)
+      end
+    end
+  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
+    isa(job.parameter, ContinuousMultivariateParameter)
+    result = quote
+      function $reset_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
+        $(body...)
+      end
+    end
+  end
+end
 
 function Base.run(job::BasicMCJob)
   for i in 1:job.range.nsteps

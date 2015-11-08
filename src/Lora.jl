@@ -15,7 +15,6 @@ import Base:
   open,
   read!,
   read,
-  reset,
   run,
   show,
   write

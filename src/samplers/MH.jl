@@ -70,9 +70,9 @@ sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) = MHState(gen
 
 ## Reset parameter state
 
-function reset!{N<:AbstractFloat}(
+function reset!{N<:AbstractFloat, S<:VariableState}(
   pstate::ContinuousUnivariateParameterState,
-  vstate::Vector{VariableState},
+  vstate::Vector{S},
   x::N,
   parameter::ContinuousUnivariateParameter,
   sampler::MH
@@ -81,9 +81,9 @@ function reset!{N<:AbstractFloat}(
   parameter.logtarget!(pstate, vstate)
 end
 
-function reset!{N<:AbstractFloat}(
+function reset!{N<:AbstractFloat, S<:VariableState}(
   pstate::ContinuousMultivariateParameterState,
-  vstate::Vector{VariableState},
+  vstate::Vector{S},
   x::Vector{N},
   parameter::ContinuousMultivariateParameter,
   sampler::MH
@@ -94,36 +94,38 @@ end
 
 ## Initialize task
 
-function initialize_task!{N<:AbstractFloat}(
+function initialize_task!{N<:AbstractFloat, S<:VariableState}(
   pstate::ContinuousUnivariateParameterState{N},
-  vstate::Vector{VariableState},
+  vstate::Vector{S},
   sstate::MHState{ContinuousUnivariateParameterState{N}},
   parameter::ContinuousUnivariateParameter,
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
+  resetplain!::Function,
   iterate!::Function
 )
   # Hook inside task to allow remote resetting
-  task_local_storage(:reset, x::N -> reset!(pstate, vstate, x, parameter, sampler))
+  task_local_storage(:reset, resetplain!)
 
   while true
     iterate!(pstate, vstate, sstate, parameter, sampler, tuner, range)
   end
 end
 
-function initialize_task!{N<:AbstractFloat}(
+function initialize_task!{N<:AbstractFloat, S<:VariableState}(
   pstate::ContinuousMultivariateParameterState{N},
-  vstate::Vector{VariableState},
+  vstate::Vector{S},
   sstate::MHState{ContinuousMultivariateParameterState{N}},
   parameter::ContinuousMultivariateParameter,
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
+  resetplain!::Function,
   iterate!::Function
 )
   # Hook inside task to allow remote resetting
-  task_local_storage(:reset, x::Vector{N} -> reset!(pstate, vstate, x, parameter, sampler))
+  task_local_storage(:reset, resetplain!)
 
   while true
     iterate!(pstate, vstate, sstate, parameter, sampler, tuner, range)

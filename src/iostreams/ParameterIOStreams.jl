@@ -23,8 +23,8 @@ type ContinuousParameterIOStream <: ParameterIOStream
   size::Tuple
   n::Int
   diagnostickeys::Vector{Symbol}
-  close::Function
   open::Function
+  close::Function
   mark::Function
   reset::Function
   flush::Function
@@ -50,8 +50,8 @@ type ContinuousParameterIOStream <: ParameterIOStream
     instance.n = n
     instance.diagnostickeys = diagnostickeys
 
-    instance.close = eval(codegen_close_continuous_parameter_iostream(instance, fnames))
     instance.open = eval(codegen_open_continuous_parameter_iostream(instance, fnames))
+    instance.close = eval(codegen_close_continuous_parameter_iostream(instance, fnames))
     instance.mark = eval(codegen_mark_continuous_parameter_iostream(instance, fnames))
     instance.reset = eval(codegen_reset_continuous_parameter_iostream(instance, fnames))
     instance.flush = eval(codegen_flush_continuous_parameter_iostream(instance, fnames))
