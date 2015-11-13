@@ -209,13 +209,26 @@ function checkin(job::BasicMCJob)
     end
   end
 
-  nv = length(pindex)
+  np = length(pindex)
 
-  if nv == 0 || nv >= 2
-    error("The model has $(nv == 0 ? "no": string(nv)) parameters, but a BasicMCJob requires exactly one parameter")
-  else # elseif nv == 1
+  if np == 0 || np >= 2
+    error("The model has $(np == 0 ? "no": string(np)) parameters, but a BasicMCJob requires exactly one parameter")
+  else # elseif np == 1
     if pindex[1] != job.pindex
       error("Parameter located in job.model.vertices[$(pindex[1])], but job.pindex = $(job.pindex)")
+    end
+  end
+
+  pstate = job.vstate[job.pindex]
+
+  if !isa(pstate, ParameterState)
+    error("The parameter's state must be saved in a ParameterState subtype, got $(typeof(pstate)) state type")
+  else
+    if isa(job.model.vertices[job.pindex], ContinuousParameter) && !isa(pstate, ContinuousParameterState)
+      error(string(
+        "The state of the continuous parameter must be saved in a ContinuousParameterState subtype, ",
+        "got $(typeof(pstate))"
+      ))
     end
   end
 end

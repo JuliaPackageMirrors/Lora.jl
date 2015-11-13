@@ -104,7 +104,6 @@ export
   add_dimension,
   add_edge!,
   add_vertex!,
-  checkin,
   count!,
   edge_index,
   edges,
