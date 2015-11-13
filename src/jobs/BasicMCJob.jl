@@ -120,6 +120,19 @@ BasicMCJob{S<:VariableState}(
 ) =
   BasicMCJob{S}(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 
+  BasicMCJob{S<:VariableState}(
+    model::GenericModel,
+    sampler::MCSampler,
+    range::BasicMCRange,
+    vstate::Vector{S};
+    pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
+    tuner::MCTuner=VanillaMCTuner(),
+    outopts::Dict{Symbol, Any}=Dict{Symbol, Any}(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
+    plain::Bool=true,
+    checkin::Bool=false
+) =
+  BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
+
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument
 
@@ -201,13 +214,7 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
 end
 
 function checkin(job::BasicMCJob)
-  pindex = Int[]
-
-  for i in 1:num_vertices(job.model)
-    if isa(job.model.vertices[i], Parameter)
-      push!(pindex, i)
-    end
-  end
+  pindex = find(v::Variable -> isa(v, Parameter), job.model.vertices)
 
   np = length(pindex)
 
