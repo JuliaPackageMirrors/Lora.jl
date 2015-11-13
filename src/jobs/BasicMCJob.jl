@@ -40,14 +40,18 @@ type BasicMCJob{S<:VariableState} <: MCJob
 
     instance.model = model
     instance.pindex = pindex
-    instance.parameter = instance.model.vertices[instance.pindex]
-
     instance.sampler = sampler
     instance.tuner = tuner
-
     instance.range = range
+    instance.vstate = vstate
+    instance.plain = plain
 
-    instance.vstate = vstate
+    if checkin
+      Lora.checkin(instance)
+    end
+
+    instance.parameter = instance.model.vertices[instance.pindex]
+
     instance.pstate = instance.vstate[instance.pindex]
     initialize!(instance.pstate, instance.vstate, instance.parameter, sampler)
 
@@ -57,8 +61,6 @@ type BasicMCJob{S<:VariableState} <: MCJob
     instance.output = initialize_output(instance.pstate, range.npoststeps, outopts)
 
     instance.count = 0
-
-    instance.plain = plain
 
     if outopts[:destination] == :nstate
       instance.close = () -> ()
@@ -194,6 +196,26 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
       function $reset_task_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
         $(body...)
       end
+    end
+  end
+end
+
+function checkin(job::BasicMCJob)
+  pindex = Int[]
+
+  for i in 1:num_vertices(job.model)
+    if isa(job.model.vertices[i], Parameter)
+      push!(pindex, i)
+    end
+  end
+
+  nv = length(pindex)
+
+  if nv == 0 || nv >= 2
+    error("The model has $(nv == 0 ? "no": string(nv)) parameters, but a BasicMCJob requires exactly one parameter")
+  else # elseif nv == 1
+    if pindex[1] != job.pindex
+      error("Parameter located in job.model.vertices[$(pindex[1])], but job.pindex = $(job.pindex)")
     end
   end
 end
