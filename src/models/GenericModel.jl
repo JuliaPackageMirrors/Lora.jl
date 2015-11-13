@@ -5,7 +5,7 @@ type GenericModel <: AbstractGraph{Variable, Dependence}
   finclist::Vector{Vector{Dependence}} # Forward incidence list
   binclist::Vector{Vector{Dependence}} # Backward incidence list
   indexof::Dict{Variable, Int}         # Dictionary storing index of vertex (variable)
-  ofkey::Dict{Symbol, Variable}        # Dictionary storing vertex (variable) of corresponding key
+  ofkey::Dict{Symbol, Int}             # Dictionary storing vertex (variable) index of corresponding key
 end
 
 @graph_implements GenericModel vertex_list edge_list
@@ -40,7 +40,7 @@ function add_vertex!(m::GenericModel, v::Variable)
     push!(m.finclist, Int[])
     push!(m.binclist, Int[])
     m.indexof[v] = length(m.vertices)
-    m.ofkey[v.key] = v
+    m.ofkey[v.key] = m.indexof[v]
     v
 end
 
@@ -57,7 +57,7 @@ function add_edge!(m::GenericModel, u::Variable, v::Variable, d::Dependence)
         push!(m.finclist[vi], rev_d)
         push!(m.binclist[ui], rev_d)
     end
-    
+
     d
 end
 
@@ -79,13 +79,13 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
-    m.ofkey[v.key] = v
+    m.ofkey[v.key] = m.indexof[v]
   end
-  
+
   for d in ds
     add_edge!(m, d)
   end
-  
+
   return m
 end
 
@@ -106,13 +106,13 @@ function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::B
   for v in vs
     add_vertex!(m, v)
     m.indexof[v] = v.index
-    m.ofkey[v.key] = v
+    m.ofkey[v.key] = m.indexof[v]
   end
-  
+
   for i in 1:size(ds, 1)
     add_edge!(m, ds[i, 1], ds[i, 2])
   end
-  
+
   return m
 end
 
@@ -140,7 +140,7 @@ function topological_sort_by_dfs(m::GenericModel)
   gvs = topological_sort_by_dfs(g)
 
   for i in 1:ngvs
-    mvs[i] = m.ofkey[gvs[i].key]
+    mvs[i] = m.vertices[gvs[i].index]
   end
 
   mvs
