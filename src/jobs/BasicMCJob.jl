@@ -23,7 +23,6 @@ type BasicMCJob{S<:VariableState} <: MCJob
   reset!::Function
   consume!::Function
   save!::Function
-  # checkin::Bool # If checkin=true then check validity of job constructors' input arguments, else don't check
 
   function BasicMCJob(
     model::GenericModel,
@@ -32,7 +31,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
     tuner::MCTuner,
     range::BasicMCRange,
     vstate::Vector{S},
-    outopts::Dict{Symbol, Any}, # Options related to output
+    outopts::Dict, # Options related to output
     plain::Bool,
     checkin::Bool
   )
@@ -114,29 +113,48 @@ BasicMCJob{S<:VariableState}(
   tuner::MCTuner,
   range::BasicMCRange,
   vstate::Vector{S},
-  outopts::Dict{Symbol, Any}, # Options related to output
+  outopts::Dict, # Options related to output
   plain::Bool,
   checkin::Bool
 ) =
   BasicMCJob{S}(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 
-  BasicMCJob{S<:VariableState}(
-    model::GenericModel,
-    sampler::MCSampler,
-    range::BasicMCRange,
-    vstate::Vector{S};
-    pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
-    tuner::MCTuner=VanillaMCTuner(),
-    outopts::Dict{Symbol, Any}=Dict{Symbol, Any}(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
-    plain::Bool=true,
-    checkin::Bool=false
+BasicMCJob{S<:VariableState}(
+  model::GenericModel,
+  sampler::MCSampler,
+  range::BasicMCRange,
+  vstate::Vector{S};
+  pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
+  tuner::MCTuner=VanillaMCTuner(),
+  outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
+  plain::Bool=true,
+  checkin::Bool=false
 ) =
   BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
+
+function BasicMCJob(
+  model::GenericModel,
+  sampler::MCSampler,
+  range::BasicMCRange,
+  vstate::Dict;
+  pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
+  tuner::MCTuner=VanillaMCTuner(),
+  outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
+  plain::Bool=true,
+  checkin::Bool=false
+)
+  vector = Array(VariableState, length(vstate))
+  for (k, v) in vstate
+    vector[model.ofkey[k]] = v
+  end
+
+  BasicMCJob(model, pindex, sampler, tuner, range, vector, outopts, plain, checkin)
+end
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
 # In that case the iterate!() function will take a second variable (transformation) as input argument
 
-function codegen_save_iostream_basic_mcjob(job::BasicMCJob, outopts::Dict{Symbol, Any})
+function codegen_save_iostream_basic_mcjob(job::BasicMCJob, outopts::Dict)
   body = []
 
   push!(body, :($(job).output.write($(job).pstate)))
@@ -214,8 +232,14 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
 end
 
 function checkin(job::BasicMCJob)
-  pindex = find(v::Variable -> isa(v, Parameter), job.model.vertices)
+  nv = num_vertices(job.model)
+  nvstate = length(job.vstate)
 
+  if nv != nvstate
+    error("Number of variables ( = $nv) not equal to number of variable states ( = $nvstate)")
+  end
+
+  pindex = find(v::Variable -> isa(v, Parameter), job.model.vertices)
   np = length(pindex)
 
   if np == 0 || np >= 2

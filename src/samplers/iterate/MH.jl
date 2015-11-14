@@ -1,4 +1,4 @@
-function codegen_iterate_mh(job::BasicMCJob, outopts::Dict{Symbol, Any})
+function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
   result::Expr
   update::Vector{Expr}
   noupdate = []

@@ -4,7 +4,7 @@ abstract MCJob
 
 # Set defaults for possibly unspecified output options
 
-function augment!(outopts::Dict{Symbol, Any})
+function augment!(outopts::Dict)
   destination = get!(outopts, :destination, :nstate)
 
   if destination != :none
@@ -32,16 +32,12 @@ function augment!(outopts::Dict{Symbol, Any})
   end
 end
 
-augment!(outopts::Vector{Dict{Symbol, Any}}) = map(augment!, outopts)
+augment!(outopts::Vector{Dict}) = map(augment!, outopts)
 
 # initialize_output() needs to be defined for custom variable state or NState input arguments
 # Thus multiple dispatch allows to extend the code base to accommodate new variable states or NStates
 
-function initialize_output(
-  state::ContinuousUnivariateParameterState,
-  n::Int,
-  outopts::Dict{Symbol, Any}
-)
+function initialize_output(state::ContinuousUnivariateParameterState, n::Int, outopts::Dict)
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
@@ -65,11 +61,7 @@ function initialize_output(
   output
 end
 
-function initialize_output(
-  state::ContinuousMultivariateParameterState,
-  n::Int,
-  outopts::Dict{Symbol, Any}
-)
+function initialize_output(state::ContinuousMultivariateParameterState, n::Int, outopts::Dict)
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
