@@ -313,6 +313,9 @@ function ContinuousUnivariateParameter(
   )
 end
 
+default_state{N<:AbstractFloat}(variable::ContinuousUnivariateParameter, value::Vector{N}) =
+  ContinuousUnivariateParameterState(value)
+
 ## ContinuousMultivariateParameter
 
 type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivariate}
@@ -620,3 +623,6 @@ function ContinuousMultivariateParameter(
     uptodtensorlogtarget
   )
 end
+
+default_state{N<:AbstractFloat}(variable::ContinuousMultivariateParameter, value::Vector{N}) =
+  ContinuousMultivariateParameterState(value)

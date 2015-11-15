@@ -132,6 +132,53 @@ BasicMCJob{S<:VariableState}(
 ) =
   BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 
+function BasicMCJob{S<:VariableState}(
+  model::GenericModel,
+  sampler::MCSampler,
+  range::BasicMCRange,
+  vstate::Dict{Symbol, S};
+  pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
+  tuner::MCTuner=VanillaMCTuner(),
+  outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
+  plain::Bool=true,
+  checkin::Bool=false
+)
+  vsvector = Array(S, length(vstate))
+  for (k, v) in vstate
+    vsvector[model.ofkey[k]] = v
+  end
+
+  BasicMCJob(model, pindex, sampler, tuner, range, vsvector, outopts, plain, checkin)
+end
+
+function BasicMCJob(
+  model::GenericModel,
+  sampler::MCSampler,
+  range::BasicMCRange,
+  vstate::Vector;
+  pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
+  tuner::MCTuner=VanillaMCTuner(),
+  outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
+  plain::Bool=true,
+  checkin::Bool=false
+)
+  nvstate = length(vstate)
+  vsvector = Array(VariableState, nvstate)
+  for i in 1:nvstate
+    if isa(vstate[i], VariableState)
+      vsvector[i] = vstate[i]
+    elseif isa(vstate[i], Number) ||
+      (isa(vstate[i], Vector) && issubtype(eltype(vstate[i]), Number)) ||
+      (isa(vstate[i], Matrix) && issubtype(eltype(vstate[i]), Number))
+      vsvector[i] = default_state(model.vertices[i], vstate[i])
+    else
+      error("Variable state or state value of type $(typeof(vstate[i])) not valid")
+    end
+  end
+
+  BasicMCJob(model, pindex, sampler, tuner, range, vsvector, outopts, plain, checkin)
+end
+
 function BasicMCJob(
   model::GenericModel,
   sampler::MCSampler,
@@ -143,12 +190,12 @@ function BasicMCJob(
   plain::Bool=true,
   checkin::Bool=false
 )
-  vector = Array(VariableState, length(vstate))
+  vsvector = Array(Any, length(vstate))
   for (k, v) in vstate
-    vector[model.ofkey[k]] = v
+    vsvector[model.ofkey[k]] = v
   end
 
-  BasicMCJob(model, pindex, sampler, tuner, range, vector, outopts, plain, checkin)
+  BasicMCJob(model, sampler, range, vsvector, pindex=pindex, tuner=tuner, outopts=outopts, plain=plain, checkin=checkin)
 end
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob

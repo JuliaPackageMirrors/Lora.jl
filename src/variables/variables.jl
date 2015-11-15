@@ -28,6 +28,10 @@ immutable Constant <: Variable{Deterministic}
   key::Symbol
 end
 
+default_state{N<:Number}(variable::Constant, value::N) = UnivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Constant, value::Vector{N}) = MultivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Constant, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+
 ## Hyperparameter
 
 typealias Hyperparameter Constant
@@ -42,6 +46,10 @@ end
 
 Data(index::Int, key::Symbol) = Data(index, key, nothing)
 
+default_state{N<:Number}(variable::Data, value::N) = UnivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Data, value::Vector{N}) = MultivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Data, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+
 ## Transformation
 
 immutable Transformation <: Variable{Deterministic}
@@ -49,3 +57,7 @@ immutable Transformation <: Variable{Deterministic}
   key::Symbol
   transform::Function
 end
+
+default_state{N<:Number}(variable::Transformation, value::N) = UnivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Transformation, value::Vector{N}) = MultivariateBasicVariableState(value)
+default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
