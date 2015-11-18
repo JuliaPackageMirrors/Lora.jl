@@ -61,3 +61,11 @@ end
 default_state{N<:Number}(variable::Transformation, value::N) = UnivariateBasicVariableState(value)
 default_state{N<:Number}(variable::Transformation, value::Vector{N}) = MultivariateBasicVariableState(value)
 default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+
+### Random Variable subtypes
+
+## Astract Parameter types
+
+abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
+
+abstract ContinuousParameter{S<:ValueSupport, F<:VariateForm} <: Parameter{S, F}

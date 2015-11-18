@@ -149,7 +149,8 @@ include("iostreams/VariableIOStreams.jl")
 include("iostreams/ParameterIOStreams.jl")
 
 include("variables/variables.jl")
-include("variables/parameters.jl")
+include("variables/ContinuousUnivariateParameter.jl")
+include("variables/ContinuousMultivariateParameter.jl")
 include("variables/dependencies.jl")
 
 include("models/GenericModel.jl")
