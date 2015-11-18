@@ -66,7 +66,7 @@ end
 add_edge!(m::GenericModel, d::Dependence) = add_edge!(m, source(d, m), target(d, m), d)
 add_edge!(m::GenericModel, u::Variable, v::Variable) = add_edge!(m, u, v, make_edge(m, u, v))
 
-function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed::Bool=true)
+function GenericModel{V<:Variable}(vs::Vector{V}, ds::Vector{Dependence}, is_directed::Bool=true)
   n = length(vs)
   m = GenericModel(
     is_directed,
@@ -91,35 +91,22 @@ function GenericModel(vs::Vector{Variable}, ds::Vector{Dependence}; is_directed:
   return m
 end
 
-GenericModel(is_directed::Bool=true) = GenericModel(Variable[], Dependence[], is_directed=is_directed)
+GenericModel(is_directed::Bool=true) = GenericModel(Variable[], Dependence[], is_directed)
 
-function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::Bool=true)
-  n = length(vs)
-  m = GenericModel(
-    is_directed,
-    Variable[],
-    Dependence[],
-    Graphs.multivecs(Dependence, n),
-    Graphs.multivecs(Dependence, n),
-    Dict{Variable, Int}(),
-    Dict{Symbol, Variable}()
-  )
+GenericModel{V<:Variable}(vs::Vector{V}, ds::Matrix{V}, is_directed::Bool=true) =
+  GenericModel(vs, [Dependence(i, ds[i, 1], ds[i, 2]) for i in 1:size(ds, 1)], is_directed)
 
-  for v in vs
-    add_vertex!(m, v)
-    m.indexof[v] = v.index
-    m.ofkey[v.key] = m.indexof[v]
-  end
+function GenericModel(vs::Dict{Symbol, DataType}, ds::Dict{Symbol, Symbol}, is_directed::Bool=true)
+  i = 0
+  m = GenericModel(Variable[vs[k](i+=1, k) for k in keys(vs)], Dependence[], is_directed)
 
-  for i in 1:size(ds, 1)
-    add_edge!(m, ds[i, 1], ds[i, 2])
+  i = 0
+  for k in keys(ds)
+    add_edge!(m, Dependence(i+=1, m[k], m[ds[k]]))
   end
 
   return m
 end
-
-# function GenericModel{V<:Variable}(vs::Dict{Symbol, V}, ds::Dict{Symbol, Symbol}; is_directed::Bool=true)
-# end
 
 function Base.convert(::Type{GenericGraph}, m::GenericModel)
   dict = Dict{KeyVertex{Symbol}, Int}()
