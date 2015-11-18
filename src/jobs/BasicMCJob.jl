@@ -123,79 +123,79 @@ BasicMCJob{S<:VariableState}(
   model::GenericModel,
   sampler::MCSampler,
   range::BasicMCRange,
-  vstate::Vector{S};
+  v0::Vector{S};
   pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
   tuner::MCTuner=VanillaMCTuner(),
   outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
   plain::Bool=true,
   checkin::Bool=false
 ) =
-  BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
+  BasicMCJob(model, pindex, sampler, tuner, range, v0, outopts, plain, checkin)
 
 function BasicMCJob{S<:VariableState}(
   model::GenericModel,
   sampler::MCSampler,
   range::BasicMCRange,
-  vstate::Dict{Symbol, S};
+  v0::Dict{Symbol, S};
   pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
   tuner::MCTuner=VanillaMCTuner(),
   outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
   plain::Bool=true,
   checkin::Bool=false
 )
-  vsvector = Array(S, length(vstate))
-  for (k, v) in vstate
-    vsvector[model.ofkey[k]] = v
+  vstate = Array(S, length(v0))
+  for (k, v) in v0
+    vstate[model.ofkey[k]] = v
   end
 
-  BasicMCJob(model, pindex, sampler, tuner, range, vsvector, outopts, plain, checkin)
+  BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 end
 
 function BasicMCJob(
   model::GenericModel,
   sampler::MCSampler,
   range::BasicMCRange,
-  vstate::Vector;
+  v0::Vector;
   pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
   tuner::MCTuner=VanillaMCTuner(),
   outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
   plain::Bool=true,
   checkin::Bool=false
 )
-  nvstate = length(vstate)
-  vsvector = Array(VariableState, nvstate)
-  for i in 1:nvstate
-    if isa(vstate[i], VariableState)
-      vsvector[i] = vstate[i]
-    elseif isa(vstate[i], Number) ||
-      (isa(vstate[i], Vector) && issubtype(eltype(vstate[i]), Number)) ||
-      (isa(vstate[i], Matrix) && issubtype(eltype(vstate[i]), Number))
-      vsvector[i] = default_state(model.vertices[i], vstate[i])
+  nv0 = length(v0)
+  vstate = Array(VariableState, nv0)
+  for i in 1:nv0
+    if isa(v0[i], VariableState)
+      vstate[i] = v0[i]
+    elseif isa(v0[i], Number) ||
+      (isa(v0[i], Vector) && issubtype(eltype(v0[i]), Number)) ||
+      (isa(v0[i], Matrix) && issubtype(eltype(v0[i]), Number))
+      vstate[i] = default_state(model.vertices[i], v0[i])
     else
-      error("Variable state or state value of type $(typeof(vstate[i])) not valid")
+      error("Variable state or state value of type $(typeof(v0[i])) not valid")
     end
   end
 
-  BasicMCJob(model, pindex, sampler, tuner, range, vsvector, outopts, plain, checkin)
+  BasicMCJob(model, pindex, sampler, tuner, range, vstate, outopts, plain, checkin)
 end
 
 function BasicMCJob(
   model::GenericModel,
   sampler::MCSampler,
   range::BasicMCRange,
-  vstate::Dict;
+  v0::Dict;
   pindex::Int=findfirst(v::Variable -> isa(v, Parameter), model.vertices),
   tuner::MCTuner=VanillaMCTuner(),
   outopts::Dict=Dict(:destination=>:nstate, :monitor=>[:value], :diagnostics=>Symbol[]),
   plain::Bool=true,
   checkin::Bool=false
 )
-  vsvector = Array(Any, length(vstate))
-  for (k, v) in vstate
-    vsvector[model.ofkey[k]] = v
+  vstate = Array(Any, length(v0))
+  for (k, v) in v0
+    vstate[model.ofkey[k]] = v
   end
 
-  BasicMCJob(model, sampler, range, vsvector, pindex=pindex, tuner=tuner, outopts=outopts, plain=plain, checkin=checkin)
+  BasicMCJob(model, sampler, range, vstate, pindex=pindex, tuner=tuner, outopts=outopts, plain=plain, checkin=checkin)
 end
 
 # It is likely that MCMC inference for parameters of ODEs will require a separate ODEBasicMCJob
