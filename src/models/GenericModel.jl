@@ -10,6 +10,8 @@ end
 
 @graph_implements GenericModel vertex_list edge_list
 
+Base.getindex(m::GenericModel, k::Symbol) = m.vertices[m.ofkey[k]]
+
 is_directed(m::GenericModel) = m.is_directed
 
 num_vertices(m::GenericModel) = length(m.vertices)
@@ -115,6 +117,9 @@ function GenericModel(vs::Vector{Variable}, ds::Matrix{Variable}; is_directed::B
 
   return m
 end
+
+# function GenericModel{V<:Variable}(vs::Dict{Symbol, V}, ds::Dict{Symbol, Symbol}; is_directed::Bool=true)
+# end
 
 function Base.convert(::Type{GenericGraph}, m::GenericModel)
   dict = Dict{KeyVertex{Symbol}, Int}()

@@ -10,6 +10,7 @@ import Base:
   copy!,
   eltype,
   flush,
+  getindex,
   isequal,
   mark,
   open,
@@ -143,11 +144,14 @@ include("states/VariableStates.jl")
 include("states/ParameterStates.jl")
 include("states/VariableNStates.jl")
 include("states/ParameterNStates.jl")
+
 include("iostreams/VariableIOStreams.jl")
 include("iostreams/ParameterIOStreams.jl")
+
 include("variables/variables.jl")
 include("variables/parameters.jl")
 include("variables/dependencies.jl")
+
 include("models/GenericModel.jl")
 include("models/generators.jl")
 
@@ -156,13 +160,15 @@ include("ranges/BasicMCRange.jl")
 include("tuners/tuners.jl")
 include("tuners/VanillaMCTuner.jl")
 include("tuners/AcceptanceRateMCTuner.jl")
+
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
 
 include("jobs/jobs.jl")
 include("jobs/BasicMCJob.jl")
+# include("jobs/GibbsJob.jl")
+
 include("samplers/iterate/MH.jl")
 include("samplers/iterate/iterate.jl")
-# include("jobs/GibbsJob.jl")
 
 end

@@ -1,4 +1,5 @@
 doc/sphinx/build
 test/basic_mc_job_tests.jl
 test/compound_expressions.jl
+test/parameter_parser.jl
 test/speed_up_parameter_access.jl
