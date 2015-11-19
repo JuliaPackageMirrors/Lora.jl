@@ -4,8 +4,8 @@ using Lora
 
 println("    Testing conversion of dependencies to edges compatible with Graphs...")
 
-θ = ContinuousUnivariateParameter(1, :θ)
-x = Data(2, :x)
+θ = ContinuousUnivariateParameter(:θ, 1)
+x = Data(:x, 1)
 
 dxθ = Dependence(1, x, θ)
 
@@ -17,7 +17,7 @@ gdxθ = convert(Edge, dxθ)
 @test dxθ.target.index == gdxθ.target.index
 @test dxθ.target.key == gdxθ.target.key
 
-λ = Hyperparameter(2, :λ)
+λ = Hyperparameter(:λ, 2)
 
 dxλ = Dependence(1, x, λ)
 

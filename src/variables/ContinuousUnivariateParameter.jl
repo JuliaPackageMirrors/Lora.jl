@@ -6,8 +6,8 @@
 # 3) Upto-related fields have higher priority than implicitly derived Function tuples
 
 type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate}
-  index::Int
   key::Symbol
+  index::Int
   pdf::Union{ContinuousUnivariateDistribution, Void}
   prior::Union{ContinuousUnivariateDistribution, Void}
   setpdf::Union{Function, Void}
@@ -29,8 +29,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
   uptodtensorlogtarget!::Union{Function, Void}
 
   function ContinuousUnivariateParameter(
-    index::Int,
     key::Symbol,
+    index::Int,
     pdf::Union{ContinuousUnivariateDistribution, Void},
     prior::Union{ContinuousUnivariateDistribution, Void},
     setpdf::Union{Function, Void},
@@ -52,8 +52,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     uptodtlt::Union{Function, Void}
   )
     instance = new()
-    instance.index = index
     instance.key = key
+    instance.index = index
     instance.pdf = pdf
     instance.prior = prior
 
@@ -258,8 +258,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
 end
 
 function ContinuousUnivariateParameter(
-  index::Int,
-  key::Symbol;
+  key::Symbol,
+  index::Int=0;
   pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
   prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
   setpdf::Union{Function, Void}=nothing,
@@ -281,8 +281,8 @@ function ContinuousUnivariateParameter(
   uptodtensorlogtarget::Union{Function, Void}=nothing
 )
   ContinuousUnivariateParameter(
-    index,
     key,
+    index,
     pdf,
     prior,
     setpdf,

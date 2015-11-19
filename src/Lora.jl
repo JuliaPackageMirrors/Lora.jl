@@ -113,6 +113,7 @@ export
   in_edges,
   in_neighbors,
   is_directed,
+  is_indexed,
   likelihood_model,
   logistic,
   logistic_rate_score,

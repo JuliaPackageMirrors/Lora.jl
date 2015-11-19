@@ -6,9 +6,13 @@ immutable Dependence{S<:Variable, T<:Variable}
   target::T
 end
 
+Dependence{S<:Variable, T<:Variable}(source::S, target::T) = Dependence(0, source, target)
+
 edge_index(d::Dependence) = d.index
 source(d::Dependence) = e.source
 target(d::Dependence) = e.target
+
+is_indexed(d::Dependence) = d.index > 0 ? true : false
 
 revedge{S<:Variable, T<:Variable}(d::Dependence{S, T}) = Dependence(d.index, d.target, d.source)
 

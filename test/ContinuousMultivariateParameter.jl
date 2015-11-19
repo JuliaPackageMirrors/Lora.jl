@@ -28,7 +28,7 @@ println("    Testing ContinuousMultivariateParameter constructors:")
 
 println("      Initialization via index and key fields...")
 
-p = ContinuousMultivariateParameter(1, :p)
+p = ContinuousMultivariateParameter(:p, 1)
 
 for field in values(fields)
   @test getfield(p, field) == nothing
@@ -40,7 +40,7 @@ pv = [5.18, -7.76]
 μv = [6.11, -8.5]
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
-p = ContinuousMultivariateParameter(1, :p, pdf=MvNormal(states[2].value, 1.))
+p = ContinuousMultivariateParameter(:p, 1, pdf=MvNormal(states[2].value, 1.))
 
 distribution = MvNormal(μv, 1.)
 p.pdf == distribution
@@ -90,7 +90,7 @@ pvlen = length(pv)
 σv = [10., 2.]
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
 
-p = ContinuousMultivariateParameter(1, :p, prior=MvNormal(zeros(pvlen), states[2].value))
+p = ContinuousMultivariateParameter(:p, 1, prior=MvNormal(zeros(pvlen), states[2].value))
 
 distribution = MvNormal(zeros(pvlen), σv)
 p.prior == distribution
@@ -144,7 +144,7 @@ pv = [3.79, 4.64]
 μv = [5.4, 5.3]
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
-p = ContinuousMultivariateParameter(1, :p, setpdf=(state, states) -> MvNormal(states[2].value, 1.))
+p = ContinuousMultivariateParameter(:p, 1, setpdf=(state, states) -> MvNormal(states[2].value, 1.))
 p.setpdf(states[1], states)
 
 distribution = MvNormal(μv, 1.)
@@ -195,7 +195,7 @@ pvlen = length(pv)
 σv = [2., 10.]
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
 
-p = ContinuousMultivariateParameter(1, :p, setprior=(state, states) -> MvNormal(zeros(pvlen), states[2].value))
+p = ContinuousMultivariateParameter(:p, 1, setprior=(state, states) -> MvNormal(zeros(pvlen), states[2].value))
 p.setprior(states[1], states)
 
 distribution = MvNormal(zeros(pvlen), σv)
@@ -260,7 +260,7 @@ lpf(state, states) =
     logdet(states[5].value)
   )[1]
 
-μ = ContinuousMultivariateParameter(1, :μ, loglikelihood=llf, logprior=lpf)
+μ = ContinuousMultivariateParameter(:μ, 1, loglikelihood=llf, logprior=lpf)
 
 ld = MvNormal(μv, Σv)
 pd = MvNormal(μ0v, Σ0v)
@@ -298,8 +298,8 @@ pvlen = length(pv)
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(
-  1,
   :p,
+  1,
   logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)⋅(states[1].value-states[2].value)
 )
 
@@ -346,8 +346,8 @@ llf(state, states) =
 gllf(state, states) = states[1].gradloglikelihood = (states[3].value\(states[2].value-states[1].value))
 
 μ = ContinuousMultivariateParameter(
-  1,
   :μ,
+  1,
   loglikelihood=llf,
   gradloglikelihood=gllf,
   prior=MvNormal(states[4].value, states[5].value)
@@ -483,7 +483,7 @@ gllf(state, states) = state.gradloglikelihood = (states[3].value\(states[2].valu
 
 glpf(state, states) = state.gradlogprior = -(states[5].value\(state.value-states[4].value))
 
-μ = ContinuousMultivariateParameter(1, :μ, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
+μ = ContinuousMultivariateParameter(:μ, 1, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
 
 ld = MvNormal(μv, Σv)
 pd = MvNormal(μ0v, Σ0v)
@@ -533,8 +533,8 @@ pv = [-4.29, 2.91]
 states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
 
 p = ContinuousMultivariateParameter(
-  1,
   :p,
+  1,
   logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)⋅(states[1].value-states[2].value),
   gradlogtarget=(state, states) -> state.gradlogtarget = -2*(state.value-states[2].value)
 )

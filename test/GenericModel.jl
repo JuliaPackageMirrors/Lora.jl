@@ -7,9 +7,9 @@ println("      Initialization without input arguments...")
 
 m = GenericModel()
 
-θ = ContinuousUnivariateParameter(1, :θ)
-x = Data(2, :x)
-λ = Hyperparameter(3, :λ)
+θ = ContinuousUnivariateParameter(:θ, 1)
+x = Data(:x, 2)
+λ = Hyperparameter(:λ, 3)
 
 add_vertex!(m, θ)
 add_vertex!(m, x)
@@ -19,10 +19,6 @@ add_edge!(m, x, θ)
 add_edge!(m, λ, θ)
 
 println("      Initialization via matrix-based specification of dependencies...")
-
-θ = ContinuousUnivariateParameter(1, :θ)
-x = Data(2, :x)
-λ = Hyperparameter(3, :λ)
 
 m = GenericModel([θ, x, λ], [x θ; λ θ])
 

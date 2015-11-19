@@ -1,8 +1,8 @@
 ### ContinuousMultivariateParameter
 
 type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivariate}
-  index::Int
   key::Symbol
+  index::Int
   pdf::Union{ContinuousMultivariateDistribution, Void}
   prior::Union{ContinuousMultivariateDistribution, Void}
   setpdf::Union{Function, Void}
@@ -24,8 +24,8 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
   uptodtensorlogtarget!::Union{Function, Void}
 
   function ContinuousMultivariateParameter(
-    index::Int,
     key::Symbol,
+    index::Int,
     pdf::Union{ContinuousMultivariateDistribution, Void},
     prior::Union{ContinuousMultivariateDistribution, Void},
     setpdf::Union{Function, Void},
@@ -47,8 +47,8 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     uptodtlt::Union{Function, Void}
   )
     instance = new()
-    instance.index = index
     instance.key = key
+    instance.index = index
     instance.pdf = pdf
     instance.prior = prior
 
@@ -259,8 +259,8 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
 end
 
 function ContinuousMultivariateParameter(
-  index::Int,
-  key::Symbol;
+  key::Symbol,
+  index::Int=0;
   pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
   prior::Union{ContinuousMultivariateDistribution, Void}=nothing,
   setpdf::Union{Function, Void}=nothing,
@@ -282,8 +282,8 @@ function ContinuousMultivariateParameter(
   uptodtensorlogtarget::Union{Function, Void}=nothing
 )
   ContinuousMultivariateParameter(
-    index,
     key,
+    index,
     pdf,
     prior,
     setpdf,
