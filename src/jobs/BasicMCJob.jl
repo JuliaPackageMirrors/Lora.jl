@@ -220,6 +220,7 @@ function codegen_save_iostream_basic_mcjob(job::BasicMCJob, outopts::Dict)
 end
 
 function codegen_resetplain_basic_mcjob(job::BasicMCJob)
+  result::Expr
   body = []
 
   push!(body, :(reset!($(job).pstate, $(job).vstate, $(:_x), $(job).parameter, $(job).sampler)))
@@ -249,10 +250,15 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
         $(body...)
       end
     end
+  else
+    error("It is not possible to define plain reset for given job")
   end
+
+  result
 end
 
 function codegen_reset_task_basic_mcjob(job::BasicMCJob)
+  result::Expr
   body = []
 
   push!(body, :($(job).task.storage[:reset]($(:_x))))
@@ -275,7 +281,11 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
         $(body...)
       end
     end
+  else
+    error("It is not possible to define task reset for given job")
   end
+
+  result
 end
 
 function checkin(job::BasicMCJob)

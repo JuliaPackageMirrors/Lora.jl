@@ -6,8 +6,8 @@ using Lora
 # Example 1: multivariate parameter
 
 p = ContinuousMultivariateParameter(
-  1,
   :p,
+  1,
   logtarget=(state, states) -> state.logtarget = -dot(state.value, state.value)
 )
 model = single_parameter_likelihood_model(p)
@@ -40,8 +40,8 @@ job = BasicMCJob(
 # Example 2: univariate parameter
 
 p = ContinuousUnivariateParameter(
-  1,
   :p,
+  1,
   logtarget=(state, states) -> state.logtarget = -abs2(state.value)
 )
 model = single_parameter_likelihood_model(p)

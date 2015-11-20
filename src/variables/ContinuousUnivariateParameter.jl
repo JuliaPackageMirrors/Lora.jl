@@ -77,10 +77,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
       "uptotensorlogtarget!",
       "uptodtensorlogtarget!"
     )
-    nf = 17
-
     # Check that all generic functions have correct signature
-    for i = 1:nf
+    for i = 1:17
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
         !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
@@ -257,7 +255,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
   end
 end
 
-function ContinuousUnivariateParameter(
+ContinuousUnivariateParameter(
   key::Symbol,
   index::Int=0;
   pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
@@ -279,7 +277,7 @@ function ContinuousUnivariateParameter(
   uptogradlogtarget::Union{Function, Void}=nothing,
   uptotensorlogtarget::Union{Function, Void}=nothing,
   uptodtensorlogtarget::Union{Function, Void}=nothing
-)
+) =
   ContinuousUnivariateParameter(
     key,
     index,
@@ -303,6 +301,72 @@ function ContinuousUnivariateParameter(
     uptotensorlogtarget,
     uptodtensorlogtarget
   )
+
+function ContinuousUnivariateParameter(
+  key::Vector{Symbol},
+  index::Int=0;
+  pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  setpdf::Union{Function, Void}=nothing,
+  setprior::Union{Function, Void}=nothing,
+  loglikelihood::Union{Function, Void}=nothing,
+  logprior::Union{Function, Void}=nothing,
+  logtarget::Union{Function, Void}=nothing,
+  gradloglikelihood::Union{Function, Void}=nothing,
+  gradlogprior::Union{Function, Void}=nothing,
+  gradlogtarget::Union{Function, Void}=nothing,
+  tensorloglikelihood::Union{Function, Void}=nothing,
+  tensorlogprior::Union{Function, Void}=nothing,
+  tensorlogtarget::Union{Function, Void}=nothing,
+  dtensorloglikelihood::Union{Function, Void}=nothing,
+  dtensorlogprior::Union{Function, Void}=nothing,
+  dtensorlogtarget::Union{Function, Void}=nothing,
+  uptogradlogtarget::Union{Function, Void}=nothing,
+  uptotensorlogtarget::Union{Function, Void}=nothing,
+  uptodtensorlogtarget::Union{Function, Void}=nothing
+)
+  inargs = (
+    setpdf,
+    setprior,
+    loglikelihood,
+    logprior,
+    logtarget,
+    gradloglikelihood,
+    gradlogprior,
+    gradlogtarget,
+    tensorloglikelihood,
+    tensorlogprior,
+    tensorlogtarget,
+    dtensorloglikelihood,
+    dtensorlogprior,
+    dtensorlogtarget,
+    uptogradlogtarget,
+    uptotensorlogtarget,
+    uptodtensorlogtarget
+  )
+
+  outargs = Array(Union{Function, Void}, 17)
+
+  for i in 1:17
+    if inargs[i] == nothing
+      outargs[i] = nothing
+    elseif isa(inargs[i], Function)
+      if isgeneric(args[i])
+        if any([method_exists(args[i], (t,)) for t in (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)])
+          f = code_lowered(args[i], (Any,))
+          fargs = f[1].args[1]
+          fbody = f[1].args[3]
+        # elseif
+        else
+          error("")
+        end
+      else
+        error("ContinuousUnivariateParameter with vector key input argument works only with generic input methods")
+      end
+    end
+  end
+
+  ContinuousUnivariateParameter(key, index, outargs...)
 end
 
 default_state{N<:AbstractFloat}(variable::ContinuousUnivariateParameter, value::Vector{N}) =

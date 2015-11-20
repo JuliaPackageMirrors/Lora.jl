@@ -72,10 +72,8 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
       "uptotensorlogtarget!",
       "uptodtensorlogtarget!"
     )
-    nf = 17
-
     # Check that all generic functions have correct signature
-    for i = 1:nf
+    for i = 1:17
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
         !method_exists(args[i], (ContinuousMultivariateParameterState, Vector{VariableState}))
@@ -258,7 +256,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
   end
 end
 
-function ContinuousMultivariateParameter(
+ContinuousMultivariateParameter(
   key::Symbol,
   index::Int=0;
   pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
@@ -280,7 +278,7 @@ function ContinuousMultivariateParameter(
   uptogradlogtarget::Union{Function, Void}=nothing,
   uptotensorlogtarget::Union{Function, Void}=nothing,
   uptodtensorlogtarget::Union{Function, Void}=nothing
-)
+) =
   ContinuousMultivariateParameter(
     key,
     index,
@@ -304,7 +302,6 @@ function ContinuousMultivariateParameter(
     uptotensorlogtarget,
     uptodtensorlogtarget
   )
-end
 
 default_state{N<:AbstractFloat}(variable::ContinuousMultivariateParameter, value::Vector{N}) =
   ContinuousMultivariateParameterState(value)
