@@ -1,6 +1,5 @@
 function replace!(exprn::Expr, operand::Symbol, replacement::Union{Symbol, Expr})
   queue = Array(Union{Number, Symbol, Expr}, 0)
-
   unshift!(queue, exprn)
 
   while length(queue) != 0
@@ -53,7 +52,7 @@ function replace!(exprn::Expr, dict::Dict{Union{Symbol, Expr}, Union{Symbol, Exp
     if isa(node, LineNumberNode)
       continue
     else
-      for i in 2:length(node.args)
+      for i in 1:length(node.args)
         if isa(node.args[i], Expr)
           if haskey(dict, node.args[i]) && get(dict, node.args[i], :()) != :()
             node.args[i] = dict[node.args[i]]

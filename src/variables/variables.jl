@@ -19,7 +19,7 @@ is_indexed(v::Variable) = v.index > 0 ? true : false
 Base.convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
 Base.convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
 
-function codegen_internal_variable_method(f::Function)
+function codegen_internal_variable_method(f::Function, r::Symbol)
   body = []
   fexprn = code_lowered(f, (Any,))
 
@@ -33,13 +33,11 @@ function codegen_internal_variable_method(f::Function)
     replace!(exprn, fexprn[1].args[1][1], :(state.value))
   end
 
+  body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r)), body[end].args[1])
+
   @gensym internal_variable_method
-  
-  Expr(
-    :function,
-    Expr(:call, internal_variable_method, Expr(:(::), :state, :ContinuousUnivariateParameterState)),
-    Expr(:block, body...)
-  )
+
+  Expr(:function, Expr(:call, internal_variable_method, :state, :states), Expr(:block, body...))
 end
 
 Base.show(io::IO, v::Variable) = print(io, "Variable [$(v.index)]: $(v.key) ($(typeof(v)))")

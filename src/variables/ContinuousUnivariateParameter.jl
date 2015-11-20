@@ -296,7 +296,7 @@ ContinuousUnivariateParameter(
 
 function ContinuousUnivariateParameter(
   key::Vector{Symbol},
-  index::Int=0;
+  index::Int;
   pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
   prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
   setpdf::Union{Function, Void}=nothing,
@@ -343,8 +343,9 @@ function ContinuousUnivariateParameter(
     if inargs[i] == nothing
       outargs[i] = nothing
     elseif isa(inargs[i], Function)
-      if isgeneric(args[i])
-        if any([method_exists(args[i], (t,)) for t in (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)])
+      if isgeneric(inargs[i])
+        if any([method_exists(inargs[i], (t,)) for t in (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)])
+          outargs[i] = eval(codegen_internal_variable_method(inargs[i], :logtarget))
         # elseif
         else
           error("")
@@ -355,7 +356,7 @@ function ContinuousUnivariateParameter(
     end
   end
 
-  ContinuousUnivariateParameter(key, index, outargs...)
+  ContinuousUnivariateParameter(key[index], index, pdf, prior, outargs...)
 end
 
 default_state{N<:AbstractFloat}(variable::ContinuousUnivariateParameter, value::Vector{N}) =
