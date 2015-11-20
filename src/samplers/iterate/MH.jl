@@ -33,10 +33,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
   if job.tuner.verbose
     push!(update, :($(:_sstate).tune.accepted += 1))
   end
-  push!(
-    body,
-    Expr(:if, :($(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))), Expr(:block, update...), noupdate...)
-  )
+  push!(body, Expr(:if, :($(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))), Expr(:block, update...), noupdate...))
 
   if job.tuner.verbose
     push!(body, :(

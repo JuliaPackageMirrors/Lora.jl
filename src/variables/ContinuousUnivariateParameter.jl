@@ -106,10 +106,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
-    for (i , ppfield, spfield, f) in (
-      (4, :logprior!, :logprior, logpdf),
-      (7, :gradlogprior!, :gradlogprior, gradlogpdf)
-    )
+    for (i , ppfield, spfield, f) in ((4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf))
       setfield!(
         instance,
         ppfield,
@@ -129,12 +126,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     # ptfield, plfield and ppfield stand for parameter target, likelihood and prior-related field respectively
     # stfield, slfield and spfield stand for state target, likelihood and prior-related field respectively
     for (i , ptfield, plfield, ppfield, stfield, slfield, spfield, f) in (
-      (
-        5,
-        :logtarget!, :loglikelihood!, :logprior!,
-        :logtarget, :loglikelihood, :logprior,
-        logpdf
-      ),
+      (5, :logtarget!, :loglikelihood!, :logprior!, :logtarget, :loglikelihood, :logprior, logpdf),
       (
         8,
         :gradlogtarget!, :gradloglikelihood!, :gradlogprior!,
@@ -353,9 +345,6 @@ function ContinuousUnivariateParameter(
     elseif isa(inargs[i], Function)
       if isgeneric(args[i])
         if any([method_exists(args[i], (t,)) for t in (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)])
-          f = code_lowered(args[i], (Any,))
-          fargs = f[1].args[1]
-          fbody = f[1].args[3]
         # elseif
         else
           error("")

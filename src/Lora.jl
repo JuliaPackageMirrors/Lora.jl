@@ -124,6 +124,7 @@ export
   out_edges,
   out_neighbors,
   rate!,
+  replace!,
   reset!,
   revedge,
   run,
@@ -139,7 +140,9 @@ export
   vertex_index,
   vertices
 
-include("common.jl")
+include("parser/replace.jl")
+
+include("stats/logistic.jl")
 
 include("states/VariableStates.jl")
 include("states/ParameterStates.jl")
@@ -157,6 +160,7 @@ include("variables/dependencies.jl")
 include("models/GenericModel.jl")
 include("models/generators.jl")
 
+include("ranges/ranges.jl")
 include("ranges/BasicMCRange.jl")
 
 include("tuners/tuners.jl")

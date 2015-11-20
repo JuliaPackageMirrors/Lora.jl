@@ -35,9 +35,7 @@ function ContinuousUnivariateParameterState{N<:AbstractFloat}(
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 )
   v = convert(N, NaN)
-  ContinuousUnivariateParameterState{N}(
-    value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys
-  )
+  ContinuousUnivariateParameterState{N}(value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys)
 end
 
 ContinuousUnivariateParameterState{N<:AbstractFloat}(

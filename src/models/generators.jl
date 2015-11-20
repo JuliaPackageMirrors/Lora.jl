@@ -41,10 +41,4 @@ single_parameter_likelihood_model(
   is_directed::Bool=true,
   is_indexed::Bool=true
 ) =
-  likelihood_model(
-    Parameter[p],
-    data=data,
-    hyperparameters=hyperparameters,
-    is_directed=is_directed,
-    is_indexed=is_indexed
-  )
+  likelihood_model(Parameter[p], data=data, hyperparameters=hyperparameters, is_directed=is_directed, is_indexed=is_indexed)

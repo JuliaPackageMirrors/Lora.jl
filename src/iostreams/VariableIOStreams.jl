@@ -15,11 +15,9 @@ BasicVariableIOStream(filename::AbstractString, size::Tuple, n::Int, mode::Abstr
 
 Base.close(iostream::BasicVariableIOStream) = close(iostream.stream)
 
-Base.write(iostream::BasicVariableIOStream, state::BasicVariableState) =
-  write(iostream.stream, join(state.value, ','), "\n")
+Base.write(iostream::BasicVariableIOStream, state::BasicVariableState) = write(iostream.stream, join(state.value, ','), "\n")
 
-Base.write(iostream::BasicVariableIOStream, nstate::UnivariateBasicVariableNState) =
-  writedlm(iostream.stream, nstate.value)
+Base.write(iostream::BasicVariableIOStream, nstate::UnivariateBasicVariableNState) = writedlm(iostream.stream, nstate.value)
 
 Base.write(iostream::BasicVariableIOStream, nstate::MultivariateBasicVariableNState) =
   writedlm(iostream.stream, nstate.value', ',')
@@ -41,8 +39,7 @@ function Base.read!{N<:Number}(iostream::BasicVariableIOStream, nstate::Matrixva
   statelen = prod(iostream.size)
   line = 1
   while !eof(iostream.stream)
-    nstate.value[1+(line-1)*statelen:line*statelen] =
-      [parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
+    nstate.value[1+(line-1)*statelen:line*statelen] = [parse(N, c) for c in split(chomp(readline(iostream.stream)), ',')]
     line += 1
   end
 end

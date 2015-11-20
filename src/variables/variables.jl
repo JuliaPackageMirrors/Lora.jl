@@ -19,6 +19,29 @@ is_indexed(v::Variable) = v.index > 0 ? true : false
 Base.convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
 Base.convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
 
+function codegen_internal_variable_method(f::Function)
+  body = []
+  fexprn = code_lowered(f, (Any,))
+
+  for exprn in fexprn[1].args[3].args
+    if !isa(exprn, LineNumberNode)
+      push!(body, exprn)
+    end
+  end
+
+  for exprn in body
+    replace!(exprn, fexprn[1].args[1][1], :(state.value))
+  end
+
+  @gensym internal_variable_method
+  
+  Expr(
+    :function,
+    Expr(:call, internal_variable_method, Expr(:(::), :state, :ContinuousUnivariateParameterState)),
+    Expr(:block, body...)
+  )
+end
+
 Base.show(io::IO, v::Variable) = print(io, "Variable [$(v.index)]: $(v.key) ($(typeof(v)))")
 
 ### Deterministic Variable subtypes

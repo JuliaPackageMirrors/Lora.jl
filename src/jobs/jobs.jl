@@ -65,8 +65,7 @@ function initialize_output(state::ContinuousMultivariateParameterState, n::Int, 
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
-    output =
-      ContinuousMultivariateParameterNState(state.size, n, outopts[:monitor], outopts[:diagnostics], eltype(state))
+    output = ContinuousMultivariateParameterNState(state.size, n, outopts[:monitor], outopts[:diagnostics], eltype(state))
   elseif outopts[:destination] == :iostream
     output = ContinuousParameterIOStream(
       (),

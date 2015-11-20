@@ -101,18 +101,12 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
-    for (i , ppfield, spfield, f) in (
-      (4, :logprior!, :logprior, logpdf),
-      (7, :gradlogprior!, :gradlogprior, gradlogpdf)
-    )
+    for (i , ppfield, spfield, f) in ((4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf))
       setfield!(
         instance,
         ppfield,
         if args[i] == nothing && (
-          (
-            isa(prior, ContinuousMultivariateDistribution) &&
-            method_exists(f, (typeof(prior), Vector{eltype(prior)}))
-          ) ||
+          (isa(prior, ContinuousMultivariateDistribution) && method_exists(f, (typeof(prior), Vector{eltype(prior)}))) ||
           isa(args[2], Function)
         )
           (state::ContinuousMultivariateParameterState, states::Vector{VariableState}) ->
@@ -127,12 +121,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     # ptfield, plfield and ppfield stand for parameter target, likelihood and prior-related field respectively
     # stfield, slfield and spfield stand for state target, likelihood and prior-related field respectively
     for (i , ptfield, plfield, ppfield, stfield, slfield, spfield, f) in (
-      (
-        5,
-        :logtarget!, :loglikelihood!, :logprior!,
-        :logtarget, :loglikelihood, :logprior,
-        logpdf
-      ),
+      (5, :logtarget!, :loglikelihood!, :logprior!, :logtarget, :loglikelihood, :logprior, logpdf),
       (
         8,
         :gradlogtarget!, :gradloglikelihood!, :gradlogprior!,
@@ -150,10 +139,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
               getfield(instance, ppfield)(state, states)
               setfield!(state, stfield, getfield(state, slfield)+getfield(state, spfield))
             end
-          elseif (
-              isa(pdf, ContinuousMultivariateDistribution) &&
-              method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))
-            ) ||
+          elseif (isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))) ||
             isa(args[1], Function)
             (state::ContinuousMultivariateParameterState, states::Vector{VariableState}) ->
             setfield!(state, stfield, f(instance.pdf, state.value))
