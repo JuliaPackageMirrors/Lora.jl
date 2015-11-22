@@ -19,7 +19,7 @@ is_indexed(v::Variable) = v.index > 0 ? true : false
 Base.convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
 Base.convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
 
-function codegen_internal_variable_method(f::Function, r::Symbol)
+function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[])
   body = []
   fexprn = code_lowered(f, (Any,))
 
@@ -33,7 +33,21 @@ function codegen_internal_variable_method(f::Function, r::Symbol)
     replace!(exprn, fexprn[1].args[1][1], :(state.value))
   end
 
-  body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r)), body[end].args[1])
+  nr = length(r)
+
+  if nr == 1
+    body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r)), body[end].args[1])
+  elseif nr > 1
+    rvalues = pop!(body)
+    rvalues = rvalues.args[1].args
+    shift!(rvalues)
+
+    @assert nr == length(rvalues) "Wrong length of returned values in user-defined function"
+
+    for i in 1:nr
+      push!(body, Expr(:(=), Expr(:., :state, QuoteNode(r[i])), rvalues[i]))
+    end
+  end
 
   @gensym internal_variable_method
 

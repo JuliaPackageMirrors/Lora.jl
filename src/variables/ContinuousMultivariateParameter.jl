@@ -53,25 +53,8 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     instance.prior = prior
 
     args = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
-    fnames = (
-      "setpdf",
-      "setprior",
-      "loglikelihood!",
-      "logprior!",
-      "logtarget!",
-      "gradloglikelihood!",
-      "gradlogprior!",
-      "gradlogtarget!",
-      "tensorloglikelihood!",
-      "tensorlogprior!",
-      "tensorlogtarget!",
-      "dtensorloglikelihood!",
-      "dtensorlogprior!",
-      "dtensorlogtarget!",
-      "uptogradlogtarget!",
-      "uptotensorlogtarget!",
-      "uptodtensorlogtarget!"
-    )
+    fnames = fieldnames(ContinuousMultivariateParameter)[5:21]
+
     # Check that all generic functions have correct signature
     for i = 1:17
       if isa(args[i], Function) &&

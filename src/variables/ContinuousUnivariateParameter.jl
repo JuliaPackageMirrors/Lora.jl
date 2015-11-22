@@ -58,25 +58,8 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     instance.prior = prior
 
     args = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
-    fnames = (
-      "setpdf",
-      "setprior",
-      "loglikelihood!",
-      "logprior!",
-      "logtarget!",
-      "gradloglikelihood!",
-      "gradlogprior!",
-      "gradlogtarget!",
-      "tensorloglikelihood!",
-      "tensorlogprior!",
-      "tensorlogtarget!",
-      "dtensorloglikelihood!",
-      "dtensorlogprior!",
-      "dtensorlogtarget!",
-      "uptogradlogtarget!",
-      "uptotensorlogtarget!",
-      "uptodtensorlogtarget!"
-    )
+    fnames = fieldnames(ContinuousUnivariateParameter)[5:21]
+
     # Check that all generic functions have correct signature
     for i = 1:17
       if isa(args[i], Function) &&
@@ -338,6 +321,7 @@ function ContinuousUnivariateParameter(
   )
 
   outargs = Array(Union{Function, Void}, 17)
+  #fieldnames(ContinuousUnivariateParameterState)[2:13]
 
   for i in 1:17
     if inargs[i] == nothing
