@@ -61,13 +61,13 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     fnames = fieldnames(ContinuousUnivariateParameter)[5:21]
 
     # Check that all generic functions have correct signature
-    for i = 1:17
-      if isa(args[i], Function) &&
-        isgeneric(args[i]) &&
-        !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
-        error("$(fnames[i]) has wrong signature")
-      end
-    end
+    # for i = 1:17
+    #   if isa(args[i], Function) &&
+    #     isgeneric(args[i]) &&
+    #     !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
+    #     error("$(fnames[i]) has wrong signature")
+    #   end
+    # end
 
     # Define setpdf (i = 1) and setprior (i = 2)
     for (i, setter, distribution) in ((1, :setpdf, :pdf), (2, :setprior, :prior))
@@ -75,8 +75,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         setter,
         if isa(args[i], Function)
-          (state::ContinuousUnivariateParameterState, states::Vector{VariableState}) ->
-          setfield!(instance, distribution, args[i](state, states))
+          eval(codegen_setdistribution_continuous_univariate_parameter(instance, distribution, args[i]))
         else
           args[i]
         end
@@ -348,6 +347,24 @@ function ContinuousUnivariateParameter(
   end
 
   ContinuousUnivariateParameter(key[index], index, pdf, prior, outargs...)
+end
+
+function codegen_setdistribution_continuous_univariate_parameter(
+  parameter::ContinuousUnivariateParameter,
+  distribution::Symbol,
+  f::Function
+)
+  body = :(setfield!($(parameter), $(QuoteNode(distribution)), $(f)($(:_state), $(:_states))))
+
+  @gensym setdistribution_continuous_univariate_parameter
+
+  quote
+    function $setdistribution_continuous_univariate_parameter{S<:VariableState}(
+      _state::ContinuousUnivariateParameterState,
+      _states::Vector{S})
+      $(body)
+    end
+  end
 end
 
 default_state{N<:AbstractFloat}(variable::ContinuousUnivariateParameter, value::Vector{N}) =

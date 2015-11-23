@@ -41,6 +41,7 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
     rvalues = pop!(body)
     rvalues = rvalues.args[1].args
     shift!(rvalues)
+    
     @assert nr == length(rvalues) "Wrong number of returned values in user-defined function"
 
     for i in 1:nr
