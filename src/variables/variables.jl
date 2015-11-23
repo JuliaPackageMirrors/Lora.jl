@@ -36,13 +36,12 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
   nr = length(r)
 
   if nr == 1
-    body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r)), body[end].args[1])
+    body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r[1])), body[end].args[1])
   elseif nr > 1
     rvalues = pop!(body)
     rvalues = rvalues.args[1].args
     shift!(rvalues)
-
-    @assert nr == length(rvalues) "Wrong length of returned values in user-defined function"
+    @assert nr == length(rvalues) "Wrong number of returned values in user-defined function"
 
     for i in 1:nr
       push!(body, Expr(:(=), Expr(:., :state, QuoteNode(r[i])), rvalues[i]))

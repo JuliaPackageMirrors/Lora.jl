@@ -300,6 +300,8 @@ function ContinuousUnivariateParameter(
   uptotensorlogtarget::Union{Function, Void}=nothing,
   uptodtensorlogtarget::Union{Function, Void}=nothing
 )
+  outargs = Array(Union{Function, Void}, 17)
+
   inargs = (
     setpdf,
     setprior,
@@ -320,19 +322,24 @@ function ContinuousUnivariateParameter(
     uptodtensorlogtarget
   )
 
-  outargs = Array(Union{Function, Void}, 17)
-  #fieldnames(ContinuousUnivariateParameterState)[2:13]
+  fnames = Array(Any, 17)
+  fnames[1:2] = fill(Symbol[], 2)
+  fnames[3:14] = [Symbol[f] for f in fieldnames(ContinuousUnivariateParameterState)[2:13]]
+  for i in 1:3
+    fnames[14+i] = fnames[5:3:(5+i*3)]
+  end
 
   for i in 1:17
     if inargs[i] == nothing
       outargs[i] = nothing
     elseif isa(inargs[i], Function)
       if isgeneric(inargs[i])
-        if any([method_exists(inargs[i], (t,)) for t in (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)])
-          outargs[i] = eval(codegen_internal_variable_method(inargs[i], :logtarget))
-        # elseif
+        if any([method_exists(inargs[i], (t,)) for t in
+          (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
+        ])
+          outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))
         else
-          error("")
+          error("Function $(f[i]) has wrong signature")
         end
       else
         error("ContinuousUnivariateParameter with vector key input argument works only with generic input methods")
