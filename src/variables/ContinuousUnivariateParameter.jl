@@ -319,7 +319,7 @@ function ContinuousUnivariateParameter(
       outargs[i] = nothing
     elseif isa(inargs[i], Function)
       if isgeneric(inargs[i])
-        if any([method_exists(inargs[i], (t,)) for t in
+        if any([method_exists(inargs[i], (T,)) for T in
           (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
         ])
           outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))

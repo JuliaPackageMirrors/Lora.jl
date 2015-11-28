@@ -30,13 +30,13 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
   end
 
   for exprn in body
-    replace!(exprn, fexprn[1].args[1][1], :(state.value))
+    replace!(exprn, fexprn[1].args[1][1], :(_state.value))
   end
 
   nr = length(r)
 
   if nr == 1
-    body[end] = Expr(:(=), Expr(:., :state, QuoteNode(r[1])), body[end].args[1])
+    body[end] = Expr(:(=), Expr(:., :_state, QuoteNode(r[1])), body[end].args[1])
   elseif nr > 1
     rvalues = pop!(body)
     rvalues = rvalues.args[1].args

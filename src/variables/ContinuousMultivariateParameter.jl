@@ -257,6 +257,79 @@ ContinuousMultivariateParameter(
     uptodtensorlogtarget
   )
 
+function ContinuousMultivariateParameter(
+  key::Vector{Symbol},
+  index::Int;
+  pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  setpdf::Union{Function, Void}=nothing,
+  setprior::Union{Function, Void}=nothing,
+  loglikelihood::Union{Function, Void}=nothing,
+  logprior::Union{Function, Void}=nothing,
+  logtarget::Union{Function, Void}=nothing,
+  gradloglikelihood::Union{Function, Void}=nothing,
+  gradlogprior::Union{Function, Void}=nothing,
+  gradlogtarget::Union{Function, Void}=nothing,
+  tensorloglikelihood::Union{Function, Void}=nothing,
+  tensorlogprior::Union{Function, Void}=nothing,
+  tensorlogtarget::Union{Function, Void}=nothing,
+  dtensorloglikelihood::Union{Function, Void}=nothing,
+  dtensorlogprior::Union{Function, Void}=nothing,
+  dtensorlogtarget::Union{Function, Void}=nothing,
+  uptogradlogtarget::Union{Function, Void}=nothing,
+  uptotensorlogtarget::Union{Function, Void}=nothing,
+  uptodtensorlogtarget::Union{Function, Void}=nothing
+)
+  outargs = Array(Union{Function, Void}, 17)
+
+  inargs = (
+    setpdf,
+    setprior,
+    loglikelihood,
+    logprior,
+    logtarget,
+    gradloglikelihood,
+    gradlogprior,
+    gradlogtarget,
+    tensorloglikelihood,
+    tensorlogprior,
+    tensorlogtarget,
+    dtensorloglikelihood,
+    dtensorlogprior,
+    dtensorlogtarget,
+    uptogradlogtarget,
+    uptotensorlogtarget,
+    uptodtensorlogtarget
+  )
+
+  fnames = Array(Any, 17)
+  fnames[1:2] = fill(Symbol[], 2)
+  fnames[3:14] = [Symbol[f] for f in fieldnames(ContinuousMultivariateParameterState)[2:13]]
+  for i in 1:3
+    fnames[14+i] = fnames[5:3:(5+i*3)]
+  end
+
+  for i in 1:17
+    if inargs[i] == nothing
+      outargs[i] = nothing
+    elseif isa(inargs[i], Function)
+      if isgeneric(inargs[i])
+        if any([method_exists(inargs[i], (T,)) for T in
+          [Any; [Vector{N} for N in (Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)]]
+        ])
+          outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))
+        else
+          error("Function $(f[i]) has wrong signature")
+        end
+      else
+        error("ContinuousMultivariateParameter with vector key input argument works only with generic input methods")
+      end
+    end
+  end
+
+  ContinuousMultivariateParameter(key[index], index, pdf, prior, outargs...)
+end
+
 function codegen_setdistribution_continuous_multivariate_parameter(
   parameter::ContinuousMultivariateParameter,
   distribution::Symbol,
