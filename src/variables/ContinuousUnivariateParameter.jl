@@ -61,13 +61,13 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     fnames = fieldnames(ContinuousUnivariateParameter)[5:21]
 
     # Check that all generic functions have correct signature
-    # for i = 1:17
-    #   if isa(args[i], Function) &&
-    #     isgeneric(args[i]) &&
-    #     !method_exists(args[i], (ContinuousUnivariateParameterState, Vector{VariableState}))
-    #     error("$(fnames[i]) has wrong signature")
-    #   end
-    # end
+    for i = 1:17
+      if isa(args[i], Function) &&
+        isgeneric(args[i]) &&
+        !any([method_exists(args[i], (ContinuousUnivariateParameterState, Vector{S})) for S in subtypes(VariableState)])
+        error("$(fnames[i]) has wrong signature")
+      end
+    end
 
     # Define setpdf (i = 1) and setprior (i = 2)
     for (i, setter, distribution) in ((1, :setpdf, :pdf), (2, :setprior, :prior))
