@@ -41,17 +41,17 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
     rvalues = pop!(body)
     rvalues = rvalues.args[1].args
     shift!(rvalues)
-    
+
     @assert nr == length(rvalues) "Wrong number of returned values in user-defined function"
 
     for i in 1:nr
-      push!(body, Expr(:(=), Expr(:., :state, QuoteNode(r[i])), rvalues[i]))
+      push!(body, Expr(:(=), Expr(:., :_state, QuoteNode(r[i])), rvalues[i]))
     end
   end
 
   @gensym internal_variable_method
 
-  Expr(:function, Expr(:call, internal_variable_method, :state, :states), Expr(:block, body...))
+  Expr(:function, Expr(:call, internal_variable_method, :_state, :_states), Expr(:block, body...))
 end
 
 Base.show(io::IO, v::Variable) = print(io, "Variable [$(v.index)]: $(v.key) ($(typeof(v)))")
