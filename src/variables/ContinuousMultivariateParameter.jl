@@ -59,7 +59,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     for i = 1:17
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
-        !method_exists(args[i], (ContinuousMultivariateParameterState, Vector{VariableState}))
+        !any([method_exists(args[i], (ContinuousMultivariateParameterState, Vector{S})) for S in subtypes(VariableState)])
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -70,8 +70,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
         instance,
         setter,
         if isa(args[i], Function)
-          (state::ContinuousMultivariateParameterState, states::Vector{VariableState}) ->
-          setfield!(instance, distribution, args[i](state, states))
+          eval(codegen_setdistribution_continuous_multivariate_parameter(instance, distribution, args[i]))
         else
           args[i]
         end
@@ -92,8 +91,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
           (isa(prior, ContinuousMultivariateDistribution) && method_exists(f, (typeof(prior), Vector{eltype(prior)}))) ||
           isa(args[2], Function)
         )
-          (state::ContinuousMultivariateParameterState, states::Vector{VariableState}) ->
-          setfield!(state, spfield, f(instance.prior, state.value))
+          eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, spfield, :prior, f))
         else
           args[i]
         end
@@ -117,15 +115,12 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
         ptfield,
         if args[i] == nothing
           if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
-            function (state::ContinuousMultivariateParameterState, states::Vector{VariableState})
-              getfield(instance, plfield)(state, states)
-              getfield(instance, ppfield)(state, states)
-              setfield!(state, stfield, getfield(state, slfield)+getfield(state, spfield))
-            end
+            eval(codegen_setfield_via_sum_continuous_multivariate_parameter(
+              instance, plfield, ppfield, stfield, slfield, spfield
+            ))
           elseif (isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))) ||
             isa(args[1], Function)
-            (state::ContinuousMultivariateParameterState, states::Vector{VariableState}) ->
-            setfield!(state, stfield, f(instance.pdf, state.value))
+            eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, stfield, :pdf, f))
           end
         else
           args[i]
@@ -158,11 +153,9 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
         instance,
         ptfield,
         if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
-          function (state::ContinuousMultivariateParameterState, states::Vector{VariableState})
-            getfield(instance, plfield)(state, states)
-            getfield(instance, ppfield)(state, states)
-            setfield!(state, stfield, getfield(state, slfield)+getfield(state, spfield))
-          end
+          eval(codegen_setfield_via_sum_continuous_multivariate_parameter(
+            instance, plfield, ppfield, stfield, slfield, spfield
+          ))
         else
           args[i]
         end
@@ -174,10 +167,7 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
       instance,
       :uptogradlogtarget!,
       if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
-        function (state::ContinuousMultivariateParameterState, states::Vector{VariableState})
-          instance.logtarget!(state, states)
-          instance.gradlogtarget!(state, states)
-        end
+        eval(codegen_setuptofields_continuous_multivariate_parameter(instance, [:logtarget!, :gradlogtarget!]))
       else
         args[15]
       end
@@ -191,11 +181,9 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
-        function (state::ContinuousMultivariateParameterState, states::Vector{VariableState})
-          instance.logtarget!(state, states)
-          instance.gradlogtarget!(state, states)
-          instance.tensorlogtarget!(state, states)
-        end
+        eval(codegen_setuptofields_continuous_multivariate_parameter(
+          instance, [:logtarget!, :gradlogtarget!, :tensorlogtarget!]
+        ))
       else
         args[16]
       end
@@ -210,12 +198,9 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
         isa(instance.dtensorlogtarget!, Function)
-        function (state::ContinuousMultivariateParameterState, states::Vector{VariableState})
-          instance.logtarget!(state, states)
-          instance.gradlogtarget!(state, states)
-          instance.tensorlogtarget!(state, states)
-          instance.dtensorlogtarget!(state, states)
-        end
+        eval(codegen_setuptofields_continuous_multivariate_parameter(
+          instance, [:logtarget!, :gradlogtarget!, :tensorlogtarget!, :dtensorlogtarget!]
+        ))
       else
         args[17]
       end
@@ -271,6 +256,92 @@ ContinuousMultivariateParameter(
     uptotensorlogtarget,
     uptodtensorlogtarget
   )
+
+function codegen_setdistribution_continuous_multivariate_parameter(
+  parameter::ContinuousMultivariateParameter,
+  distribution::Symbol,
+  f::Function
+)
+  body = :(setfield!($(parameter), $(QuoteNode(distribution)), $(f)($(:_state), $(:_states))))
+  @gensym setdistribution_continuous_multivariate_parameter
+  quote
+    function $setdistribution_continuous_multivariate_parameter{S<:VariableState}(
+      _state::ContinuousMultivariateParameterState,
+      _states::Vector{S})
+      $(body)
+    end
+  end
+end
+
+function codegen_setfield_via_distribution_continuous_multivariate_parameter(
+  parameter::ContinuousMultivariateParameter,
+  field::Symbol,
+  distribution::Symbol,
+  f::Function
+)
+  body =
+    :(setfield!($(:_state), $(QuoteNode(field)), $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)))
+  @gensym codegen_setfield_via_distribution_continuous_multivariate_parameter
+  quote
+    function $codegen_setfield_via_distribution_continuous_multivariate_parameter{S<:VariableState}(
+      _state::ContinuousMultivariateParameterState,
+      _states::Vector{S})
+      $(body)
+    end
+  end
+end
+
+function codegen_setfield_via_sum_continuous_multivariate_parameter(
+  parameter::ContinuousMultivariateParameter,
+  plfield::Symbol,
+  ppfield::Symbol,
+  stfield::Symbol,
+  slfield::Symbol,
+  spfield::Symbol
+)
+  body = []
+
+  push!(body, :(getfield($(parameter), $(QuoteNode(plfield)))($(:_state), $(:_states))))
+  push!(body, :(getfield($(parameter), $(QuoteNode(ppfield)))($(:_state), $(:_states))))
+  push!(body, :(setfield!(
+    $(:_state),
+    $(QuoteNode(stfield)),
+    getfield($(:_state), $(QuoteNode(slfield)))+getfield($(:_state), $(QuoteNode(spfield)))))
+  )
+
+  @gensym codegen_setfield_via_sum_continuous_multivariate_parameter
+
+  quote
+    function $codegen_setfield_via_sum_continuous_multivariate_parameter{S<:VariableState}(
+      _state::ContinuousMultivariateParameterState,
+      _states::Vector{S})
+      $(body...)
+    end
+  end
+end
+
+function codegen_setuptofields_continuous_multivariate_parameter(
+  parameter::ContinuousMultivariateParameter,
+  fields::Vector{Symbol}
+)
+  body = []
+  local f::Symbol
+
+  for i in 1:length(fields)
+    f = fields[i]
+    push!(body, :(getfield($(parameter), $(QuoteNode(f)))($(:_state), $(:_states))))
+  end
+
+  @gensym codegen_setuptofields_continuous_multivariate_parameter
+
+  quote
+    function $codegen_setuptofields_continuous_multivariate_parameter{S<:VariableState}(
+      _state::ContinuousMultivariateParameterState,
+      _states::Vector{S})
+      $(body...)
+    end
+  end
+end
 
 default_state{N<:AbstractFloat}(variable::ContinuousMultivariateParameter, value::Vector{N}) =
   ContinuousMultivariateParameterState(value)
