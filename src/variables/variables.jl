@@ -19,9 +19,15 @@ is_indexed(v::Variable) = v.index > 0 ? true : false
 Base.convert(::Type{KeyVertex}, v::Variable) = KeyVertex{Symbol}(v.index, v.key)
 Base.convert(::Type{Vector{KeyVertex}}, v::Vector{Variable}) = KeyVertex{Symbol}[convert(KeyVertex, i) for i in v]
 
-function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[])
+function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[], k::Vector{Symbol}=Symbol[], i::Int=0)
   body = []
-  fexprn = code_lowered(f, (Any,))
+  fexprn::Array{Any, 1}
+
+  if isempty(k)
+    fexprn = code_lowered(f, (Any,))
+  else
+    fexprn = code_lowered(f, (Any, Any))
+  end
 
   for exprn in fexprn[1].args[3].args
     if !isa(exprn, LineNumberNode)
@@ -29,8 +35,19 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
     end
   end
 
+  fargs = fexprn[1].args[1]
+  nfargs = length(fargs)
+
   for exprn in body
-    replace!(exprn, fexprn[1].args[1][1], :(_state.value))
+    replace!(exprn, fargs[1], :(_state.value))
+  end
+
+  if nfargs > 1
+    for exprn in body
+      for j in [1:(i-1); (i+1):length(k)]
+        replace!(exprn, :($(GlobalRef(Main, :getindex))($(fargs[2]), $(QuoteNode(k[j])))), :(_states[$j].value))
+      end
+    end
   end
 
   nr = length(r)
@@ -44,8 +61,8 @@ function codegen_internal_variable_method(f::Function, r::Vector{Symbol}=Symbol[
 
     @assert nr == length(rvalues) "Wrong number of returned values in user-defined function"
 
-    for i in 1:nr
-      push!(body, Expr(:(=), Expr(:., :_state, QuoteNode(r[i])), rvalues[i]))
+    for j in 1:nr
+      push!(body, Expr(:(=), Expr(:., :_state, QuoteNode(r[j])), rvalues[j]))
     end
   end
 

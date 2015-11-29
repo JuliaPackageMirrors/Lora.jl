@@ -88,7 +88,9 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
-    for (i , ppfield, spfield, f) in ((4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf))
+    for (i , ppfield, spfield, f) in (
+      (4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf)
+    )
       setfield!(
         instance,
         ppfield,
@@ -323,6 +325,10 @@ function ContinuousUnivariateParameter(
           (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
         ])
           outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))
+        elseif any([method_exists(inargs[i], (T, Dict)) for T in
+          (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
+        ])
+          outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i], key, index))
         else
           error("Function $(f[i]) has wrong signature")
         end
@@ -357,8 +363,11 @@ function codegen_setfield_via_distribution_continuous_univariate_parameter(
   distribution::Symbol,
   f::Function
 )
-  body =
-    :(setfield!($(:_state), $(QuoteNode(field)), $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)))
+  body = :(setfield!(
+    $(:_state),
+    $(QuoteNode(field)),
+    $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)
+  ))
   @gensym codegen_setfield_via_distribution_continuous_univariate_parameter
   quote
     function $codegen_setfield_via_distribution_continuous_univariate_parameter{S<:VariableState}(

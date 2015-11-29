@@ -59,7 +59,9 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
     for i = 1:17
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
-        !any([method_exists(args[i], (ContinuousMultivariateParameterState, Vector{S})) for S in subtypes(VariableState)])
+        !any(
+          [method_exists(args[i], (ContinuousMultivariateParameterState, Vector{S})) for S in subtypes(VariableState)]
+        )
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -83,12 +85,17 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
 
     # Define logprior! (i = 4) and gradlogprior! (i = 7)
     # ppfield and spfield stand for parameter prior-related field and state prior-related field repsectively
-    for (i , ppfield, spfield, f) in ((4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf))
+    for (i , ppfield, spfield, f) in (
+      (4, :logprior!, :logprior, logpdf), (7, :gradlogprior!, :gradlogprior, gradlogpdf)
+    )
       setfield!(
         instance,
         ppfield,
         if args[i] == nothing && (
-          (isa(prior, ContinuousMultivariateDistribution) && method_exists(f, (typeof(prior), Vector{eltype(prior)}))) ||
+          (
+            isa(prior, ContinuousMultivariateDistribution) &&
+            method_exists(f, (typeof(prior), Vector{eltype(prior)}))
+          ) ||
           isa(args[2], Function)
         )
           eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, spfield, :prior, f))
@@ -118,7 +125,9 @@ type ContinuousMultivariateParameter <: ContinuousParameter{Continuous, Multivar
             eval(codegen_setfield_via_sum_continuous_multivariate_parameter(
               instance, plfield, ppfield, stfield, slfield, spfield
             ))
-          elseif (isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))) ||
+          elseif (
+              isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))
+            ) ||
             isa(args[1], Function)
             eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, stfield, :pdf, f))
           end
@@ -318,6 +327,10 @@ function ContinuousMultivariateParameter(
           [Any; [Vector{N} for N in (Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)]]
         ])
           outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))
+        elseif any([method_exists(inargs[i], (T, Dict)) for T in
+          [Any; [Vector{N} for N in (Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)]]
+        ])
+          outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i], key, index))
         else
           error("Function $(f[i]) has wrong signature")
         end
@@ -352,8 +365,11 @@ function codegen_setfield_via_distribution_continuous_multivariate_parameter(
   distribution::Symbol,
   f::Function
 )
-  body =
-    :(setfield!($(:_state), $(QuoteNode(field)), $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)))
+  body = :(
+    setfield!($(:_state),
+    $(QuoteNode(field)),
+    $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)
+  ))
   @gensym codegen_setfield_via_distribution_continuous_multivariate_parameter
   quote
     function $codegen_setfield_via_distribution_continuous_multivariate_parameter{S<:VariableState}(
