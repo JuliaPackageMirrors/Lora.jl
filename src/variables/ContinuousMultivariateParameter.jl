@@ -432,5 +432,5 @@ function codegen_setuptofields_continuous_multivariate_parameter(
   end
 end
 
-default_state{N<:AbstractFloat}(variable::ContinuousMultivariateParameter, value::Vector{N}) =
+default_state{N<:Real}(variable::ContinuousMultivariateParameter, value::Vector{N}) =
   ContinuousMultivariateParameterState(value)

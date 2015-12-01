@@ -293,7 +293,7 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
   end
 end
 
-function Base.read!{N<:AbstractFloat}(
+function Base.read!{N<:Real}(
   iostream::ContinuousParameterIOStream,
   nstate::ContinuousUnivariateParameterNState{N}
 )
@@ -308,7 +308,7 @@ function Base.read!{N<:AbstractFloat}(
   end
 end
 
-function Base.read!{N<:AbstractFloat}(
+function Base.read!{N<:Real}(
   iostream::ContinuousParameterIOStream,
   nstate::ContinuousMultivariateParameterNState{N}
 )
@@ -350,7 +350,7 @@ function Base.read!{N<:AbstractFloat}(
   end
 end
 
-function Base.read{N<:AbstractFloat}(iostream::ContinuousParameterIOStream, T::Type{N})
+function Base.read{N<:Real}(iostream::ContinuousParameterIOStream, T::Type{N})
   nstate::ContinuousParameterNState
   fnames = fieldnames(ContinuousParameterIOStream)
   l = length(iostream.size)

@@ -2,16 +2,16 @@
 
 abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
 
-abstract ContinuousParameterState{F<:VariateForm, N<:AbstractFloat} <: ParameterState{F, N}
+abstract ContinuousParameterState{F<:VariateForm, N<:Real} <: ParameterState{F, N}
 
 Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:AbstractFloat}(::Type{ContinuousParameterState{F, N}}) = N
+Base.eltype{F<:VariateForm, N<:Real}(::Type{ContinuousParameterState{F, N}}) = N
 
 ### Parameter state subtypes
 
 ## ContinuousUnivariateParameterState
 
-type ContinuousUnivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Univariate, N}
+type ContinuousUnivariateParameterState{N<:Real} <: ContinuousParameterState{Univariate, N}
   value::N
   loglikelihood::N
   logprior::N
@@ -29,7 +29,7 @@ type ContinuousUnivariateParameterState{N<:AbstractFloat} <: ContinuousParameter
   diagnostickeys::Vector{Symbol}
 end
 
-function ContinuousUnivariateParameterState{N<:AbstractFloat}(
+function ContinuousUnivariateParameterState{N<:Real}(
   value::N,
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
@@ -38,15 +38,15 @@ function ContinuousUnivariateParameterState{N<:AbstractFloat}(
   ContinuousUnivariateParameterState{N}(value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys)
 end
 
-ContinuousUnivariateParameterState{N<:AbstractFloat}(
+ContinuousUnivariateParameterState{N<:Real}(
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
   ContinuousUnivariateParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:AbstractFloat}(::Type{ContinuousUnivariateParameterState{N}}) = N
-Base.eltype{N<:AbstractFloat}(s::ContinuousUnivariateParameterState{N}) = N
+Base.eltype{N<:Real}(::Type{ContinuousUnivariateParameterState{N}}) = N
+Base.eltype{N<:Real}(s::ContinuousUnivariateParameterState{N}) = N
 
 Base.(:(==)){S<:ContinuousUnivariateParameterState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])
@@ -59,7 +59,7 @@ generate_empty(state::ContinuousUnivariateParameterState) =
 
 ## ContinuousMultivariateParameterState
 
-type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParameterState{Multivariate, N}
+type ContinuousMultivariateParameterState{N<:Real} <: ContinuousParameterState{Multivariate, N}
   value::Vector{N}
   loglikelihood::N
   logprior::N
@@ -78,7 +78,7 @@ type ContinuousMultivariateParameterState{N<:AbstractFloat} <: ContinuousParamet
   diagnostickeys::Vector{Symbol}
 end
 
-function ContinuousMultivariateParameterState{N<:AbstractFloat}(
+function ContinuousMultivariateParameterState{N<:Real}(
   value::Vector{N},
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -113,7 +113,7 @@ function ContinuousMultivariateParameterState{N<:AbstractFloat}(
   )
 end
 
-function ContinuousMultivariateParameterState{N<:AbstractFloat}(
+function ContinuousMultivariateParameterState{N<:Real}(
   value::Vector{N},
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -125,7 +125,7 @@ function ContinuousMultivariateParameterState{N<:AbstractFloat}(
   )
 end
 
-ContinuousMultivariateParameterState{N<:AbstractFloat}(
+ContinuousMultivariateParameterState{N<:Real}(
   size::Int,
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -134,7 +134,7 @@ ContinuousMultivariateParameterState{N<:AbstractFloat}(
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousMultivariateParameterState{N<:AbstractFloat}(
+ContinuousMultivariateParameterState{N<:Real}(
   size::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -143,8 +143,8 @@ ContinuousMultivariateParameterState{N<:AbstractFloat}(
 ) =
   ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:AbstractFloat}(::Type{ContinuousMultivariateParameterState{N}}) = N
-Base.eltype{N<:AbstractFloat}(s::ContinuousMultivariateParameterState{N}) = N
+Base.eltype{N<:Real}(::Type{ContinuousMultivariateParameterState{N}}) = N
+Base.eltype{N<:Real}(s::ContinuousMultivariateParameterState{N}) = N
 
 Base.(:(==)){S<:ContinuousMultivariateParameterState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])

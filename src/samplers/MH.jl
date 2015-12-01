@@ -32,23 +32,28 @@ immutable MH <: MHSampler
   logproposal::Union{Function, Void} # logpdf of asymmetric proposal. For symmetric proposals, logproposal=nothing
   randproposal::Function # random sampling from proposal density
 
-  function MH(s::Bool, l::Union{Function, Void}, r::Function)
-    if s && (l != nothing)
+  function MH(symmetric::Bool, logproposal::Union{Function, Void}, randproposal::Function)
+    if symmetric && (logproposal != nothing)
       error("If the symmetric field is true, then logproposal is not used in the calculations")
     end
-    new(s, l, r)
+    new(symmetric, logproposal, randproposal)
   end
 end
 
-MH(l::Function, r::Function) = MH(false, l, r) # Metropolis-Hastings sampler (asymmetric proposal)
-MH(r::Function) = MH(true, nothing, r) # Metropolis sampler (symmetric proposal)
+# Metropolis-Hastings sampler (asymmetric proposal)
+
+MH(logproposal::Function, randproposal::Function) = MH(false, logproposal, randproposal)
+
+# Metropolis sampler (symmetric proposal)
+
+MH(randproposal::Function) = MH(true, nothing, randproposal)
 
 # Random-walk Metropolis, i.e. Metropolis with a normal proposal density
 
-MH{N<:AbstractFloat}(σ::Matrix{N}) = MH(x::Vector{N} -> rand(MvNormal(x, σ)))
-MH{N<:AbstractFloat}(σ::Vector{N}) = MH(x::Vector{N} -> rand(MvNormal(x, σ)))
-MH{N<:AbstractFloat}(σ::N) = MH(x::N -> rand(Normal(x, σ)))
-MH{N<:AbstractFloat}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
+MH{N<:Real}(σ::Matrix{N}) = MH(x::Vector{N} -> rand(MvNormal(x, σ)))
+MH{N<:Real}(σ::Vector{N}) = MH(x::Vector{N} -> rand(MvNormal(x, σ)))
+MH{N<:Real}(σ::N) = MH(x::N -> rand(Normal(x, σ)))
+MH{N<:Real}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ### Initialize Metropolis-Hastings sampler
 
@@ -70,7 +75,7 @@ sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) = MHState(gen
 
 ## Reset parameter state
 
-function reset!{N<:AbstractFloat, S<:VariableState}(
+function reset!{N<:Real, S<:VariableState}(
   pstate::ContinuousUnivariateParameterState,
   vstate::Vector{S},
   x::N,
@@ -81,7 +86,7 @@ function reset!{N<:AbstractFloat, S<:VariableState}(
   parameter.logtarget!(pstate, vstate)
 end
 
-function reset!{N<:AbstractFloat, S<:VariableState}(
+function reset!{N<:Real, S<:VariableState}(
   pstate::ContinuousMultivariateParameterState,
   vstate::Vector{S},
   x::Vector{N},
@@ -94,7 +99,7 @@ end
 
 ## Initialize task
 
-function initialize_task!{N<:AbstractFloat, S<:VariableState}(
+function initialize_task!{N<:Real, S<:VariableState}(
   pstate::ContinuousUnivariateParameterState{N},
   vstate::Vector{S},
   sstate::MHState{ContinuousUnivariateParameterState{N}},
@@ -113,7 +118,7 @@ function initialize_task!{N<:AbstractFloat, S<:VariableState}(
   end
 end
 
-function initialize_task!{N<:AbstractFloat, S<:VariableState}(
+function initialize_task!{N<:Real, S<:VariableState}(
   pstate::ContinuousMultivariateParameterState{N},
   vstate::Vector{S},
   sstate::MHState{ContinuousMultivariateParameterState{N}},

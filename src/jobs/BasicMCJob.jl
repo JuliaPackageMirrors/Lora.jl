@@ -238,7 +238,7 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
     isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
     isa(job.parameter, ContinuousUnivariateParameter)
     result = quote
-      function $resetplain_basic_mcjob{N<:AbstractFloat}(_x::N)
+      function $resetplain_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
@@ -246,7 +246,7 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
     isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
     isa(job.parameter, ContinuousMultivariateParameter)
     result = quote
-      function $resetplain_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
+      function $resetplain_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
       end
     end
@@ -269,7 +269,7 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
     isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
     isa(job.parameter, ContinuousUnivariateParameter)
     result = quote
-      function $reset_task_basic_mcjob{N<:AbstractFloat}(_x::N)
+      function $reset_task_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
@@ -277,7 +277,7 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
     isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
     isa(job.parameter, ContinuousMultivariateParameter)
     result = quote
-      function $reset_task_basic_mcjob{N<:AbstractFloat}(_x::Vector{N})
+      function $reset_task_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
       end
     end

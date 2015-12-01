@@ -430,5 +430,5 @@ function codegen_setuptofields_continuous_univariate_parameter(
   end
 end
 
-default_state{N<:AbstractFloat}(variable::ContinuousUnivariateParameter, value::Vector{N}) =
+default_state{N<:Real}(variable::ContinuousUnivariateParameter, value::Vector{N}) =
   ContinuousUnivariateParameterState(value)

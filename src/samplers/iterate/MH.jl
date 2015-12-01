@@ -62,7 +62,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
     isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
     isa(job.parameter, ContinuousUnivariateParameter)
     result = quote
-      function $iterate_mh{N<:AbstractFloat, S<:VariableState}(
+      function $iterate_mh{N<:Real, S<:VariableState}(
         _pstate::ContinuousUnivariateParameterState{N},
         _vstate::Vector{S},
         _sstate::MHState{ContinuousUnivariateParameterState{N}},
@@ -78,7 +78,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
     isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
     isa(job.parameter, ContinuousMultivariateParameter)
     result = quote
-      function $iterate_mh{N<:AbstractFloat, S<:VariableState}(
+      function $iterate_mh{N<:Real, S<:VariableState}(
         _pstate::ContinuousMultivariateParameterState{N},
         _vstate::Vector{S},
         _sstate::MHState{ContinuousMultivariateParameterState{N}},

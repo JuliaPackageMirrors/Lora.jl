@@ -72,6 +72,8 @@ export
   HMCSampler,
   Hyperparameter,
   LMCSampler,
+  MALA,
+  MALAState,
   MarkovChain,
   MCJob,
   MCRange,
@@ -86,6 +88,7 @@ export
   MatrixvariateBasicVariableState,
   MultivariateBasicVariableNState,
   MultivariateBasicVariableState,
+  MultivariateMALAState,
   Parameter,
   ParameterIOStream,
   ParameterNState,
@@ -169,6 +172,7 @@ include("tuners/AcceptanceRateMCTuner.jl")
 
 include("samplers/samplers.jl")
 include("samplers/MH.jl")
+include("samplers/MALA.jl")
 
 include("jobs/jobs.jl")
 include("jobs/BasicMCJob.jl")
