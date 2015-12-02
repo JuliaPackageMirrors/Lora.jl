@@ -58,40 +58,18 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
 
   @gensym iterate_mh
 
-  if isa(job.pstate, BasicContUnvParameterState) &&
-    isa(job.sstate.pstate, BasicContUnvParameterState) &&
-    isa(job.parameter, BasicContUnvParameter)
-    result = quote
-      function $iterate_mh{N<:Real, S<:VariableState}(
-        _pstate::BasicContUnvParameterState{N},
-        _vstate::Vector{S},
-        _sstate::MHState{BasicContUnvParameterState{N}},
-        _parameter::BasicContUnvParameter,
-        _sampler::MH,
-        _tuner::MCTuner,
-        _range::BasicMCRange
-      )
-        $(body...)
-      end
+  result = quote
+    function $iterate_mh{S<:VariableState}(
+      _pstate::$(typeof(job.pstate)),
+      _vstate::Vector{S},
+      _sstate::$(typeof(job.sstate)),
+      _parameter::$(typeof(job.parameter)),
+      _sampler::MH,
+      _tuner::MCTuner,
+      _range::BasicMCRange
+    )
+      $(body...)
     end
-  elseif isa(job.pstate, BasicContMuvParameterState) &&
-    isa(job.sstate.pstate, BasicContMuvParameterState) &&
-    isa(job.parameter, BasicContMuvParameter)
-    result = quote
-      function $iterate_mh{N<:Real, S<:VariableState}(
-        _pstate::BasicContMuvParameterState{N},
-        _vstate::Vector{S},
-        _sstate::MHState{BasicContMuvParameterState{N}},
-        _parameter::BasicContMuvParameter,
-        _sampler::MH,
-        _tuner::MCTuner,
-        _range::BasicMCRange
-      )
-        $(body...)
-      end
-    end
-  else
-      error("It is not possible to define iterate!() for given job")
   end
 
   result

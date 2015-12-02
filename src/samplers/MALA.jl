@@ -7,7 +7,7 @@ abstract MALAState <: MCSamplerState
 ## MuvMALAState holds the internal state ("local variables") of the MALA sampler for multivariate parameters
 
 type MuvMALAState{N<:Real} <: MALAState
-  pstate::BasicContMuvParameterState{N} # Parameter state used internally by MALA
+  pstate::ParameterState{Continuous, Multivariate, N} # Parameter state used internally by MALA
   driftstep::N # Drift step size for a single Monte Carlo iteration
   tune::MCTunerState
   ratio::N
@@ -16,7 +16,7 @@ type MuvMALAState{N<:Real} <: MALAState
   poldgivennew::N
 
   function MuvMALAState(
-    pstate::BasicContMuvParameterState{N},
+    pstate::ParameterState{Continuous, Multivariate, N},
     driftstep::N,
     tune::MCTunerState,
     ratio::N,
@@ -35,7 +35,7 @@ type MuvMALAState{N<:Real} <: MALAState
 end
 
 MuvMALAState{N<:Real}(
-  pstate::BasicContMuvParameterState{N},
+  pstate::ParameterState{Continuous, Multivariate, N},
   driftstep::N,
   tune::MCTunerState,
   ratio::N,
@@ -45,7 +45,7 @@ MuvMALAState{N<:Real}(
 ) =
   MuvMALAState{N}(pstate, driftstep, tune, ratio, smean, pnewgivenold, poldgivennew)
 
-MuvMALAState{N<:Real}(pstate::BasicContMuvParameterState{N}, tune::MCTunerState=BasicMCTune()) =
+MuvMALAState{N<:Real}(pstate::ParameterState{Continuous, Multivariate, N}, tune::MCTunerState=BasicMCTune()) =
   MuvMALAState(pstate, NaN, tune, NaN, Array(N, pstate.size), NaN, NaN)
 
 Base.eltype{N<:Real}(::Type{MuvMALAState{N}}) = N
@@ -68,10 +68,10 @@ MALA() = MALA(1.)
 
 ## Initialize parameter state
 
-function initialize!{S<:VariableState}(
-  pstate::BasicContMuvParameterState,
+function initialize!{N<:Real, S<:VariableState}(
+  pstate::ParameterState{Continuous, Multivariate, N},
   vstate::Vector{S},
-  parameter::BasicContMuvParameter,
+  parameter::Parameter{Continuous, Multivariate},
   sampler::MALA
 )
   parameter.uptogradlogtarget!(pstate, vstate)
@@ -81,16 +81,16 @@ end
 
 ## Initialize MuvMALAState
 
-sampler_state(sampler::MALA, tuner::MCTuner, pstate::BasicContMuvParameterState) =
+sampler_state{N<:Real}(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Multivariate, N}) =
   MuvMALAState(generate_empty(pstate), tuner_state(tuner))
 
 ## Reset parameter state
 
 function reset!{N<:Real, S<:VariableState}(
-  pstate::BasicContMuvParameterState{N},
+  pstate::ParameterState{Continuous, Multivariate, N},
   vstate::Vector{S},
   x::Vector{N},
-  parameter::BasicContMuvParameter,
+  parameter::Parameter{Continuous, Multivariate},
   sampler::MALA
 )
   pstate.value = copy(x)
@@ -100,10 +100,10 @@ end
 ## Initialize task
 
 function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::BasicContMuvParameterState{N},
+  pstate::ParameterState{Continuous, Multivariate, N},
   vstate::Vector{S},
   sstate::MuvMALAState{N},
-  parameter::BasicContMuvParameter,
+  parameter::Parameter{Continuous, Multivariate},
   sampler::MALA,
   tuner::MCTuner,
   range::BasicMCRange,

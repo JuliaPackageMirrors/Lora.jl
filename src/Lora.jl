@@ -173,6 +173,7 @@ include("jobs/BasicMCJob.jl")
 # include("jobs/GibbsJob.jl")
 
 include("samplers/iterate/MH.jl")
+include("samplers/iterate/MALA.jl")
 include("samplers/iterate/iterate.jl")
 
 end
