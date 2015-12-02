@@ -234,17 +234,14 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
 
   @gensym resetplain_basic_mcjob
 
-  if isa(job.pstate, BasicContUnvParameterState) &&
-    isa(job.sstate.pstate, BasicContUnvParameterState) &&
-    isa(job.parameter, BasicContUnvParameter)
+  vform = variate_form(job.pstate)
+  if vform == Univariate
     result = quote
       function $resetplain_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
-  elseif isa(job.pstate, BasicContMuvParameterState) &&
-    isa(job.sstate.pstate, BasicContMuvParameterState) &&
-    isa(job.parameter, BasicContMuvParameter)
+  elseif vform == Multivariate
     result = quote
       function $resetplain_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
@@ -265,17 +262,14 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
 
   @gensym reset_task_basic_mcjob
 
-  if isa(job.pstate, BasicContUnvParameterState) &&
-    isa(job.sstate.pstate, BasicContUnvParameterState) &&
-    isa(job.parameter, BasicContUnvParameter)
+  vform = variate_form(job.pstate)
+  if vform == Univariate
     result = quote
       function $reset_task_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
-  elseif isa(job.pstate, BasicContMuvParameterState) &&
-    isa(job.sstate.pstate, BasicContMuvParameterState) &&
-    isa(job.parameter, BasicContMuvParameter)
+  elseif vform == Multivariate
     result = quote
       function $reset_task_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
