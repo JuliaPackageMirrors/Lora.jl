@@ -2,48 +2,53 @@
 
 abstract VariableState{F<:VariateForm, N<:Number}
 
-abstract BasicVariableState{F<:VariateForm, N<:Number} <: VariableState{F, N}
-
+variate_form{F<:VariateForm, N<:Number}(::Type{VariableState{F, N}}) = F
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Number}(::Type{BasicVariableState{F, N}}) = N
 
 ### Basic variable state subtypes
 
-## UnivariateBasicVariableState
+## BasicUnvVariableState
 
-type UnivariateBasicVariableState{N<:Number} <: BasicVariableState{Univariate, N}
+type BasicUnvVariableState{N<:Number} <: VariableState{Univariate, N}
   value::N
 end
 
-Base.eltype{N<:Number}(::Type{UnivariateBasicVariableState{N}}) = N
-Base.eltype{N<:Number}(s::UnivariateBasicVariableState{N}) = N
+variate_form{N<:Number}(s::Type{BasicUnvVariableState{N}}) = variate_form(super(s))
+variate_form{N<:Number}(s::BasicUnvVariableState{N}) = variate_form(super(typeof(s)))
 
-## MultivariateBasicVariableState
+Base.eltype{N<:Number}(::Type{BasicUnvVariableState{N}}) = N
+Base.eltype{N<:Number}(s::BasicUnvVariableState{N}) = N
 
-type MultivariateBasicVariableState{N<:Number} <: BasicVariableState{Multivariate, N}
+## BasicMuvVariableState
+
+type BasicMuvVariableState{N<:Number} <: VariableState{Multivariate, N}
   value::Vector{N}
   size::Int
 end
 
-MultivariateBasicVariableState{N<:Number}(value::Vector{N}) = MultivariateBasicVariableState{N}(value, length(value))
+BasicMuvVariableState{N<:Number}(value::Vector{N}) = BasicMuvVariableState{N}(value, length(value))
 
-MultivariateBasicVariableState{N<:Number}(size::Int, ::Type{N}=Float64) =
-  MultivariateBasicVariableState{N}(Array(N, size), size)
+BasicMuvVariableState{N<:Number}(size::Int, ::Type{N}=Float64) = BasicMuvVariableState{N}(Array(N, size), size)
 
-Base.eltype{N<:Number}(::Type{MultivariateBasicVariableState{N}}) = N
-Base.eltype{N<:Number}(s::MultivariateBasicVariableState{N}) = N
+variate_form{N<:Number}(s::Type{BasicMuvVariableState{N}}) = variate_form(super(s))
+variate_form{N<:Number}(s::BasicMuvVariableState{N}) = variate_form(super(typeof(s)))
 
-## MatrixvariateBasicVariableState
+Base.eltype{N<:Number}(::Type{BasicMuvVariableState{N}}) = N
+Base.eltype{N<:Number}(s::BasicMuvVariableState{N}) = N
 
-type MatrixvariateBasicVariableState{N<:Number} <: BasicVariableState{Matrixvariate, N}
+## BasicMavVariableState
+
+type BasicMavVariableState{N<:Number} <: VariableState{Matrixvariate, N}
   value::Matrix{N}
   size::Tuple{Int, Int}
 end
 
-MatrixvariateBasicVariableState{N<:Number}(value::Matrix{N}) = MatrixvariateBasicVariableState{N}(value, size(value))
+BasicMavVariableState{N<:Number}(value::Matrix{N}) = BasicMavVariableState{N}(value, size(value))
 
-MatrixvariateBasicVariableState{N<:Number}(size::Tuple, ::Type{N}=Float64) =
-  MatrixvariateBasicVariableState{N}(Array(N, size...), size)
+BasicMavVariableState{N<:Number}(size::Tuple, ::Type{N}=Float64) = BasicMavVariableState{N}(Array(N, size...), size)
 
-Base.eltype{N<:Number}(::Type{MatrixvariateBasicVariableState{N}}) = N
-Base.eltype{N<:Number}(s::MatrixvariateBasicVariableState{N}) = N
+variate_form{N<:Number}(s::Type{BasicMavVariableState{N}}) = variate_form(super(s))
+variate_form{N<:Number}(s::BasicMavVariableState{N}) = variate_form(super(typeof(s)))
+
+Base.eltype{N<:Number}(::Type{BasicMavVariableState{N}}) = N
+Base.eltype{N<:Number}(s::BasicMavVariableState{N}) = N

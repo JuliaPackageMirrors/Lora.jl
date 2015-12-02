@@ -84,9 +84,9 @@ end
 
 Constant(key::Symbol) = Constant(key, 0)
 
-default_state{N<:Number}(variable::Constant, value::N) = UnivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Constant, value::Vector{N}) = MultivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Constant, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+default_state{N<:Number}(variable::Constant, value::N) = BasicUnvVariableState(value)
+default_state{N<:Number}(variable::Constant, value::Vector{N}) = BasicMuvVariableState(value)
+default_state{N<:Number}(variable::Constant, value::Matrix{N}) = BasicMavVariableState(value)
 
 ## Hyperparameter
 
@@ -104,9 +104,9 @@ Data(key::Symbol, index::Int) = Data(key, index, nothing)
 Data(key::Symbol, update::Union{Function, Void}) = Data(key, 0, update)
 Data(key::Symbol) = Data(key, 0, nothing)
 
-default_state{N<:Number}(variable::Data, value::N) = UnivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Data, value::Vector{N}) = MultivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Data, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+default_state{N<:Number}(variable::Data, value::N) = BasicUnvVariableState(value)
+default_state{N<:Number}(variable::Data, value::Vector{N}) = BasicMuvVariableState(value)
+default_state{N<:Number}(variable::Data, value::Matrix{N}) = BasicMavVariableState(value)
 
 ## Transformation
 
@@ -118,9 +118,9 @@ end
 
 Transformation(key::Symbol, transform::Function) = Transformation(key, 0, transform)
 
-default_state{N<:Number}(variable::Transformation, value::N) = UnivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Transformation, value::Vector{N}) = MultivariateBasicVariableState(value)
-default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = MatrixvariateBasicVariableState(value)
+default_state{N<:Number}(variable::Transformation, value::N) = BasicUnvVariableState(value)
+default_state{N<:Number}(variable::Transformation, value::Vector{N}) = BasicMuvVariableState(value)
+default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = BasicMavVariableState(value)
 
 ### Random Variable subtypes
 
@@ -128,4 +128,5 @@ default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = Matrixvar
 
 abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 
-abstract ContinuousParameter{S<:ValueSupport, F<:VariateForm} <: Parameter{S, F}
+value_support{S<:ValueSupport, F<:VariateForm}(::Type{Parameter{S, F}}) = S
+variate_form{S<:ValueSupport, F<:VariateForm}(::Type{Parameter{S, F}}) = F

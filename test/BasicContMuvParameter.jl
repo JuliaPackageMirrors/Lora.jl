@@ -24,11 +24,11 @@ fields = Dict{Symbol, Symbol}(
   :uptodtlt=>:uptodtensorlogtarget!
 )
 
-println("    Testing ContinuousMultivariateParameter constructors:")
+println("    Testing BasicContMuvParameter constructors:")
 
 println("      Initialization via index and key fields...")
 
-p = ContinuousMultivariateParameter(:p, 1)
+p = BasicContMuvParameter(:p, 1)
 
 for field in values(fields)
   @test getfield(p, field) == nothing
@@ -38,9 +38,9 @@ println("      Initialization via pdf field...")
 
 pv = [5.18, -7.76]
 μv = [6.11, -8.5]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(μv)]
 
-p = ContinuousMultivariateParameter(:p, 1, pdf=MvNormal(states[2].value, 1.))
+p = BasicContMuvParameter(:p, 1, pdf=MvNormal(states[2].value, 1.))
 
 distribution = MvNormal(μv, 1.)
 p.pdf == distribution
@@ -50,7 +50,7 @@ p.logtarget!(states[1], states)
 p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
-states[1] = ContinuousMultivariateParameterState(pv)
+states[1] = BasicContMuvParameterState(pv)
 
 p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
@@ -74,7 +74,7 @@ p.logtarget!(states[1], states)
 p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
-states[1] = ContinuousMultivariateParameterState(pv)
+states[1] = BasicContMuvParameterState(pv)
 
 p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
@@ -88,9 +88,9 @@ println("      Initialization via prior field...")
 pv = [1.25, 1.8]
 pvlen = length(pv)
 σv = [10., 2.]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(σv)]
 
-p = ContinuousMultivariateParameter(:p, 1, prior=MvNormal(zeros(pvlen), states[2].value))
+p = BasicContMuvParameter(:p, 1, prior=MvNormal(zeros(pvlen), states[2].value))
 
 distribution = MvNormal(zeros(pvlen), σv)
 p.prior == distribution
@@ -142,9 +142,9 @@ println("      Initialization via setpdf field...")
 
 pv = [3.79, 4.64]
 μv = [5.4, 5.3]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(μv)]
 
-p = ContinuousMultivariateParameter(:p, 1, setpdf=(state, states) -> MvNormal(states[2].value, 1.))
+p = BasicContMuvParameter(:p, 1, setpdf=(state, states) -> MvNormal(states[2].value, 1.))
 p.setpdf(states[1], states)
 
 distribution = MvNormal(μv, 1.)
@@ -155,7 +155,7 @@ p.logtarget!(states[1], states)
 p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
-states[1] = ContinuousMultivariateParameterState(pv)
+states[1] = BasicContMuvParameterState(pv)
 
 p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
@@ -179,7 +179,7 @@ p.logtarget!(states[1], states)
 p.gradlogtarget!(states[1], states)
 @test states[1].gradlogtarget == glt
 
-states[1] = ContinuousMultivariateParameterState(pv)
+states[1] = BasicContMuvParameterState(pv)
 
 p.uptogradlogtarget!(states[1], states)
 @test (states[1].logtarget, states[1].gradlogtarget) == (lt, glt)
@@ -193,9 +193,9 @@ println("      Initialization via setprior field...")
 pv = [3.55, 9.5]
 pvlen = length(pv)
 σv = [2., 10.]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(σv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(σv)]
 
-p = ContinuousMultivariateParameter(:p, 1, setprior=(state, states) -> MvNormal(zeros(pvlen), states[2].value))
+p = BasicContMuvParameter(:p, 1, setprior=(state, states) -> MvNormal(zeros(pvlen), states[2].value))
 p.setprior(states[1], states)
 
 distribution = MvNormal(zeros(pvlen), σv)
@@ -237,11 +237,11 @@ xv = [-1.88, 2.23]
 μ0v = zeros(μvlen)
 Σ0v = eye(μvlen)
 states = VariableState[
-  ContinuousMultivariateParameterState(μv),
-  MultivariateBasicVariableState(xv),
-  MatrixvariateBasicVariableState(Σv),
-  MultivariateBasicVariableState(μ0v),
-  MatrixvariateBasicVariableState(Σ0v)
+  BasicContMuvParameterState(μv),
+  BasicMuvVariableState(xv),
+  BasicMavVariableState(Σv),
+  BasicMuvVariableState(μ0v),
+  BasicMavVariableState(Σ0v)
 ]
 
 llf(state, states) =
@@ -260,7 +260,7 @@ lpf(state, states) =
     logdet(states[5].value)
   )[1]
 
-μ = ContinuousMultivariateParameter(:μ, 1, loglikelihood=llf, logprior=lpf)
+μ = BasicContMuvParameter(:μ, 1, loglikelihood=llf, logprior=lpf)
 
 ld = MvNormal(μv, Σv)
 pd = MvNormal(μ0v, Σ0v)
@@ -271,7 +271,7 @@ lt = ll+lp
 μ.logprior!(states[1], states)
 @test_approx_eq states[1].logprior lp
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -295,9 +295,9 @@ println("      Initialization via logtarget! field...")
 pv = [-1.28, 1.73]
 pvlen = length(pv)
 μv = [9.4, 3.32]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(μv)]
 
-p = ContinuousMultivariateParameter(
+p = BasicContMuvParameter(
   :p,
   1,
   logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)⋅(states[1].value-states[2].value)
@@ -328,11 +328,11 @@ xv = [4.11, 8.17]
 μ0v = zeros(μvlen)
 Σ0v = eye(μvlen)
 states = VariableState[
-  ContinuousMultivariateParameterState(μv),
-  MultivariateBasicVariableState(xv),
-  MatrixvariateBasicVariableState(Σv),
-  MultivariateBasicVariableState(μ0v),
-  MatrixvariateBasicVariableState(Σ0v)
+  BasicContMuvParameterState(μv),
+  BasicMuvVariableState(xv),
+  BasicMavVariableState(Σv),
+  BasicMuvVariableState(μ0v),
+  BasicMavVariableState(Σ0v)
 ]
 
 llf(state, states) =
@@ -345,13 +345,7 @@ llf(state, states) =
 
 gllf(state, states) = states[1].gradloglikelihood = (states[3].value\(states[2].value-states[1].value))
 
-μ = ContinuousMultivariateParameter(
-  :μ,
-  1,
-  loglikelihood=llf,
-  gradloglikelihood=gllf,
-  prior=MvNormal(states[4].value, states[5].value)
-)
+μ = BasicContMuvParameter(:μ, 1, loglikelihood=llf, gradloglikelihood=gllf, prior=MvNormal(states[4].value, states[5].value))
 
 ld = MvNormal(μv, Σv)
 pd = MvNormal(μ0v, Σ0v)
@@ -368,7 +362,7 @@ glt = gll+glp
 μ.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == glp
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -379,7 +373,7 @@ states[1] = ContinuousMultivariateParameterState(μv)
 @test states[1].gradlogprior == glp
 @test_approx_eq states[1].gradlogtarget glt
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -421,7 +415,7 @@ glt = gll+glp
 μ.gradlogprior!(states[1], states)
 @test states[1].gradlogprior == glp
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -432,7 +426,7 @@ states[1] = ContinuousMultivariateParameterState(μv)
 @test states[1].gradlogprior == glp
 @test_approx_eq states[1].gradlogtarget glt
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -456,11 +450,11 @@ xv = [5.43, 9.783]
 μ0v = zeros(μvlen)
 Σ0v = eye(μvlen)
 states = VariableState[
-  ContinuousMultivariateParameterState(μv),
-  MultivariateBasicVariableState(xv),
-  MatrixvariateBasicVariableState(Σv),
-  MultivariateBasicVariableState(μ0v),
-  MatrixvariateBasicVariableState(Σ0v)
+  BasicContMuvParameterState(μv),
+  BasicMuvVariableState(xv),
+  BasicMavVariableState(Σv),
+  BasicMuvVariableState(μ0v),
+  BasicMavVariableState(Σ0v)
 ]
 
 llf(state, states) =
@@ -483,7 +477,7 @@ gllf(state, states) = state.gradloglikelihood = (states[3].value\(states[2].valu
 
 glpf(state, states) = state.gradlogprior = -(states[5].value\(state.value-states[4].value))
 
-μ = ContinuousMultivariateParameter(:μ, 1, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
+μ = BasicContMuvParameter(:μ, 1, loglikelihood=llf, logprior=lpf, gradloglikelihood=gllf, gradlogprior=glpf)
 
 ld = MvNormal(μv, Σv)
 pd = MvNormal(μ0v, Σ0v)
@@ -500,7 +494,7 @@ glt = gll+glp
 μ.gradlogprior!(states[1], states)
 @test_approx_eq states[1].gradlogprior glp
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.logtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -511,7 +505,7 @@ states[1] = ContinuousMultivariateParameterState(μv)
 @test_approx_eq states[1].gradlogprior glp
 @test_approx_eq states[1].gradlogtarget glt
 
-states[1] = ContinuousMultivariateParameterState(μv)
+states[1] = BasicContMuvParameterState(μv)
 
 μ.uptogradlogtarget!(states[1], states)
 @test_approx_eq states[1].loglikelihood ll
@@ -530,9 +524,9 @@ println("      Initialization via logtarget! and gradlogtarget! fields...")
 
 pv = [-4.29, 2.91]
 μv = [2.2, 2.02]
-states = VariableState[ContinuousMultivariateParameterState(pv), MultivariateBasicVariableState(μv)]
+states = VariableState[BasicContMuvParameterState(pv), BasicMuvVariableState(μv)]
 
-p = ContinuousMultivariateParameter(
+p = BasicContMuvParameter(
   :p,
   1,
   logtarget=(state, states) -> state.logtarget = -(state.value-states[2].value)⋅(states[1].value-states[2].value),
@@ -546,7 +540,7 @@ p.logtarget!(states[1], states)
 p.gradlogtarget!(states[1], states)
 @test_approx_eq 0.5*states[1].gradlogtarget glt
 
-states[1] = ContinuousMultivariateParameterState(pv)
+states[1] = BasicContMuvParameterState(pv)
 
 p.uptogradlogtarget!(states[1], states)
 @test_approx_eq 0.5*(states[1].logtarget-pvlen*log(2*pi))[1] lt

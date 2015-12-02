@@ -4,10 +4,10 @@ using Lora
 println("    Testing MHState constructors...")
 
 v = Float32(1.5)
-pstate = ContinuousUnivariateParameterState(v, [:accept], [true])
+pstate = BasicContUnvParameterState(v, [:accept], [true])
 sstate = MHState(deepcopy(pstate))
 
-@test eltype(sstate) == ContinuousUnivariateParameterState{eltype(v)}
+@test eltype(sstate) == BasicContUnvParameterState{eltype(v)}
 @test isequal(sstate.pstate, pstate)
 @test sstate.tune.accepted == 0
 @test sstate.tune.proposed == 0
@@ -15,10 +15,10 @@ sstate = MHState(deepcopy(pstate))
 @test isnan(sstate.ratio)
 
 v = Float64[-6.55, 2.8]
-pstate = ContinuousMultivariateParameterState(v)
+pstate = BasicContMuvParameterState(v)
 sstate = MHState(deepcopy(pstate), BasicMCTune(10, 100, 0.1))
 
-@test eltype(sstate) == ContinuousMultivariateParameterState{eltype(v)}
+@test eltype(sstate) == BasicContMuvParameterState{eltype(v)}
 @test isequal(sstate.pstate, pstate)
 @test sstate.tune.accepted == 10
 @test sstate.tune.proposed == 100
@@ -26,10 +26,10 @@ sstate = MHState(deepcopy(pstate), BasicMCTune(10, 100, 0.1))
 @test isnan(sstate.ratio)
 
 v = Float16[3.16, -2.97, -8.53]
-pstate = ContinuousMultivariateParameterState(v)
+pstate = BasicContMuvParameterState(v)
 sstate = MHState(deepcopy(pstate), BasicMCTune(), 0.27)
 
-@test eltype(sstate) == ContinuousMultivariateParameterState{eltype(v)}
+@test eltype(sstate) == BasicContMuvParameterState{eltype(v)}
 @test isequal(sstate.pstate, pstate)
 @test sstate.tune.accepted == 0
 @test sstate.tune.proposed == 0

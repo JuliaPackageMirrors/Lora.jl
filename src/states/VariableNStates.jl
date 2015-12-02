@@ -2,73 +2,64 @@
 
 abstract VariableNState{F<:VariateForm, N<:Number}
 
-abstract BasicVariableNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
-
 Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableNState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Number}(::Type{BasicVariableNState{F, N}}) = N
 
 add_dimension(n::Number) = eltype(n)[n]
 add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)
 
 ### Basic variable NState subtypes
 
-## UnivariateBasicVariableNState
+## BasicUnvVariableNState
 
-type UnivariateBasicVariableNState{N<:Number} <: BasicVariableNState{Univariate, N}
+type BasicUnvVariableNState{N<:Number} <: VariableNState{Univariate, N}
   value::Vector{N}
   n::Int
 end
 
-UnivariateBasicVariableNState{N<:Number}(value::Vector{N}) = UnivariateBasicVariableNState{N}(value, length(value))
+BasicUnvVariableNState{N<:Number}(value::Vector{N}) = BasicUnvVariableNState{N}(value, length(value))
 
-UnivariateBasicVariableNState{N<:Number}(n::Int, ::Type{N}=Float64) = UnivariateBasicVariableNState{N}(Array(N, n), n)
+BasicUnvVariableNState{N<:Number}(n::Int, ::Type{N}=Float64) = BasicUnvVariableNState{N}(Array(N, n), n)
 
-Base.eltype{N<:Number}(::Type{UnivariateBasicVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::UnivariateBasicVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{BasicUnvVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::BasicUnvVariableNState{N}) = N
 
-Base.copy!(nstate::UnivariateBasicVariableNState, state::UnivariateBasicVariableState, i::Int) =
-  (nstate.value[i] = state.value)
+Base.copy!(nstate::BasicUnvVariableNState, state::BasicUnvVariableState, i::Int) = (nstate.value[i] = state.value)
 
-## MultivariateBasicVariableNState
+## BasicMuvVariableNState
 
-type MultivariateBasicVariableNState{N<:Number} <: BasicVariableNState{Multivariate, N}
+type BasicMuvVariableNState{N<:Number} <: VariableNState{Multivariate, N}
   value::Matrix{N}
   size::Int
   n::Int
 end
 
-MultivariateBasicVariableNState{N<:Number}(value::Matrix{N}) = MultivariateBasicVariableNState{N}(value, size(value)...)
+BasicMuvVariableNState{N<:Number}(value::Matrix{N}) = BasicMuvVariableNState{N}(value, size(value)...)
 
-MultivariateBasicVariableNState{N<:Number}(size::Int, n::Int, ::Type{N}=Float64) =
-  MultivariateBasicVariableNState{N}(Array(N, size, n), size, n)
+BasicMuvVariableNState{N<:Number}(size::Int, n::Int, ::Type{N}=Float64) =
+  BasicMuvVariableNState{N}(Array(N, size, n), size, n)
 
-Base.eltype{N<:Number}(::Type{MultivariateBasicVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::MultivariateBasicVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{BasicMuvVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::BasicMuvVariableNState{N}) = N
 
-Base.copy!(nstate::MultivariateBasicVariableNState, state::MultivariateBasicVariableState, i::Int) =
+Base.copy!(nstate::BasicMuvVariableNState, state::BasicMuvVariableState, i::Int) =
   (nstate.value[1+(i-1)*state.size:i*state.size] = state.value)
 
-## MatrixvariateBasicVariableNState
+## BasicMavVariableNState
 
-type MatrixvariateBasicVariableNState{N<:Number} <: BasicVariableNState{Matrixvariate, N}
+type BasicMavVariableNState{N<:Number} <: VariableNState{Matrixvariate, N}
   value::Array{N, 3}
   size::Tuple{Int, Int}
   n::Int
 end
 
-MatrixvariateBasicVariableNState{N<:Number}(value::Array{N, 3}) =
-  MatrixvariateBasicVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
+BasicMavVariableNState{N<:Number}(value::Array{N, 3}) =
+  BasicMavVariableNState{N}(value, (size(value, 1), size(value, 2)), size(value, 3))
 
-MatrixvariateBasicVariableNState{N<:Number}(size::Tuple, n::Int, ::Type{N}=Float64) =
-  MatrixvariateBasicVariableNState{N}(Array(N, size..., n), size, n)
+BasicMavVariableNState{N<:Number}(size::Tuple, n::Int, ::Type{N}=Float64) =
+  BasicMavVariableNState{N}(Array(N, size..., n), size, n)
 
-Base.eltype{N<:Number}(::Type{MatrixvariateBasicVariableNState{N}}) = N
-Base.eltype{N<:Number}(s::MatrixvariateBasicVariableNState{N}) = N
+Base.eltype{N<:Number}(::Type{BasicMavVariableNState{N}}) = N
+Base.eltype{N<:Number}(s::BasicMavVariableNState{N}) = N
 
-Base.copy!(
-  nstate::MatrixvariateBasicVariableNState,
-  state::MatrixvariateBasicVariableState,
-  i::Int,
-  statelen::Int=prod(state.size)
-) =
+Base.copy!(nstate::BasicMavVariableNState, state::BasicMavVariableState, i::Int, statelen::Int=prod(state.size)) =
   (nstate.value[1+(i-1)*statelen:i*statelen] = state.value)

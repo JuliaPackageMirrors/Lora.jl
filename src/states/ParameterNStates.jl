@@ -1,21 +1,16 @@
 ### Abstract parameter NStates
 
-abstract ParameterNState{F<:VariateForm, N<:Number} <: VariableNState{F, N}
-
-abstract ContinuousParameterNState{F<:VariateForm, N<:Real} <: ParameterNState{F, N}
+abstract ParameterNState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableNState{F, N}
 
 typealias MarkovChain ParameterNState
 
-typealias ContinuousMarkovChain ContinuousParameterNState
-
-Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterNState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Real}(::Type{ContinuousParameterNState{F, N}}) = N
+Base.eltype{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterNState{S, F, N}}) = N
 
 ### Parameter NState subtypes
 
-## ContinuousUnivariateParameterNState
+## BasicContUnvParameterNState
 
-type ContinuousUnivariateParameterNState{N<:Real} <: ContinuousParameterNState{Univariate, N}
+type BasicContUnvParameterNState{N<:Real} <: ParameterNState{Continuous, Univariate, N}
   value::Vector{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -34,7 +29,7 @@ type ContinuousUnivariateParameterNState{N<:Real} <: ContinuousParameterNState{U
   diagnostickeys::Vector{Symbol}
   copy::Function
 
-  function ContinuousUnivariateParameterNState(
+  function BasicContUnvParameterNState(
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
     diagnostickeys::Vector{Symbol}=Symbol[],
@@ -48,7 +43,7 @@ type ContinuousUnivariateParameterNState{N<:Real} <: ContinuousParameterNState{U
       l[i] = (monitor[i] == false ? zero(Int) : n)
     end
 
-    fnames = fieldnames(ContinuousUnivariateParameterNState)
+    fnames = fieldnames(BasicContUnvParameterNState)
     for i in 1:13
       setfield!(instance, fnames[i], Array(N, l[i]))
     end
@@ -64,42 +59,37 @@ type ContinuousUnivariateParameterNState{N<:Real} <: ContinuousParameterNState{U
   end
 end
 
-ContinuousUnivariateParameterNState{N<:Real}(
+BasicContUnvParameterNState{N<:Real}(
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
-  ContinuousUnivariateParameterNState{N}(n, monitor, diagnostickeys, N, diagnosticvalues)
+  BasicContUnvParameterNState{N}(n, monitor, diagnostickeys, N, diagnosticvalues)
 
-function ContinuousUnivariateParameterNState{N<:Real}(
+function BasicContUnvParameterNState{N<:Real}(
   n::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 )
-  fnames = fieldnames(ContinuousUnivariateParameterNState)
-  ContinuousUnivariateParameterNState(
-    n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, N, diagnosticvalues
-  )
+  fnames = fieldnames(BasicContUnvParameterNState)
+  BasicContUnvParameterNState(n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, N, diagnosticvalues)
 end
 
-typealias ContinuousUnivariateMarkovChain ContinuousUnivariateParameterNState
+typealias ContUnvMarkovChain BasicContUnvParameterNState
 
 # To visually inspect code generation via codegen_copy_continuous_univariate_parameter_nstate, try for example
 # using Lora
 #
-# nstate = ContinuousUnivariateMarkovChain(Float64, 4)
+# nstate = ContUnvMarkovChain(Float64, 4)
 # Lora.codegen_copy_continuous_univariate_parameter_nstate(nstate, [true; fill(false, 12)])
 
-function codegen_copy_continuous_univariate_parameter_nstate(
-  nstate::ContinuousUnivariateParameterNState,
-  monitor::Vector{Bool}
-)
+function codegen_copy_continuous_univariate_parameter_nstate(nstate::BasicContUnvParameterNState, monitor::Vector{Bool})
   body = []
-  fnames = fieldnames(ContinuousUnivariateParameterNState)
+  fnames = fieldnames(BasicContUnvParameterNState)
   local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
 
   for j in 1:13
@@ -116,24 +106,24 @@ function codegen_copy_continuous_univariate_parameter_nstate(
   @gensym copy_continuous_univariate_parameter_nstate
 
   quote
-    function $copy_continuous_univariate_parameter_nstate(_state::ContinuousUnivariateParameterState, _i::Int)
+    function $copy_continuous_univariate_parameter_nstate(_state::BasicContUnvParameterState, _i::Int)
       $(body...)
     end
   end
 end
 
-Base.eltype{N<:Real}(::Type{ContinuousUnivariateParameterNState{N}}) = N
-Base.eltype{N<:Real}(s::ContinuousUnivariateParameterNState{N}) = N
+Base.eltype{N<:Real}(::Type{BasicContUnvParameterNState{N}}) = N
+Base.eltype{N<:Real}(s::BasicContUnvParameterNState{N}) = N
 
-Base.(:(==)){S<:ContinuousUnivariateParameterNState}(z::S, w::S) =
+Base.(:(==)){S<:BasicContUnvParameterNState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)[1:16]])
 
-Base.isequal{S<:ContinuousUnivariateParameterNState}(z::S, w::S) =
+Base.isequal{S<:BasicContUnvParameterNState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)[1:16]])
 
-## ContinuousMultivariateParameterNState
+## BasicContMuvParameterNState
 
-type ContinuousMultivariateParameterNState{N<:Real} <: ContinuousParameterNState{Multivariate, N}
+type BasicContMuvParameterNState{N<:Real} <: ParameterNState{Continuous, Multivariate, N}
   value::Matrix{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -153,7 +143,7 @@ type ContinuousMultivariateParameterNState{N<:Real} <: ContinuousParameterNState
   diagnostickeys::Vector{Symbol}
   copy::Function
 
-  function ContinuousMultivariateParameterNState(
+  function BasicContMuvParameterNState(
     size::Int,
     n::Int,
     monitor::Vector{Bool}=[true; fill(false, 12)],
@@ -163,7 +153,7 @@ type ContinuousMultivariateParameterNState{N<:Real} <: ContinuousParameterNState
   )
     instance = new()
 
-    fnames = fieldnames(ContinuousMultivariateParameterNState)
+    fnames = fieldnames(BasicContMuvParameterNState)
     for i in 2:4
       l = (monitor[i] == false ? zero(Int) : n)
       setfield!(instance, fnames[i], Array(N, l))
@@ -186,14 +176,14 @@ type ContinuousMultivariateParameterNState{N<:Real} <: ContinuousParameterNState
     instance.size = size
     instance.n = n
     instance.diagnostickeys = diagnostickeys
-    
+
     instance.copy = eval(codegen_copy_continuous_multivariate_parameter_nstate(instance, monitor))
 
     instance
   end
 end
 
-ContinuousMultivariateParameterNState{N<:Real}(
+BasicContMuvParameterNState{N<:Real}(
   size::Int,
   n::Int,
   monitor::Vector{Bool}=[true; fill(false, 12)],
@@ -201,9 +191,9 @@ ContinuousMultivariateParameterNState{N<:Real}(
   ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 ) =
-  ContinuousMultivariateParameterNState{N}(size, n, monitor, diagnostickeys, N, diagnosticvalues)
+  BasicContMuvParameterNState{N}(size, n, monitor, diagnostickeys, N, diagnosticvalues)
 
-function ContinuousMultivariateParameterNState{N<:Real}(
+function BasicContMuvParameterNState{N<:Real}(
   size::Int,
   n::Int,
   monitor::Vector{Symbol},
@@ -211,26 +201,26 @@ function ContinuousMultivariateParameterNState{N<:Real}(
   ::Type{N}=Float64,
   diagnosticvalues::Matrix=Array(Any, length(diagnostickeys), isempty(diagnostickeys) ? 0 : n)
 )
-  fnames = fieldnames(ContinuousMultivariateParameterNState)
-  ContinuousMultivariateParameterNState(
+  fnames = fieldnames(BasicContMuvParameterNState)
+  BasicContMuvParameterNState(
     size, n, [fnames[i] in monitor ? true : false for i in 1:13], diagnostickeys, N, diagnosticvalues
   )
 end
 
-typealias ContinuousMultivariateMarkovChain ContinuousMultivariateParameterNState
+typealias ContMuvMarkovChain BasicContMuvParameterNState
 
 # To visually inspect code generation via codegen_copy_continuous_multivariate_parameter_nstate, try for example
 # using Lora
 #
-# nstate = ContinuousMultivariateMarkovChain(Float64, 2, 4)
+# nstate = ContMuvMarkovChain(Float64, 2, 4)
 # Lora.codegen_copy_continuous_multivariate_parameter_nstate(nstate, [true; fill(false, 12)])
 
 function codegen_copy_continuous_multivariate_parameter_nstate(
-  nstate::ContinuousMultivariateParameterNState,
+  nstate::BasicContMuvParameterNState,
   monitor::Vector{Bool}
 )
   body = []
-  fnames = fieldnames(ContinuousMultivariateParameterNState)
+  fnames = fieldnames(BasicContMuvParameterNState)
   local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
   statelen::Int
 
@@ -293,17 +283,17 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   @gensym copy_continuous_multivariate_parameter_nstate
 
   quote
-    function $copy_continuous_multivariate_parameter_nstate(_state::ContinuousMultivariateParameterState, _i::Int)
+    function $copy_continuous_multivariate_parameter_nstate(_state::BasicContMuvParameterState, _i::Int)
       $(body...)
     end
   end
 end
 
-Base.eltype{N<:Real}(::Type{ContinuousMultivariateParameterNState{N}}) = N
-Base.eltype{N<:Real}(s::ContinuousMultivariateParameterNState{N}) = N
+Base.eltype{N<:Real}(::Type{BasicContMuvParameterNState{N}}) = N
+Base.eltype{N<:Real}(s::BasicContMuvParameterNState{N}) = N
 
-Base.(:(==)){S<:ContinuousMultivariateParameterNState}(z::S, w::S) =
+Base.(:(==)){S<:BasicContMuvParameterNState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)[1:17]])
 
-Base.isequal{S<:ContinuousMultivariateParameterNState}(z::S, w::S) =
+Base.isequal{S<:BasicContMuvParameterNState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)[1:17]])

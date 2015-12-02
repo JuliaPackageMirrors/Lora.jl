@@ -37,13 +37,13 @@ augment!(outopts::Vector{Dict}) = map(augment!, outopts)
 # initialize_output() needs to be defined for custom variable state or NState input arguments
 # Thus multiple dispatch allows to extend the code base to accommodate new variable states or NStates
 
-function initialize_output(state::ContinuousUnivariateParameterState, n::Int, outopts::Dict)
+function initialize_output(state::BasicContUnvParameterState, n::Int, outopts::Dict)
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
-    output = ContinuousUnivariateParameterNState(n, outopts[:monitor], outopts[:diagnostics], eltype(state))
+    output = BasicContUnvParameterNState(n, outopts[:monitor], outopts[:diagnostics], eltype(state))
   elseif outopts[:destination] == :iostream
-    output = ContinuousParameterIOStream(
+    output = BasicContParamIOStream(
       (),
       n,
       outopts[:monitor],
@@ -61,13 +61,13 @@ function initialize_output(state::ContinuousUnivariateParameterState, n::Int, ou
   output
 end
 
-function initialize_output(state::ContinuousMultivariateParameterState, n::Int, outopts::Dict)
+function initialize_output(state::BasicContMuvParameterState, n::Int, outopts::Dict)
   output::Union{VariableNState, VariableIOStream, Void}
 
   if outopts[:destination] == :nstate
-    output = ContinuousMultivariateParameterNState(state.size, n, outopts[:monitor], outopts[:diagnostics], eltype(state))
+    output = BasicContMuvParameterNState(state.size, n, outopts[:monitor], outopts[:diagnostics], eltype(state))
   elseif outopts[:destination] == :iostream
-    output = ContinuousParameterIOStream(
+    output = BasicContParamIOStream(
       (),
       n,
       outopts[:monitor],

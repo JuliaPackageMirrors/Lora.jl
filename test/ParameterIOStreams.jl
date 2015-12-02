@@ -24,11 +24,11 @@ for i in 1:14
   filenames[i] = joinpath(filepath, string(fnames[i])*"."*filesuffix)
 end
 
-println("    Testing ContinuousParameterIOStream constructors and close method...")
+println("    Testing BasicContParamIOStream constructors and close method...")
 
 iostreamsize = ()
 iostreamn = 4
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath)
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, filepath=filepath)
 
 @test isa(iostream.value, IOStream)
 for i in 2:14
@@ -43,7 +43,7 @@ rm(filenames[1])
 
 iostreamsize = (2,)
 iostreamn = 4
-iostream = ContinuousParameterIOStream(
+iostream = BasicContParamIOStream(
   iostreamsize,
   iostreamn,
   monitor=[true; fill(false, 5); true; fill(false, 6)],
@@ -66,9 +66,7 @@ for i in (1, 7, 14); rm(filenames[i]); end
 
 iostreamsize = (3,)
 iostreamn = 7
-iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value, :logtarget], filepath=filepath, diagnostickeys=[:accept]
-)
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, [:value, :logtarget], filepath=filepath, diagnostickeys=[:accept])
 
 for i in (1, 4, 14)
   @test isa(iostream.(fnames[i]), IOStream)
@@ -83,25 +81,25 @@ end
 iostream.close()
 for i in [1, 4, 14]; rm(filenames[i]); end
 
-println("    Testing ContinuousParameterIOStream IO methods...")
+println("    Testing BasicContParamIOStream IO methods...")
 
-println("      Interaction with ContinuousUnivariateParameterState...")
+println("      Interaction with BasicContUnvParameterState...")
 
 nstatev = Float64[5.70, 1.44, -1.21, 5.67]
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath)
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, filepath=filepath)
 for v in nstatev
-  iostream.write(ContinuousUnivariateParameterState(v))
+  iostream.write(BasicContUnvParameterState(v))
 end
 
 iostream.close()
 
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, filepath=filepath, mode="r")
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, filepath=filepath, mode="r")
 nstate = read(iostream, Float64)
 
-@test isa(nstate, ContinuousUnivariateMarkovChain{Float64})
+@test isa(nstate, ContUnvMarkovChain{Float64})
 @test nstate.value == nstatev
 for i in 2:13
   @test length(nstate.(fnames[i])) == 0
@@ -113,27 +111,25 @@ end
 iostream.close()
 rm(filenames[1])
 
-println("      Interaction with ContinuousUnivariateMarkovChain...")
+println("      Interaction with ContUnvMarkovChain...")
 
 nstatev = Float32[1.93, 98.46, -3.61, -0.99, 74.52, 9.90]
 nstated = Any[false, true, true, false, true, false]'
 iostreamsize = ()
 iostreamn = length(nstatev)
 
-iostream = ContinuousParameterIOStream(iostreamsize, iostreamn, [:value], filepath=filepath, diagnostickeys=[:accept])
-nstatein = ContinuousUnivariateMarkovChain(iostreamn, [:value], [:accept], Float32)
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, [:value], filepath=filepath, diagnostickeys=[:accept])
+nstatein = ContUnvMarkovChain(iostreamn, [:value], [:accept], Float32)
 nstatein.value = nstatev
 nstatein.diagnosticvalues = nstated
 write(iostream, nstatein)
 
 iostream.close()
 
-iostream = ContinuousParameterIOStream(
-  iostreamsize, iostreamn, [:value], filepath=filepath, diagnostickeys=[:accept], mode="r"
-)
+iostream = BasicContParamIOStream(iostreamsize, iostreamn, [:value], filepath=filepath, diagnostickeys=[:accept], mode="r")
 nstateout = read(iostream, Float32)
 
-@test isa(nstateout, ContinuousUnivariateMarkovChain{Float32})
+@test isa(nstateout, ContUnvMarkovChain{Float32})
 @test nstateout.value == nstatein.value
 for i in 2:13
   @test length(nstateout.(fnames[i])) == 0
@@ -145,7 +141,7 @@ end
 iostream.close()
 for i in (1, 14); rm(filenames[i]); end
 
-println("      Interaction with ContinuousMultivariateParameterState...")
+println("      Interaction with BasicContMuvParameterState...")
 
 nstatev = Float64[1.33 2.44 3.14 -0.82; 7.21 -9.75 -5.26 -0.63]
 nstategll = Float64[3.13 -12.10 13.11 -0.99; 9.91 -5.25 -8.15 -9.69]
@@ -153,23 +149,23 @@ nstated = Any[false, true, true, false]'
 iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
-iostream = ContinuousParameterIOStream(
+iostream = BasicContParamIOStream(
   iostreamsize, iostreamn, [:value, :gradloglikelihood], filepath=filepath, diagnostickeys=[:accept]
 )
 for i in 1:iostreamn
-  state = ContinuousMultivariateParameterState(nstatev[:, i], Symbol[], [:accept], [nstated[i]])
+  state = BasicContMuvParameterState(nstatev[:, i], Symbol[], [:accept], [nstated[i]])
   state.gradloglikelihood = nstategll[:, i]
   iostream.write(state)
 end
 
 iostream.close()
 
-iostream = ContinuousParameterIOStream(
+iostream = BasicContParamIOStream(
   iostreamsize, iostreamn, [:value, :gradloglikelihood], filepath=filepath, diagnostickeys=[:accept], mode="r"
 )
 nstate = read(iostream, Float64)
 
-@test isa(nstate, ContinuousMultivariateMarkovChain{Float64})
+@test isa(nstate, ContMuvMarkovChain{Float64})
 @test nstate.value == nstatev
 @test nstate.gradloglikelihood == nstategll
 for i in [2:4; 6:13]
@@ -183,7 +179,7 @@ end
 iostream.close()
 for i in (1, 5, 14); rm(filenames[i]); end
 
-println("      Interaction with ContinuousMultivariateMarkovChain...")
+println("      Interaction with ContMuvMarkovChain...")
 
 nstatev = Float32[-1.85 -0.09 0.36; -0.45 -0.85 1.91]
 nstatell = Float32[-1.30, -1.65, -0.18]
@@ -192,16 +188,10 @@ nstated = Any[false true; true false; true true]'
 iostreamsize = (size(nstatev, 1),)
 iostreamn = size(nstatev, 2)
 
-iostream = ContinuousParameterIOStream(
+iostream = BasicContParamIOStream(
   iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], filepath=filepath, diagnostickeys=[:accept]
 )
-nstatein = ContinuousMultivariateMarkovChain(
-  iostreamsize[1],
-  iostreamn,
-  [:value, :loglikelihood, :logtarget],
-  [:accept],
-  Float32
-)
+nstatein = ContMuvMarkovChain(iostreamsize[1], iostreamn, [:value, :loglikelihood, :logtarget], [:accept], Float32)
 nstatein.value = nstatev
 nstatein.loglikelihood = nstatell
 nstatein.logtarget = nstatelt
@@ -210,12 +200,12 @@ write(iostream, nstatein)
 
 iostream.close()
 
-iostream = ContinuousParameterIOStream(
+iostream = BasicContParamIOStream(
   iostreamsize, iostreamn, [:value, :loglikelihood, :logtarget], filepath=filepath, diagnostickeys=[:accept], mode="r"
 )
 nstateout = read(iostream, Float32)
 
-@test isa(nstateout, ContinuousMultivariateMarkovChain{Float32})
+@test isa(nstateout, ContMuvMarkovChain{Float32})
 @test nstateout.value == nstatein.value
 @test nstateout.loglikelihood == nstatein.loglikelihood
 @test nstateout.logtarget == nstatein.logtarget

@@ -1,10 +1,10 @@
 ### Abstract parameter IOStreams
 
-abstract ParameterIOStream <: VariableIOStream
+abstract ParameterIOStream{S<:ValueSupport} <: VariableIOStream
 
-### ContinuousParameterIOStream
+### BasicContParamIOStream
 
-type ContinuousParameterIOStream <: ParameterIOStream
+type BasicContParamIOStream <: ParameterIOStream{Continuous}
   value::Union{IOStream, Void}
   loglikelihood::Union{IOStream, Void}
   logprior::Union{IOStream, Void}
@@ -30,7 +30,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
   flush::Function
   write::Function
 
-  function ContinuousParameterIOStream(
+  function BasicContParamIOStream(
     size::Tuple,
     n::Int,
     streams::Vector{Union{IOStream, Void}},
@@ -39,7 +39,7 @@ type ContinuousParameterIOStream <: ParameterIOStream
   )
     instance = new()
 
-    fnames = fieldnames(ContinuousParameterIOStream)
+    fnames = fieldnames(BasicContParamIOStream)
     for i in 1:14
       setfield!(instance, fnames[i], streams[i])
     end
@@ -61,15 +61,15 @@ type ContinuousParameterIOStream <: ParameterIOStream
   end
 end
 
-function ContinuousParameterIOStream(
+function BasicContParamIOStream(
   size::Tuple,
   n::Int,
   filenames::Vector{AbstractString},
   diagnostickeys::Vector{Symbol}=Symbol[],
   mode::AbstractString="w"
 )
-  fnames = fieldnames(ContinuousParameterIOStream)
-  ContinuousParameterIOStream(
+  fnames = fieldnames(BasicContParamIOStream)
+  BasicContParamIOStream(
     size,
     n,
     [isempty(filenames[i]) ? nothing : open(filenames[i], mode) for i in 1:14],
@@ -78,7 +78,7 @@ function ContinuousParameterIOStream(
   )
 end
 
-function ContinuousParameterIOStream(
+function BasicContParamIOStream(
   size::Tuple,
   n::Int;
   monitor::Vector{Bool}=[true; fill(false, 12)],
@@ -87,7 +87,7 @@ function ContinuousParameterIOStream(
   diagnostickeys::Vector{Symbol}=Symbol[],
   mode::AbstractString="w"
 )
-  fnames = fieldnames(ContinuousParameterIOStream)
+  fnames = fieldnames(BasicContParamIOStream)
 
   filenames = Array(AbstractString, 14)
   for i in 1:13
@@ -95,10 +95,10 @@ function ContinuousParameterIOStream(
   end
   filenames[14] = (isempty(diagnostickeys) ? "" : joinpath(filepath, "diagnosticvalues."*filesuffix))
 
-  ContinuousParameterIOStream(size, n, filenames, diagnostickeys, mode)
+  BasicContParamIOStream(size, n, filenames, diagnostickeys, mode)
 end
 
-function ContinuousParameterIOStream(
+function BasicContParamIOStream(
   size::Tuple,
   n::Int,
   monitor::Vector{Symbol};
@@ -107,8 +107,8 @@ function ContinuousParameterIOStream(
   diagnostickeys::Vector{Symbol}=Symbol[],
   mode::AbstractString="w"
 )
-  fnames = fieldnames(ContinuousParameterIOStream)
-  ContinuousParameterIOStream(
+  fnames = fieldnames(BasicContParamIOStream)
+  BasicContParamIOStream(
     size,
     n,
     monitor=[fnames[i] in monitor ? true : false for i in 1:13],
@@ -119,7 +119,7 @@ function ContinuousParameterIOStream(
   )
 end
 
-function codegen_close_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_close_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol
 
@@ -139,7 +139,7 @@ function codegen_close_continuous_parameter_iostream(iostream::ContinuousParamet
   end
 end
 
-function codegen_open_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_open_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol
 
@@ -161,7 +161,7 @@ function codegen_open_continuous_parameter_iostream(iostream::ContinuousParamete
   end
 end
 
-function codegen_mark_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_mark_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol
 
@@ -181,7 +181,7 @@ function codegen_mark_continuous_parameter_iostream(iostream::ContinuousParamete
   end
 end
 
-function codegen_reset_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_reset_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol
 
@@ -201,7 +201,7 @@ function codegen_reset_continuous_parameter_iostream(iostream::ContinuousParamet
   end
 end
 
-function codegen_flush_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_flush_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol
 
@@ -224,11 +224,11 @@ end
 # To visually inspect code generation via codegen_write_continuous_parameter_iostream, try for example
 # using Lora
 #
-# iostream = ContinuousParameterIOStream((), 4, filepath="", "w")
-# Lora.codegen_write_continuous_parameter_iostream(iostream, fieldnames(ContinuousParameterIOStream))
+# iostream = BasicContParamIOStream((), 4, filepath="", "w")
+# Lora.codegen_write_continuous_parameter_iostream(iostream, fieldnames(BasicContParamIOStream))
 # close(iostream)
 
-function codegen_write_continuous_parameter_iostream(iostream::ContinuousParameterIOStream, fnames::Vector{Symbol})
+function codegen_write_continuous_parameter_iostream(iostream::BasicContParamIOStream, fnames::Vector{Symbol})
   body = []
   local f::Symbol # f must be local to avoid compiler errors. Alternatively, this variable declaration can be omitted
 
@@ -245,14 +245,14 @@ function codegen_write_continuous_parameter_iostream(iostream::ContinuousParamet
   @gensym write_continuous_parameter_iostream
 
   quote
-    function $write_continuous_parameter_iostream(_state::ContinuousParameterState)
+    function $write_continuous_parameter_iostream{F<:VariateForm, N<:Number}(_state::ParameterState{Continuous, F, N})
       $(body...)
     end
   end
 end
 
-function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUnivariateParameterNState)
-  fnames = fieldnames(ContinuousParameterIOStream)
+function Base.write(iostream::BasicContParamIOStream, nstate::BasicContUnvParameterNState)
+  fnames = fieldnames(BasicContParamIOStream)
   for i in 1:13
     if iostream.(fnames[i]) != nothing
       writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
@@ -263,8 +263,8 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousUni
   end
 end
 
-function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMultivariateParameterNState)
-  fnames = fieldnames(ContinuousParameterIOStream)
+function Base.write(iostream::BasicContParamIOStream, nstate::BasicContMuvParameterNState)
+  fnames = fieldnames(BasicContParamIOStream)
   for i in 2:4
     if iostream.(fnames[i]) != nothing
       writedlm(iostream.(fnames[i]), nstate.(fnames[i]))
@@ -293,11 +293,8 @@ function Base.write(iostream::ContinuousParameterIOStream, nstate::ContinuousMul
   end
 end
 
-function Base.read!{N<:Real}(
-  iostream::ContinuousParameterIOStream,
-  nstate::ContinuousUnivariateParameterNState{N}
-)
-  fnames = fieldnames(ContinuousParameterIOStream)
+function Base.read!{N<:Real}(iostream::BasicContParamIOStream, nstate::BasicContUnvParameterNState{N})
+  fnames = fieldnames(BasicContParamIOStream)
   for i in 1:13
     if iostream.(fnames[i]) != nothing
       setfield!(nstate, fnames[i], vec(readdlm(iostream.(fnames[i]), ',', N)))
@@ -308,11 +305,8 @@ function Base.read!{N<:Real}(
   end
 end
 
-function Base.read!{N<:Real}(
-  iostream::ContinuousParameterIOStream,
-  nstate::ContinuousMultivariateParameterNState{N}
-)
-  fnames = fieldnames(ContinuousParameterIOStream)
+function Base.read!{N<:Real}(iostream::BasicContParamIOStream, nstate::BasicContMuvParameterNState{N})
+  fnames = fieldnames(BasicContParamIOStream)
   for i in 2:4
     if iostream.(fnames[i]) != nothing
       setfield!(nstate, fnames[i], vec(readdlm(iostream.(fnames[i]), ',', N)))
@@ -350,20 +344,20 @@ function Base.read!{N<:Real}(
   end
 end
 
-function Base.read{N<:Real}(iostream::ContinuousParameterIOStream, T::Type{N})
-  nstate::ContinuousParameterNState
-  fnames = fieldnames(ContinuousParameterIOStream)
+function Base.read{N<:Real}(iostream::BasicContParamIOStream, T::Type{N})
+  nstate::Union{ParameterNState{Continuous, Univariate, N}, ParameterNState{Continuous, Multivariate, N}}
+  fnames = fieldnames(BasicContParamIOStream)
   l = length(iostream.size)
 
   if l == 0
-    nstate = ContinuousUnivariateParameterNState(
+    nstate = BasicContUnvParameterNState(
       iostream.n,
       [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],
       iostream.diagnostickeys,
       T
     )
   elseif l == 1
-    nstate = ContinuousMultivariateParameterNState(
+    nstate = BasicContMuvParameterNState(
       iostream.size[1],
       iostream.n,
       [iostream.(fnames[i]) != nothing ? true : false for i in 1:13],

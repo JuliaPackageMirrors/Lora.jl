@@ -45,26 +45,26 @@ import Graphs:
 export
   ### Types
   AcceptanceRateMCTuner,
+  BasicContMuvParameter,
+  BasicContMuvParameterNState,
+  BasicContMuvParameterState,
+  BasicContParamIOStream,
+  BasicContUnvParameter,
+  BasicContUnvParameterNState,
+  BasicContUnvParameterState,
   BasicMCJob,
   BasicMCRange,
   BasicMCTune,
+  BasicMavVariableNState,
+  BasicMavVariableState,
+  BasicMuvVariableNState,
+  BasicMuvVariableState,
+  BasicUnvVariableNState,
+  BasicUnvVariableState,
   BasicVariableIOStream,
-  BasicVariableNState,
-  BasicVariableState,
   Constant,
-  ContinuousMarkovChain,
-  ContinuousMultivariateMarkovChain,
-  ContinuousMultivariateParameter,
-  ContinuousMultivariateParameterNState,
-  ContinuousMultivariateParameterState,
-  ContinuousParameter,
-  ContinuousParameterIOStream,
-  ContinuousParameterNState,
-  ContinuousParameterState,
-  ContinuousUnivariateMarkovChain,
-  ContinuousUnivariateParameter,
-  ContinuousUnivariateParameterNState,
-  ContinuousUnivariateParameterState,
+  ContMuvMarkovChain,
+  ContUnvMarkovChain,
   Data,
   Dependence,
   Deterministic,
@@ -74,7 +74,6 @@ export
   LMCSampler,
   MALA,
   MALAState,
-  MarkovChain,
   MCJob,
   MCRange,
   MCSampler,
@@ -84,11 +83,8 @@ export
   MH,
   MHSampler,
   MHState,
-  MatrixvariateBasicVariableNState,
-  MatrixvariateBasicVariableState,
-  MultivariateBasicVariableNState,
-  MultivariateBasicVariableState,
-  MultivariateMALAState,
+  MarkovChain,
+  MuvMALAState,
   Parameter,
   ParameterIOStream,
   ParameterNState,
@@ -96,8 +92,6 @@ export
   Random,
   Sampleability,
   Transformation,
-  UnivariateBasicVariableNState,
-  UnivariateBasicVariableState,
   VanillaMCTuner,
   Variable,
   VariableIOStream,
@@ -156,8 +150,8 @@ include("iostreams/VariableIOStreams.jl")
 include("iostreams/ParameterIOStreams.jl")
 
 include("variables/variables.jl")
-include("variables/ContinuousUnivariateParameter.jl")
-include("variables/ContinuousMultivariateParameter.jl")
+include("variables/BasicContUnvParameter.jl")
+include("variables/BasicContMuvParameter.jl")
 include("variables/dependencies.jl")
 
 include("models/GenericModel.jl")

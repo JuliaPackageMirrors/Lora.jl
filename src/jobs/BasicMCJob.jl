@@ -46,7 +46,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
     instance.plain = plain
 
     if checkin
-      Lora.checkin(instance)
+      checkin(instance)
     end
 
     instance.parameter = instance.model.vertices[instance.pindex]
@@ -234,17 +234,17 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
 
   @gensym resetplain_basic_mcjob
 
-  if isa(job.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.parameter, ContinuousUnivariateParameter)
+  if isa(job.pstate, BasicContUnvParameterState) &&
+    isa(job.sstate.pstate, BasicContUnvParameterState) &&
+    isa(job.parameter, BasicContUnvParameter)
     result = quote
       function $resetplain_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
-  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.parameter, ContinuousMultivariateParameter)
+  elseif isa(job.pstate, BasicContMuvParameterState) &&
+    isa(job.sstate.pstate, BasicContMuvParameterState) &&
+    isa(job.parameter, BasicContMuvParameter)
     result = quote
       function $resetplain_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
@@ -265,17 +265,17 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
 
   @gensym reset_task_basic_mcjob
 
-  if isa(job.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.parameter, ContinuousUnivariateParameter)
+  if isa(job.pstate, BasicContUnvParameterState) &&
+    isa(job.sstate.pstate, BasicContUnvParameterState) &&
+    isa(job.parameter, BasicContUnvParameter)
     result = quote
       function $reset_task_basic_mcjob{N<:Real}(_x::N)
         $(body...)
       end
     end
-  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.parameter, ContinuousMultivariateParameter)
+  elseif isa(job.pstate, BasicContMuvParameterState) &&
+    isa(job.sstate.pstate, BasicContMuvParameterState) &&
+    isa(job.parameter, BasicContMuvParameter)
     result = quote
       function $reset_task_basic_mcjob{N<:Real}(_x::Vector{N})
         $(body...)
@@ -312,10 +312,17 @@ function checkin(job::BasicMCJob)
   if !isa(pstate, ParameterState)
     error("The parameter's state must be saved in a ParameterState subtype, got $(typeof(pstate)) state type")
   else
-    if isa(job.model.vertices[job.pindex], ContinuousParameter) && !isa(pstate, ContinuousParameterState)
+    if value_support(job.model.vertices[job.pindex]) != value_support(pstate)
       error(string(
-        "The state of the continuous parameter must be saved in a ContinuousParameterState subtype, ",
-        "got $(typeof(pstate))"
+        "Value support of parameter ($(value_support(job.model.vertices[job.pindex]))) and of ",
+        "($(value_support(pstate))) not in agreement"
+      ))
+    end
+
+    if variate_form(job.model.vertices[job.pindex]) != variate_form(pstate)
+      error(string(
+        "Variate form of parameter ($(variate_form(job.model.vertices[job.pindex]))) and of ",
+        "($(variate_form(pstate))) not in agreement"
       ))
     end
   end

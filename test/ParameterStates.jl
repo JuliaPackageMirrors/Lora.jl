@@ -17,10 +17,10 @@ fnames = (
   :dtensorlogtarget
 )
 
-println("    Testing ContinuousUnivariateParameterState constructors and methods...")
+println("    Testing BasicContUnvParameterState constructors and methods...")
 
 v = Float64(1.5)
-s = ContinuousUnivariateParameterState(v, [:accept], [true])
+s = BasicContUnvParameterState(v, [:accept], [true])
 
 @test eltype(s) == Float64
 @test s.value == v
@@ -30,7 +30,7 @@ end
 @test s.diagnosticvalues == [true]
 @test s.diagnostickeys == [:accept]
 
-s = ContinuousUnivariateParameterState(Symbol[], Float16)
+s = BasicContUnvParameterState(Symbol[], Float16)
 
 @test isa(s.value, Float16)
 for i in 1:13
@@ -39,14 +39,14 @@ end
 @test s.diagnosticvalues == []
 @test s.diagnostickeys == Symbol[]
 
-z = ContinuousUnivariateParameterState(Float64(-3.1), [:accept], [false])
+z = BasicContUnvParameterState(Float64(-3.1), [:accept], [false])
 w = deepcopy(z)
 @test isequal(z, w)
 
-println("    Testing ContinuousMultivariateParameterState constructors and methods...")
+println("    Testing BasicContMuvParameterState constructors and methods...")
 
 v = Float64[1., 1.5]
-s = ContinuousMultivariateParameterState(v)
+s = BasicContMuvParameterState(v)
 
 @test eltype(s) == Float64
 @test s.value == v
@@ -66,7 +66,7 @@ end
 
 v = Float16[0.24, 5.5, -6.3]
 ssize = length(v)
-s = ContinuousMultivariateParameterState(v, [:gradlogtarget], [:accept], [false])
+s = BasicContMuvParameterState(v, [:gradlogtarget], [:accept], [false])
 
 @test eltype(s) == Float16
 @test s.value == v
@@ -88,7 +88,7 @@ end
 @test s.diagnostickeys == [:accept]
 
 ssize = 4
-s = ContinuousMultivariateParameterState(ssize, Symbol[], Symbol[], BigFloat)
+s = BasicContMuvParameterState(ssize, Symbol[], Symbol[], BigFloat)
 
 @test isa(s.value, Vector{BigFloat})
 @test length(s.value) == ssize
@@ -107,6 +107,6 @@ end
 @test s.diagnosticvalues == []
 @test s.diagnostickeys == Symbol[]
 
-z = ContinuousMultivariateParameterState(Float64[-0.12, 12.15])
+z = BasicContMuvParameterState(Float64[-0.12, 12.15])
 w = deepcopy(z)
 @test isequal(z, w)

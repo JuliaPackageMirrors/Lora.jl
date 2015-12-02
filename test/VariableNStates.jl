@@ -1,10 +1,10 @@
 using Base.Test
 using Lora
 
-println("    Testing UnivariateBasicVariableNState constructors and methods...")
+println("    Testing BasicUnvVariableNState constructors and methods...")
 
 nstatev = Float64[1.25, -4.4, 7.5]
-nstate = UnivariateBasicVariableNState(nstatev)
+nstate = BasicUnvVariableNState(nstatev)
 
 @test eltype(nstate) == Float64
 @test nstate.value == nstatev
@@ -13,11 +13,11 @@ nstate = UnivariateBasicVariableNState(nstatev)
 statev = Float64(5.2)
 savei = 2
 
-copy!(nstate, UnivariateBasicVariableState(statev), savei)
+copy!(nstate, BasicUnvVariableState(statev), savei)
 @test nstate.value == [nstatev[1:savei-1]; statev; nstatev[savei+1:end]]
 
 nstatev = Float32[-2.17, 1.92, -0.15, -0.65]
-nstate = UnivariateBasicVariableNState(nstatev)
+nstate = BasicUnvVariableNState(nstatev)
 
 @test eltype(nstate) == Float32
 @test nstate.value == nstatev
@@ -26,19 +26,19 @@ nstate = UnivariateBasicVariableNState(nstatev)
 statev = Float32(-2.12)
 savei = 4
 
-copy!(nstate, UnivariateBasicVariableState(statev), savei)
+copy!(nstate, BasicUnvVariableState(statev), savei)
 @test nstate.value == [nstatev[1:savei-1]; statev; nstatev[savei+1:end]]
 
 nstaten = 10
-nstate = UnivariateBasicVariableNState(nstaten, BigFloat)
+nstate = BasicUnvVariableNState(nstaten, BigFloat)
 
 @test eltype(nstate) == BigFloat
 @test nstate.n == nstaten
 
-println("    Testing MultivariateBasicVariableNState constructors and methods...")
+println("    Testing BasicMuvVariableNState constructors and methods...")
 
 nstatev = Float64[1.35 3.7 4.5; 5.6 8.81 9.2]
-nstate = MultivariateBasicVariableNState(nstatev)
+nstate = BasicMuvVariableNState(nstatev)
 
 @test eltype(nstate) == Float64
 @test nstate.value == nstatev
@@ -48,7 +48,7 @@ nstate = MultivariateBasicVariableNState(nstatev)
 statev = Float64[5.2, 3.31]
 savei = 2
 
-copy!(nstate, MultivariateBasicVariableState(statev), savei)
+copy!(nstate, BasicMuvVariableState(statev), savei)
 @test nstate.value == [nstatev[:, 1:savei-1] statev nstatev[:, savei+1:end]]
 
 nstatev= BigFloat[
@@ -57,7 +57,7 @@ nstatev= BigFloat[
   0.82968   0.4872     0.185226   0.354095  0.944551;
   0.634923  0.448942   0.300905   0.243899  0.126606
 ]
-nstate = MultivariateBasicVariableNState(nstatev)
+nstate = BasicMuvVariableNState(nstatev)
 
 @test eltype(nstate) == BigFloat
 @test nstate.value == nstatev
@@ -67,18 +67,18 @@ nstate = MultivariateBasicVariableNState(nstatev)
 statev = BigFloat[0.0646775, 0.379354, 0.0101067, 0.821756]
 savei = 1
 
-copy!(nstate, MultivariateBasicVariableState(BigFloat[0.0646775, 0.379354, 0.0101067, 0.821756]), 1)
+copy!(nstate, BasicMuvVariableState(BigFloat[0.0646775, 0.379354, 0.0101067, 0.821756]), 1)
 @test nstate.value == [nstatev[:, 1:savei-1] statev nstatev[:, savei+1:end]]
 
 nstatesize = 3
 nstaten = 10
-nstate = MultivariateBasicVariableNState(nstatesize, nstaten, Float16)
+nstate = BasicMuvVariableNState(nstatesize, nstaten, Float16)
 
 @test eltype(nstate) == Float16
 @test nstate.size == nstatesize
 @test nstate.n == nstaten
 
-println("    Testing MatrixvariateBasicVariableNState constructors and methods...")
+println("    Testing BasicMavVariableNState constructors and methods...")
 
 nstatesize = (2, 4)
 nstaten = 5
@@ -103,7 +103,7 @@ nstatev[:, :, 5] = Float64[
   -1.3907   -1.18854  0.985564   0.373107;
    1.21794  -1.04891  0.611239  -0.526945
 ]
-nstate = MatrixvariateBasicVariableNState(nstatev)
+nstate = BasicMavVariableNState(nstatev)
 
 @test eltype(nstate) == Float64
 @test nstate.value == nstatev
@@ -116,7 +116,7 @@ statev = Float64[
 ]
 savei = 3
 
-copy!(nstate, MatrixvariateBasicVariableState(statev), savei)
+copy!(nstate, BasicMavVariableState(statev), savei)
 for i in [1:savei-1; savei; savei+1:nstaten]
   @test nstate.value[:, :, i] == nstatev[:, :, i]
 end
@@ -135,7 +135,7 @@ nstatev[:, :, 2] = Float16[
   -1.18789    0.849805   0.442735    0.454251;
    0.356338   0.60818    0.0970741   0.433813
 ]
-nstate = MatrixvariateBasicVariableNState(nstatev)
+nstate = BasicMavVariableNState(nstatev)
 
 @test eltype(nstate) == Float16
 @test nstate.value == nstatev
@@ -149,7 +149,7 @@ statev = Float16[
 ]
 savei = 2
 
-copy!(nstate, MatrixvariateBasicVariableState(statev), savei)
+copy!(nstate, BasicMavVariableState(statev), savei)
 for i in [1:savei-1; savei; savei+1:nstaten]
   @test nstate.value[:, :, i] == nstatev[:, :, i]
 end
@@ -157,7 +157,7 @@ end
 
 nstatesize = (3, 5)
 nstaten = 12
-nstate = MatrixvariateBasicVariableNState(nstatesize, nstaten, BigFloat)
+nstate = BasicMavVariableNState(nstatesize, nstaten, BigFloat)
 
 @test eltype(nstate) == BigFloat
 @test nstate.size == nstatesize

@@ -7,7 +7,7 @@ println("      Initialization without input arguments...")
 
 m = GenericModel()
 
-θ = ContinuousUnivariateParameter(:θ, 1)
+θ = BasicContUnvParameter(:θ, 1)
 x = Data(:x, 2)
 λ = Hyperparameter(:λ, 3)
 

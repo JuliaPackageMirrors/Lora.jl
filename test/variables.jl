@@ -4,7 +4,7 @@ using Lora
 
 println("    Testing conversion of variables to key vertices compatible with Graphs...")
 
-θ = ContinuousUnivariateParameter(:θ, 1)
+θ = BasicContUnvParameter(:θ, 1)
 
 gθ = convert(KeyVertex, θ)
 

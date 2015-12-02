@@ -1,17 +1,16 @@
 ### Abstract parameter states
 
-abstract ParameterState{F<:VariateForm, N<:Number} <: VariableState{F, N}
+abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableState{F, N}
 
-abstract ContinuousParameterState{F<:VariateForm, N<:Real} <: ParameterState{F, N}
-
-Base.eltype{F<:VariateForm, N<:Number}(::Type{ParameterState{F, N}}) = N
-Base.eltype{F<:VariateForm, N<:Real}(::Type{ContinuousParameterState{F, N}}) = N
+value_support{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = S
+variate_form{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = F
+Base.eltype{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = N
 
 ### Parameter state subtypes
 
-## ContinuousUnivariateParameterState
+## BasicContUnvParameterState
 
-type ContinuousUnivariateParameterState{N<:Real} <: ContinuousParameterState{Univariate, N}
+type BasicContUnvParameterState{N<:Real} <: ParameterState{Continuous, Univariate, N}
   value::N
   loglikelihood::N
   logprior::N
@@ -29,37 +28,42 @@ type ContinuousUnivariateParameterState{N<:Real} <: ContinuousParameterState{Uni
   diagnostickeys::Vector{Symbol}
 end
 
-function ContinuousUnivariateParameterState{N<:Real}(
+function BasicContUnvParameterState{N<:Real}(
   value::N,
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 )
   v = convert(N, NaN)
-  ContinuousUnivariateParameterState{N}(value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys)
+  BasicContUnvParameterState{N}(value, v, v, v, v, v, v, v, v, v, v, v, v, diagnosticvalues, diagnostickeys)
 end
 
-ContinuousUnivariateParameterState{N<:Real}(
+BasicContUnvParameterState{N<:Real}(
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
-  ContinuousUnivariateParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
+  BasicContUnvParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:Real}(::Type{ContinuousUnivariateParameterState{N}}) = N
-Base.eltype{N<:Real}(s::ContinuousUnivariateParameterState{N}) = N
+value_support{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = value_support(super(s))
+value_support{N<:Real}(s::BasicContUnvParameterState{N}) = value_support(super(typeof(s)))
 
-Base.(:(==)){S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+variate_form{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = variate_form(super(s))
+variate_form{N<:Real}(s::BasicContUnvParameterState{N}) = variate_form(super(typeof(s)))
+
+Base.eltype{N<:Real}(::Type{BasicContUnvParameterState{N}}) = N
+Base.eltype{N<:Real}(s::BasicContUnvParameterState{N}) = N
+
+Base.(:(==)){S<:BasicContUnvParameterState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])
 
-Base.isequal{S<:ContinuousUnivariateParameterState}(z::S, w::S) =
+Base.isequal{S<:BasicContUnvParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
 
-generate_empty(state::ContinuousUnivariateParameterState) =
-  ContinuousUnivariateParameterState(state.diagnostickeys, eltype(state))
+generate_empty(state::BasicContUnvParameterState) = BasicContUnvParameterState(state.diagnostickeys, eltype(state))
 
-## ContinuousMultivariateParameterState
+## BasicContMuvParameterState
 
-type ContinuousMultivariateParameterState{N<:Real} <: ContinuousParameterState{Multivariate, N}
+type BasicContMuvParameterState{N<:Real} <: ParameterState{Continuous, Multivariate, N}
   value::Vector{N}
   loglikelihood::N
   logprior::N
@@ -78,7 +82,7 @@ type ContinuousMultivariateParameterState{N<:Real} <: ContinuousParameterState{M
   diagnostickeys::Vector{Symbol}
 end
 
-function ContinuousMultivariateParameterState{N<:Real}(
+function BasicContMuvParameterState{N<:Real}(
   value::Vector{N},
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
@@ -93,7 +97,7 @@ function ContinuousMultivariateParameterState{N<:Real}(
     l[i] = (monitor[i] == false ? zero(Int) : s)
   end
 
-  ContinuousMultivariateParameterState{N}(
+  BasicContMuvParameterState{N}(
     value,
     v,
     v,
@@ -113,48 +117,51 @@ function ContinuousMultivariateParameterState{N<:Real}(
   )
 end
 
-function ContinuousMultivariateParameterState{N<:Real}(
+function BasicContMuvParameterState{N<:Real}(
   value::Vector{N},
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 )
-  fnames = fieldnames(ContinuousMultivariateParameterState)
-  ContinuousMultivariateParameterState(
-    value, [fnames[i] in monitor ? true : false for i in 5:13], diagnostickeys, diagnosticvalues
-  )
+  fnames = fieldnames(BasicContMuvParameterState)
+  BasicContMuvParameterState(value, [fnames[i] in monitor ? true : false for i in 5:13], diagnostickeys, diagnosticvalues)
 end
 
-ContinuousMultivariateParameterState{N<:Real}(
+BasicContMuvParameterState{N<:Real}(
   size::Int,
   monitor::Vector{Bool}=fill(false, 9),
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
-  ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
+  BasicContMuvParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-ContinuousMultivariateParameterState{N<:Real}(
+BasicContMuvParameterState{N<:Real}(
   size::Int,
   monitor::Vector{Symbol},
   diagnostickeys::Vector{Symbol}=Symbol[],
   ::Type{N}=Float64,
   diagnosticvalues::Vector=Array(Any, length(diagnostickeys))
 ) =
-  ContinuousMultivariateParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
+  BasicContMuvParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-Base.eltype{N<:Real}(::Type{ContinuousMultivariateParameterState{N}}) = N
-Base.eltype{N<:Real}(s::ContinuousMultivariateParameterState{N}) = N
+value_support{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = value_support(super(s))
+value_support{N<:Real}(s::BasicContMuvParameterState{N}) = value_support(super(typeof(s)))
 
-Base.(:(==)){S<:ContinuousMultivariateParameterState}(z::S, w::S) =
+variate_form{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = variate_form(super(s))
+variate_form{N<:Real}(s::BasicContMuvParameterState{N}) = variate_form(super(typeof(s)))
+
+Base.eltype{N<:Real}(::Type{BasicContMuvParameterState{N}}) = N
+Base.eltype{N<:Real}(s::BasicContMuvParameterState{N}) = N
+
+Base.(:(==)){S<:BasicContMuvParameterState}(z::S, w::S) =
   reduce(&, [getfield(z, n) == getfield(w, n) for n in fieldnames(S)])
 
-Base.isequal{S<:ContinuousMultivariateParameterState}(z::S, w::S) =
+Base.isequal{S<:BasicContMuvParameterState}(z::S, w::S) =
   reduce(&, [isequal(getfield(z, n), getfield(w, n)) for n in fieldnames(S)])
 
 generate_empty(
-  state::ContinuousMultivariateParameterState,
-  monitor::Vector{Bool}=
-    [isempty(getfield(state, fieldnames(ContinuousMultivariateParameterState)[i])) ? false : true for i in 5:13]
+  state::BasicContMuvParameterState,
+  monitor::Vector{Bool}=[isempty(getfield(state, fieldnames(BasicContMuvParameterState)[i])) ? false : true for i in 5:13]
 ) =
-  ContinuousMultivariateParameterState(state.size, monitor, state.diagnostickeys, eltype(state))
+  BasicContMuvParameterState(state.size, monitor, state.diagnostickeys, eltype(state))

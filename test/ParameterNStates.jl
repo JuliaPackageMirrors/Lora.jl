@@ -17,10 +17,10 @@ fnames = (
   :dtensorlogtarget
 )
 
-println("    Testing ContinuousUnivariateMarkovChain constructors and methods...")
+println("    Testing ContUnvMarkovChain constructors and methods...")
 
 nstaten = 4
-nstate = ContinuousUnivariateMarkovChain(nstaten)
+nstate = ContUnvMarkovChain(nstaten)
 
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
@@ -32,7 +32,7 @@ end
 @test length(nstate.diagnostickeys) == 0
 
 nstaten = 5
-nstate = ContinuousUnivariateMarkovChain(nstaten, [true; fill(false, 5); true; fill(false, 6)], [:accept], Float32)
+nstate = ContUnvMarkovChain(nstaten, [true; fill(false, 5); true; fill(false, 6)], [:accept], Float32)
 
 @test eltype(nstate) == Float32
 @test length(nstate.value) == nstaten
@@ -46,7 +46,7 @@ end
 
 statev = Float32(3.)
 stateglt = Float32(4.21)
-state = ContinuousUnivariateParameterState(statev, [:accept], [true])
+state = BasicContUnvParameterState(statev, [:accept], [true])
 state.gradlogtarget = stateglt
 savei = 2
 
@@ -56,7 +56,7 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == true
 
 nstaten = 10
-nstate = ContinuousUnivariateMarkovChain(nstaten, [:value, :logtarget], [:accept])
+nstate = ContUnvMarkovChain(nstaten, [:value, :logtarget], [:accept])
 
 @test eltype(nstate) == Float64
 @test length(nstate.value) == nstaten
@@ -70,7 +70,7 @@ end
 
 statev = Float64(1.25)
 statelt = Float64(-1.12)
-state = ContinuousUnivariateParameterState(statev, [:accept], [false])
+state = BasicContUnvParameterState(statev, [:accept], [false])
 state.logtarget = statelt
 savei = 7
 
@@ -80,16 +80,16 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == false
 
 nstatev = Float64[4.39, -9,47]
-z = ContinuousUnivariateMarkovChain(length(nstatev))
+z = ContUnvMarkovChain(length(nstatev))
 z.value = copy(nstatev)
 w = deepcopy(z)
 @test isequal(z, w)
 
-println("    Testing ContinuousMultivariateMarkovChain constructors and methods...")
+println("    Testing ContMuvMarkovChain constructors and methods...")
 
 nstatesize = 2
 nstaten = 4
-nstate = ContinuousMultivariateMarkovChain(nstatesize, nstaten)
+nstate = ContMuvMarkovChain(nstatesize, nstaten)
 
 @test eltype(nstate) == Float64
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -112,13 +112,7 @@ end
 
 nstatesize = 2
 nstaten = 5
-nstate = ContinuousMultivariateMarkovChain(
-  nstatesize,
-  nstaten,
-  [true; fill(false, 3); true; fill(false, 8)],
-  [:accept],
-  Float32
-  )
+nstate = ContMuvMarkovChain(nstatesize, nstaten, [true; fill(false, 3); true; fill(false, 8)], [:accept], Float32)
 
 @test eltype(nstate) == Float32
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -142,7 +136,7 @@ end
 
 statev = Float32[0.17, 9.44]
 stategll = Float32[-0.01, 4.7]
-state = ContinuousMultivariateParameterState(statev, [:gradloglikelihood], [:accept], [false])
+state = BasicContMuvParameterState(statev, [:gradloglikelihood], [:accept], [false])
 state.gradloglikelihood = stategll
 savei = 3
 
@@ -153,8 +147,7 @@ nstate.diagnosticvalues[savei] == false
 
 nstatesize = 2
 nstaten = 10
-nstate =
-  ContinuousMultivariateMarkovChain(nstatesize, nstaten, [:value, :logtarget, :gradlogtarget], [:accept], Float16)
+nstate = ContMuvMarkovChain(nstatesize, nstaten, [:value, :logtarget, :gradlogtarget], [:accept], Float16)
 
 @test eltype(nstate) == Float16
 @test size(nstate.value) == (nstatesize, nstaten)
@@ -180,7 +173,7 @@ end
 statev = Float16[6.91, 0.42]
 statelt = Float16(4.67)
 stateglt = Float16[-0.01, 3.2]
-state = ContinuousMultivariateParameterState(statev, [:gradlogtarget], [:accept], [true])
+state = BasicContMuvParameterState(statev, [:gradlogtarget], [:accept], [true])
 state.logtarget = statelt
 state.gradlogtarget = stateglt
 savei = 7
@@ -192,7 +185,7 @@ nstate.copy(state, savei)
 nstate.diagnosticvalues[savei] == true
 
 nstatev = Float64[4.3 9.2 -7.44; -0.2 8.1 4.43]
-z = ContinuousMultivariateMarkovChain(size(nstatev)...)
+z = ContMuvMarkovChain(size(nstatev)...)
 z.value = copy(nstatev)
 w = deepcopy(z)
 @test isequal(z, w)

@@ -1,40 +1,40 @@
 using Base.Test
 using Lora
 
-println("    Testing UnivariateBasicVariableState constructors...")
+println("    Testing BasicUnvVariableState constructors...")
 
 v = Float64(1.21)
-s = UnivariateBasicVariableState(v)
+s = BasicUnvVariableState(v)
 
 @test eltype(s) == Float64
 @test s.value == v
 
-println("    Testing MultivariateBasicVariableState constructors...")
+println("    Testing BasicMuvVariableState constructors...")
 
 v = Float32[1.5, 4.1]
-s = MultivariateBasicVariableState(v)
+s = BasicMuvVariableState(v)
 
 @test eltype(s) == Float32
 @test s.value == v
 @test s.size == length(v)
 
 ssize = 3
-s = MultivariateBasicVariableState(ssize, Float16)
+s = BasicMuvVariableState(ssize, Float16)
 
 @test eltype(s) == Float16
 @test s.size == ssize
 
-println("    Testing MatrixvariateBasicVariableState constructors...")
+println("    Testing BasicMavVariableState constructors...")
 
 v = BigFloat[3.11 7.34; 9.7 6.72; 1.18 8.1]
-s = MatrixvariateBasicVariableState(v)
+s = BasicMavVariableState(v)
 
 @test eltype(s) == BigFloat
 @test s.value == v
 @test s.size == size(v)
 
 ssize = (3, 5)
-s = MatrixvariateBasicVariableState(ssize, Float16)
+s = BasicMavVariableState(ssize, Float16)
 
 @test eltype(s) == Float16
 @test s.size == ssize

@@ -1,15 +1,10 @@
-### ContinuousUnivariateParameter
+### BasicContMuvParameter
 
-# Guidelines for usage of inner constructors of continuous parameter types:
-# 1) Function fields have higher priority than implicitly derived definitions via the pdf field
-# 2) Target-related fields have higher priority than implicitly derived likelihood+prior fields
-# 3) Upto-related fields have higher priority than implicitly derived Function tuples
-
-type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate}
+type BasicContMuvParameter <: Parameter{Continuous, Multivariate}
   key::Symbol
   index::Int
-  pdf::Union{ContinuousUnivariateDistribution, Void}
-  prior::Union{ContinuousUnivariateDistribution, Void}
+  pdf::Union{ContinuousMultivariateDistribution, Void}
+  prior::Union{ContinuousMultivariateDistribution, Void}
   setpdf::Union{Function, Void}
   setprior::Union{Function, Void}
   loglikelihood!::Union{Function, Void}
@@ -28,11 +23,11 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
   uptotensorlogtarget!::Union{Function, Void}
   uptodtensorlogtarget!::Union{Function, Void}
 
-  function ContinuousUnivariateParameter(
+  function BasicContMuvParameter(
     key::Symbol,
     index::Int,
-    pdf::Union{ContinuousUnivariateDistribution, Void},
-    prior::Union{ContinuousUnivariateDistribution, Void},
+    pdf::Union{ContinuousMultivariateDistribution, Void},
+    prior::Union{ContinuousMultivariateDistribution, Void},
     setpdf::Union{Function, Void},
     setprior::Union{Function, Void},
     ll::Union{Function, Void},
@@ -58,13 +53,15 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     instance.prior = prior
 
     args = (setpdf, setprior, ll, lp, lt, gll, glp, glt, tll, tlp, tlt, dtll, dtlp, dtlt, uptoglt, uptotlt, uptodtlt)
-    fnames = fieldnames(ContinuousUnivariateParameter)[5:21]
+    fnames = fieldnames(BasicContMuvParameter)[5:21]
 
     # Check that all generic functions have correct signature
     for i = 1:17
       if isa(args[i], Function) &&
         isgeneric(args[i]) &&
-        !any([method_exists(args[i], (ContinuousUnivariateParameterState, Vector{S})) for S in subtypes(VariableState)])
+        !any(
+          [method_exists(args[i], (BasicContMuvParameterState, Vector{S})) for S in subtypes(VariableState)]
+        )
         error("$(fnames[i]) has wrong signature")
       end
     end
@@ -75,7 +72,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         setter,
         if isa(args[i], Function)
-          eval(codegen_setdistribution_continuous_univariate_parameter(instance, distribution, args[i]))
+          eval(codegen_setdistribution_continuous_multivariate_parameter(instance, distribution, args[i]))
         else
           args[i]
         end
@@ -95,10 +92,13 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         ppfield,
         if args[i] == nothing && (
-          (isa(prior, ContinuousUnivariateDistribution) && method_exists(f, (typeof(prior), eltype(prior)))) ||
+          (
+            isa(prior, ContinuousMultivariateDistribution) &&
+            method_exists(f, (typeof(prior), Vector{eltype(prior)}))
+          ) ||
           isa(args[2], Function)
         )
-          eval(codegen_setfield_via_distribution_continuous_univariate_parameter(instance, spfield, :prior, f))
+          eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, spfield, :prior, f))
         else
           args[i]
         end
@@ -108,7 +108,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
     # Define logtarget! (i = 5) and gradlogtarget! (i = 8)
     # ptfield, plfield and ppfield stand for parameter target, likelihood and prior-related field respectively
     # stfield, slfield and spfield stand for state target, likelihood and prior-related field respectively
-    for (i, ptfield, plfield, ppfield, stfield, slfield, spfield, f) in (
+    for (i , ptfield, plfield, ppfield, stfield, slfield, spfield, f) in (
       (5, :logtarget!, :loglikelihood!, :logprior!, :logtarget, :loglikelihood, :logprior, logpdf),
       (
         8,
@@ -122,12 +122,14 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         ptfield,
         if args[i] == nothing
           if isa(args[i-2], Function) && isa(getfield(instance, ppfield), Function)
-            eval(codegen_setfield_via_sum_continuous_univariate_parameter(
+            eval(codegen_setfield_via_sum_continuous_multivariate_parameter(
               instance, plfield, ppfield, stfield, slfield, spfield
             ))
-          elseif (isa(pdf, ContinuousUnivariateDistribution) && method_exists(f, (typeof(pdf), eltype(pdf)))) ||
+          elseif (
+              isa(pdf, ContinuousMultivariateDistribution) && method_exists(f, (typeof(pdf), Vector{eltype(pdf)}))
+            ) ||
             isa(args[1], Function)
-            eval(codegen_setfield_via_distribution_continuous_univariate_parameter(instance, stfield, :pdf, f))
+            eval(codegen_setfield_via_distribution_continuous_multivariate_parameter(instance, stfield, :pdf, f))
           end
         else
           args[i]
@@ -160,7 +162,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         instance,
         ptfield,
         if args[i] == nothing && isa(args[i-2], Function) && isa(args[i-1], Function)
-          eval(codegen_setfield_via_sum_continuous_univariate_parameter(
+          eval(codegen_setfield_via_sum_continuous_multivariate_parameter(
             instance, plfield, ppfield, stfield, slfield, spfield
           ))
         else
@@ -174,7 +176,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
       instance,
       :uptogradlogtarget!,
       if args[15] == nothing && isa(instance.logtarget!, Function) && isa(instance.gradlogtarget!, Function)
-        eval(codegen_setuptofields_continuous_univariate_parameter(instance, [:logtarget!, :gradlogtarget!]))
+        eval(codegen_setuptofields_continuous_multivariate_parameter(instance, [:logtarget!, :gradlogtarget!]))
       else
         args[15]
       end
@@ -188,7 +190,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         isa(instance.logtarget!, Function) &&
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function)
-        eval(codegen_setuptofields_continuous_univariate_parameter(
+        eval(codegen_setuptofields_continuous_multivariate_parameter(
           instance, [:logtarget!, :gradlogtarget!, :tensorlogtarget!]
         ))
       else
@@ -205,7 +207,7 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
         isa(instance.gradlogtarget!, Function) &&
         isa(instance.tensorlogtarget!, Function) &&
         isa(instance.dtensorlogtarget!, Function)
-        eval(codegen_setuptofields_continuous_univariate_parameter(
+        eval(codegen_setuptofields_continuous_multivariate_parameter(
           instance, [:logtarget!, :gradlogtarget!, :tensorlogtarget!, :dtensorlogtarget!]
         ))
       else
@@ -217,11 +219,11 @@ type ContinuousUnivariateParameter <: ContinuousParameter{Continuous, Univariate
   end
 end
 
-ContinuousUnivariateParameter(
+BasicContMuvParameter(
   key::Symbol,
   index::Int=0;
-  pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
-  prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousMultivariateDistribution, Void}=nothing,
   setpdf::Union{Function, Void}=nothing,
   setprior::Union{Function, Void}=nothing,
   loglikelihood::Union{Function, Void}=nothing,
@@ -240,7 +242,7 @@ ContinuousUnivariateParameter(
   uptotensorlogtarget::Union{Function, Void}=nothing,
   uptodtensorlogtarget::Union{Function, Void}=nothing
 ) =
-  ContinuousUnivariateParameter(
+  BasicContMuvParameter(
     key,
     index,
     pdf,
@@ -264,11 +266,11 @@ ContinuousUnivariateParameter(
     uptodtensorlogtarget
   )
 
-function ContinuousUnivariateParameter(
+function BasicContMuvParameter(
   key::Vector{Symbol},
   index::Int;
-  pdf::Union{ContinuousUnivariateDistribution, Void}=nothing,
-  prior::Union{ContinuousUnivariateDistribution, Void}=nothing,
+  pdf::Union{ContinuousMultivariateDistribution, Void}=nothing,
+  prior::Union{ContinuousMultivariateDistribution, Void}=nothing,
   setpdf::Union{Function, Void}=nothing,
   setprior::Union{Function, Void}=nothing,
   loglikelihood::Union{Function, Void}=nothing,
@@ -311,7 +313,7 @@ function ContinuousUnivariateParameter(
 
   fnames = Array(Any, 17)
   fnames[1:2] = fill(Symbol[], 2)
-  fnames[3:14] = [Symbol[f] for f in fieldnames(ContinuousUnivariateParameterState)[2:13]]
+  fnames[3:14] = [Symbol[f] for f in fieldnames(BasicContMuvParameterState)[2:13]]
   for i in 1:3
     fnames[14+i] = fnames[5:3:(5+i*3)]
   end
@@ -322,64 +324,64 @@ function ContinuousUnivariateParameter(
     elseif isa(inargs[i], Function)
       if isgeneric(inargs[i])
         if any([method_exists(inargs[i], (T,)) for T in
-          (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
+          [Any; [Vector{N} for N in (Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)]]
         ])
           outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i]))
         elseif any([method_exists(inargs[i], (T, Dict)) for T in
-          (Any, Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)
+          [Any; [Vector{N} for N in (Number, Real, AbstractFloat, BigFloat, Float64, Float32, Float16)]]
         ])
           outargs[i] = eval(codegen_internal_variable_method(inargs[i], fnames[i], key, index))
         else
           error("Function $(f[i]) has wrong signature")
         end
       else
-        error("ContinuousUnivariateParameter with vector key input argument works only with generic input methods")
+        error("BasicContMuvParameter with vector key input argument works only with generic input methods")
       end
     end
   end
 
-  ContinuousUnivariateParameter(key[index], index, pdf, prior, outargs...)
+  BasicContMuvParameter(key[index], index, pdf, prior, outargs...)
 end
 
-function codegen_setdistribution_continuous_univariate_parameter(
-  parameter::ContinuousUnivariateParameter,
+function codegen_setdistribution_continuous_multivariate_parameter(
+  parameter::BasicContMuvParameter,
   distribution::Symbol,
   f::Function
 )
   body = :(setfield!($(parameter), $(QuoteNode(distribution)), $(f)($(:_state), $(:_states))))
-  @gensym setdistribution_continuous_univariate_parameter
+  @gensym setdistribution_continuous_multivariate_parameter
   quote
-    function $setdistribution_continuous_univariate_parameter{S<:VariableState}(
-      _state::ContinuousUnivariateParameterState,
+    function $setdistribution_continuous_multivariate_parameter{S<:VariableState}(
+      _state::BasicContMuvParameterState,
       _states::Vector{S})
       $(body)
     end
   end
 end
 
-function codegen_setfield_via_distribution_continuous_univariate_parameter(
-  parameter::ContinuousUnivariateParameter,
+function codegen_setfield_via_distribution_continuous_multivariate_parameter(
+  parameter::BasicContMuvParameter,
   field::Symbol,
   distribution::Symbol,
   f::Function
 )
-  body = :(setfield!(
-    $(:_state),
+  body = :(
+    setfield!($(:_state),
     $(QuoteNode(field)),
     $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)
   ))
-  @gensym codegen_setfield_via_distribution_continuous_univariate_parameter
+  @gensym codegen_setfield_via_distribution_continuous_multivariate_parameter
   quote
-    function $codegen_setfield_via_distribution_continuous_univariate_parameter{S<:VariableState}(
-      _state::ContinuousUnivariateParameterState,
+    function $codegen_setfield_via_distribution_continuous_multivariate_parameter{S<:VariableState}(
+      _state::BasicContMuvParameterState,
       _states::Vector{S})
       $(body)
     end
   end
 end
 
-function codegen_setfield_via_sum_continuous_univariate_parameter(
-  parameter::ContinuousUnivariateParameter,
+function codegen_setfield_via_sum_continuous_multivariate_parameter(
+  parameter::BasicContMuvParameter,
   plfield::Symbol,
   ppfield::Symbol,
   stfield::Symbol,
@@ -396,19 +398,19 @@ function codegen_setfield_via_sum_continuous_univariate_parameter(
     getfield($(:_state), $(QuoteNode(slfield)))+getfield($(:_state), $(QuoteNode(spfield)))))
   )
 
-  @gensym codegen_setfield_via_sum_continuous_univariate_parameter
+  @gensym codegen_setfield_via_sum_continuous_multivariate_parameter
 
   quote
-    function $codegen_setfield_via_sum_continuous_univariate_parameter{S<:VariableState}(
-      _state::ContinuousUnivariateParameterState,
+    function $codegen_setfield_via_sum_continuous_multivariate_parameter{S<:VariableState}(
+      _state::BasicContMuvParameterState,
       _states::Vector{S})
       $(body...)
     end
   end
 end
 
-function codegen_setuptofields_continuous_univariate_parameter(
-  parameter::ContinuousUnivariateParameter,
+function codegen_setuptofields_continuous_multivariate_parameter(
+  parameter::BasicContMuvParameter,
   fields::Vector{Symbol}
 )
   body = []
@@ -419,16 +421,22 @@ function codegen_setuptofields_continuous_univariate_parameter(
     push!(body, :(getfield($(parameter), $(QuoteNode(f)))($(:_state), $(:_states))))
   end
 
-  @gensym codegen_setuptofields_continuous_univariate_parameter
+  @gensym codegen_setuptofields_continuous_multivariate_parameter
 
   quote
-    function $codegen_setuptofields_continuous_univariate_parameter{S<:VariableState}(
-      _state::ContinuousUnivariateParameterState,
+    function $codegen_setuptofields_continuous_multivariate_parameter{S<:VariableState}(
+      _state::BasicContMuvParameterState,
       _states::Vector{S})
       $(body...)
     end
   end
 end
 
-default_state{N<:Real}(variable::ContinuousUnivariateParameter, value::Vector{N}) =
-  ContinuousUnivariateParameterState(value)
+value_support(s::Type{BasicContMuvParameter}) = value_support(super(s))
+value_support(s::BasicContMuvParameter) = value_support(super(typeof(s)))
+
+variate_form(s::Type{BasicContMuvParameter}) = variate_form(super(s))
+variate_form(s::BasicContMuvParameter) = variate_form(super(typeof(s)))
+
+default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}) =
+  BasicContMuvParameterState(value)

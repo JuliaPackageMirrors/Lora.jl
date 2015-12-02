@@ -59,14 +59,24 @@ MH{N<:Real}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ## Initialize parameter state
 
-function initialize!{S<:VariableState}(
-  pstate::ContinuousParameterState,
+function initialize!{N<:Real, S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate, N},
   vstate::Vector{S},
-  parameter::ContinuousParameter,
+  parameter::Parameter{Continuous, Univariate},
   sampler::MH
 )
   parameter.logtarget!(pstate, vstate)
-  @assert isfinite(pstate.logtarget) "Initial values out of parameter support"
+  @assert isfinite(pstate.logtarget) "Log-target not finite: initial values out of parameter support"
+end
+
+function initialize!{N<:Real, S<:VariableState}(
+  pstate::ParameterState{Continuous, Multivariate, N},
+  vstate::Vector{S},
+  parameter::Parameter{Continuous, Multivariate},
+  sampler::MH
+)
+  parameter.logtarget!(pstate, vstate)
+  @assert isfinite(pstate.logtarget) "Log-target not finite: initial values out of parameter support"
 end
 
 ## Initialize MHState
@@ -76,10 +86,10 @@ sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) = MHState(gen
 ## Reset parameter state
 
 function reset!{N<:Real, S<:VariableState}(
-  pstate::ContinuousUnivariateParameterState,
+  pstate::ParameterState{Continuous, Univariate, N},
   vstate::Vector{S},
   x::N,
-  parameter::ContinuousUnivariateParameter,
+  parameter::Parameter{Continuous, Univariate},
   sampler::MH
 )
   pstate.value = x
@@ -87,10 +97,10 @@ function reset!{N<:Real, S<:VariableState}(
 end
 
 function reset!{N<:Real, S<:VariableState}(
-  pstate::ContinuousMultivariateParameterState,
+  pstate::ParameterState{Continuous, Multivariate, N},
   vstate::Vector{S},
   x::Vector{N},
-  parameter::ContinuousMultivariateParameter,
+  parameter::Parameter{Continuous, Multivariate},
   sampler::MH
 )
   pstate.value = copy(x)
@@ -100,10 +110,10 @@ end
 ## Initialize task
 
 function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ContinuousUnivariateParameterState{N},
+  pstate::ParameterState{Continuous, Univariate, N},
   vstate::Vector{S},
-  sstate::MHState{ContinuousUnivariateParameterState{N}},
-  parameter::ContinuousUnivariateParameter,
+  sstate::MHState{ParameterState{Continuous, Univariate, N}},
+  parameter::BasicContUnvParameter,
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,
@@ -119,10 +129,10 @@ function initialize_task!{N<:Real, S<:VariableState}(
 end
 
 function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ContinuousMultivariateParameterState{N},
+  pstate::ParameterState{Continuous, Multivariate, N},
   vstate::Vector{S},
-  sstate::MHState{ContinuousMultivariateParameterState{N}},
-  parameter::ContinuousMultivariateParameter,
+  sstate::MHState{ParameterState{Continuous, Multivariate, N}},
+  parameter::BasicContMuvParameter,
   sampler::MH,
   tuner::MCTuner,
   range::BasicMCRange,

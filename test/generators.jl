@@ -2,7 +2,7 @@ using Lora
 
 println("    Testing likelihood_model generator...")
 
-θ = ContinuousUnivariateParameter(:θ, 1)
+θ = BasicContUnvParameter(:θ, 1)
 x = Data(:x, 2)
 λ = Hyperparameter(:λ, 3)
 

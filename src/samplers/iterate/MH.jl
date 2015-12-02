@@ -58,15 +58,15 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
 
   @gensym iterate_mh
 
-  if isa(job.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousUnivariateParameterState) &&
-    isa(job.parameter, ContinuousUnivariateParameter)
+  if isa(job.pstate, BasicContUnvParameterState) &&
+    isa(job.sstate.pstate, BasicContUnvParameterState) &&
+    isa(job.parameter, BasicContUnvParameter)
     result = quote
       function $iterate_mh{N<:Real, S<:VariableState}(
-        _pstate::ContinuousUnivariateParameterState{N},
+        _pstate::BasicContUnvParameterState{N},
         _vstate::Vector{S},
-        _sstate::MHState{ContinuousUnivariateParameterState{N}},
-        _parameter::ContinuousUnivariateParameter,
+        _sstate::MHState{BasicContUnvParameterState{N}},
+        _parameter::BasicContUnvParameter,
         _sampler::MH,
         _tuner::MCTuner,
         _range::BasicMCRange
@@ -74,15 +74,15 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
         $(body...)
       end
     end
-  elseif isa(job.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.sstate.pstate, ContinuousMultivariateParameterState) &&
-    isa(job.parameter, ContinuousMultivariateParameter)
+  elseif isa(job.pstate, BasicContMuvParameterState) &&
+    isa(job.sstate.pstate, BasicContMuvParameterState) &&
+    isa(job.parameter, BasicContMuvParameter)
     result = quote
       function $iterate_mh{N<:Real, S<:VariableState}(
-        _pstate::ContinuousMultivariateParameterState{N},
+        _pstate::BasicContMuvParameterState{N},
         _vstate::Vector{S},
-        _sstate::MHState{ContinuousMultivariateParameterState{N}},
-        _parameter::ContinuousMultivariateParameter,
+        _sstate::MHState{BasicContMuvParameterState{N}},
+        _parameter::BasicContMuvParameter,
         _sampler::MH,
         _tuner::MCTuner,
         _range::BasicMCRange
