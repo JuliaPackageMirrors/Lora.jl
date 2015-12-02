@@ -11,7 +11,7 @@ type MuvMALAState{N<:Real} <: MALAState
   driftstep::N # Drift step size for a single Monte Carlo iteration
   tune::MCTunerState
   ratio::N
-  smean::Vector{N}
+  vmean::Vector{N}
   pnewgivenold::N
   poldgivennew::N
 
@@ -20,7 +20,7 @@ type MuvMALAState{N<:Real} <: MALAState
     driftstep::N,
     tune::MCTunerState,
     ratio::N,
-    smean::Vector{N},
+    vmean::Vector{N},
     pnewgivenold::N,
     poldgivennew::N
   )
@@ -30,7 +30,7 @@ type MuvMALAState{N<:Real} <: MALAState
     if !isnan(ratio)
       @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
     end
-    new(pstate, driftstep, tune, ratio, smean, pnewgivenold, poldgivennew)
+    new(pstate, driftstep, tune, ratio, vmean, pnewgivenold, poldgivennew)
   end
 end
 
@@ -39,14 +39,18 @@ MuvMALAState{N<:Real}(
   driftstep::N,
   tune::MCTunerState,
   ratio::N,
-  smean::Vector{N},
+  vmean::Vector{N},
   pnewgivenold::N,
   poldgivennew::N
 ) =
-  MuvMALAState{N}(pstate, driftstep, tune, ratio, smean, pnewgivenold, poldgivennew)
+  MuvMALAState{N}(pstate, driftstep, tune, ratio, vmean, pnewgivenold, poldgivennew)
 
-MuvMALAState{N<:Real}(pstate::ParameterState{Continuous, Multivariate, N}, tune::MCTunerState=BasicMCTune()) =
-  MuvMALAState(pstate, NaN, tune, NaN, Array(N, pstate.size), NaN, NaN)
+MuvMALAState{N<:Real}(
+  pstate::ParameterState{Continuous, Multivariate, N},
+  driftstep::N=1.,
+  tune::MCTunerState=BasicMCTune()
+) =
+  MuvMALAState(pstate, driftstep, tune, NaN, Array(N, pstate.size), NaN, NaN)
 
 Base.eltype{N<:Real}(::Type{MuvMALAState{N}}) = N
 Base.eltype{N<:Real}(s::MuvMALAState{N}) = N
@@ -82,7 +86,7 @@ end
 ## Initialize MuvMALAState
 
 sampler_state{N<:Real}(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Multivariate, N}) =
-  MuvMALAState(generate_empty(pstate), tuner_state(tuner))
+  MuvMALAState(generate_empty(pstate), sampler.driftstep, tuner_state(tuner))
 
 ## Reset parameter state
 
