@@ -55,6 +55,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
           round(100*$(:_sstate).tune.rate, 2),
           " % acceptance rate"
         )
+        reset_burnin!($(:_sstate).tune)
       end
     ))
   end

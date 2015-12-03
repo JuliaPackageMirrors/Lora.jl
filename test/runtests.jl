@@ -13,10 +13,10 @@ tests =
     "dependencies",
     "GenericModel",
     "generators",
-    "tuners",
-    "VanillaMCTuner",
+    "tuners"
+    # "VanillaMCTuner",
     # "AcceptanceRateMCTuner",
-    "MH"
+    # "MH"
   ]
 
 println("Running tests:")

@@ -7,21 +7,26 @@
 type VanillaMCTune <: MCTunerState
   accepted::Int # Number of accepted MCMC samples during current tuning period
   proposed::Int # Number of proposed MCMC samples during current tuning period
+  totproposed::Int # Total number of proposed MCMC samples during burnin
   rate::Real # Observed acceptance rate over current tuning period
 
-  function VanillaMCTune(accepted::Int, proposed::Int, rate::Real)
+  function VanillaMCTune(accepted::Int, proposed::Int, totproposed::Int, rate::Real)
     @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
     @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
+    @assert totproposed >= 0 "Total number of proposed MCMC samples should be non-negative"
     if !isnan(rate)
       @assert 0 < rate < 1 "Observed acceptance rate should be between 0 and 1"
     end
-    new(accepted, proposed, rate)
+    new(accepted, proposed, totproposed, rate)
   end
 end
 
-VanillaMCTune(accepted::Int=0, proposed::Int=0) = VanillaMCTune(accepted::Int, proposed::Int, NaN)
+VanillaMCTune(accepted::Int=0, proposed::Int=0, totproposed::Int=0) = VanillaMCTune(accepted, proposed, totproposed, NaN)
 
-reset!(tune::VanillaMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
+function reset_burnin!(tune::VanillaMCTune)
+  tune.totproposed += tune.proposed
+  (tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN)
+end
 
 count!(tune::VanillaMCTune) = (tune.accepted += 1)
 

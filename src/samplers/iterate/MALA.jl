@@ -2,6 +2,7 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
   result::Expr
   update::Vector{Expr}
   noupdate = []
+  burninbody = []
   body = []
 
   stepsize = isa(job.tuner, AcceptanceRateMCTuner) ? :($(:_sstate).tune.step) : :($(:_sstate).driftstep)
@@ -40,11 +41,11 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
   ))
 
   if vform == Univariate
-    push!(body, :($(:_sstate).pnewgivenold =
+    push!(body, :($(:_sstate).poldgivennew =
       -0.5*(abs2($(:_sstate).vmean-$(:_pstate).value)/$(stepsize)+log(2*pi*$(stepsize)))
     ))
   elseif vform == Multivariate
-    push!(body, :($(:_sstate).pnewgivenold =
+    push!(body, :($(:_sstate).poldgivennew =
       sum(-0.5*(abs2($(:_sstate).vmean-$(:_pstate).value)/$(stepsize)+log(2*pi*$(stepsize))))
     ))
   end
@@ -55,14 +56,14 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
 
   update = [
     :($(:_pstate).value = copy($(:_sstate).pstate.value)),
-    :($(:_pstate).logtarget = copy($(:_sstate).pstate.logtarget)),
+    :($(:_pstate).logtarget = $(:_sstate).pstate.logtarget),
     :($(:_pstate).gradlogtarget = copy($(:_sstate).pstate.gradlogtarget))
   ]
   if in(:loglikelihood, outopts[:monitor]) && job.parameter.loglikelihood! != nothing
-    push!(update, :($(:_pstate).loglikelihood = copy($(:_sstate).pstate.loglikelihood)))
+    push!(update, :($(:_pstate).loglikelihood = $(:_sstate).pstate.loglikelihood))
   end
   if in(:logprior, outopts[:monitor]) && job.parameter.logprior! != nothing
-    push!(update, :($(:_pstate).logprior = copy($(:_sstate).pstate.logprior)))
+    push!(update, :($(:_pstate).logprior = $(:_sstate).pstate.logprior))
   end
   if in(:gradloglikelihood, outopts[:monitor]) && job.parameter.gradloglikelihood! != nothing
     push!(update, :($(:_pstate).gradloglikelihood = copy($(:_sstate).pstate.gradloglikelihood)))
@@ -80,30 +81,31 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
 
   push!(body, Expr(:if, :($(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))), Expr(:block, update...), noupdate...))
 
+  if (isa(job.tuner, VanillaMCTuner) && job.tuner.verbose) || isa(job.tuner, AcceptanceRateMCTuner)
+    push!(burninbody, :(rate!($(:_sstate).tune)))
 
+    if isa(job.tuner, AcceptanceRateMCTuner)
+      push!(burninbody, :(tune!($(:_sstate).tune, $(:_tuner))))
+    end
 
+    if job.tuner.verbose
+      push!(burninbody, :(println(
+        "Burnin iteration ",
+        $(:_sstate).tune.proposed,
+        " of ",
+        $(:_range).burnin,
+        ": ",
+        round(100*$(:_sstate).tune.rate, 2),
+        " % acceptance rate"
+      )))
+    end
 
+    push!(burninbody, :(rate!($(:_sstate).tune)))
 
-
-
-
-
-
-
-  if job.tuner.verbose
-    push!(body, :(
-      if $(:_sstate).tune.proposed <= $(:_range).burnin && mod($(:_sstate).tune.proposed, $(:_tuner).period) == 0
-        rate!($(:_sstate).tune)
-        println(
-          "Burnin iteration ",
-          $(:_sstate).tune.proposed,
-          " of ",
-          $(:_range).burnin,
-          ": ",
-          round(100*$(:_sstate).tune.rate, 2),
-          " % acceptance rate"
-        )
-      end
+    push!(body, Expr(
+      :if,
+      :($(:_sstate).tune.proposed <= $(:_range).burnin && mod($(:_sstate).tune.proposed, $(:_tuner).period) == 0),
+      Expr(:block, burninbody...)
     ))
   end
 

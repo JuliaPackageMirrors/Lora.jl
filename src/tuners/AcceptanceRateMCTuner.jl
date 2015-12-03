@@ -24,22 +24,28 @@ type AcceptanceRateMCTune <: MCTunerState
   step::Real # Stepsize of MCMC iteration (for ex leapfrog in HMC or drift stepsize in MALA)
   accepted::Int # Number of accepted MCMC samples during current tuning period
   proposed::Int # Number of proposed MCMC samples during current tuning period
+  totproposed::Int # Total number of proposed MCMC samples during burnin
   rate::Real # Observed acceptance rate over current tuning period
 
-  function AcceptanceRateMCTune(step::Real, accepted::Int, proposed::Int, rate::Real)
+  function AcceptanceRateMCTune(step::Real, accepted::Int, proposed::Int, totproposed::Int, rate::Real)
     @assert step > 0 "Stepsize of MCMC iteration should be positive"
     @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
     @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
+    @assert totproposed >= 0 "Total number of proposed MCMC samples should be non-negative"
     if !isnan(rate)
       @assert 0 < rate < 1 "Observed acceptance rate should be between 0 and 1"
     end
-    new(step, accepted, proposed, rate)
+    new(step, accepted, proposed, totproposed, rate)
   end
 end
 
-AcceptanceRateMCTune(step::Real=1., accepted::Int=0, proposed::Int=0) = AcceptanceRateMCTune(step, accepted, proposed, NaN)
+AcceptanceRateMCTune(step::Real=1., accepted::Int=0, proposed::Int=0, totproposed::Int=0) =
+  AcceptanceRateMCTune(step, accepted, proposed, totproposed, NaN)
 
-reset!(tune::AcceptanceRateMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
+function reset_burnin!(tune::AcceptanceRateMCTune)
+  tune.totproposed += tune.proposed
+  (tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN)
+end
 
 count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
 

@@ -124,6 +124,7 @@ export
   rate!,
   replace!,
   reset!,
+  reset_burnin!,
   revedge,
   run,
   sampler_state,
