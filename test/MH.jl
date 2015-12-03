@@ -16,7 +16,7 @@ sstate = MHState(deepcopy(pstate))
 
 v = Float64[-6.55, 2.8]
 pstate = BasicContMuvParameterState(v)
-sstate = MHState(deepcopy(pstate), BasicMCTune(10, 100, 0.1))
+sstate = MHState(deepcopy(pstate), VanillaMCTune(10, 100, 0.1))
 
 @test eltype(sstate) == BasicContMuvParameterState{eltype(v)}
 @test isequal(sstate.pstate, pstate)
@@ -27,7 +27,7 @@ sstate = MHState(deepcopy(pstate), BasicMCTune(10, 100, 0.1))
 
 v = Float16[3.16, -2.97, -8.53]
 pstate = BasicContMuvParameterState(v)
-sstate = MHState(deepcopy(pstate), BasicMCTune(), 0.27)
+sstate = MHState(deepcopy(pstate), VanillaMCTune(), 0.27)
 
 @test eltype(sstate) == BasicContMuvParameterState{eltype(v)}
 @test isequal(sstate.pstate, pstate)

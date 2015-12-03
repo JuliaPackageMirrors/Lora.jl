@@ -20,4 +20,7 @@ abstract HMCSampler <: MCSampler
 
 abstract LMCSampler <: MCSampler
 
-sampler_state{S<:MCSampler}(sampler::S, tuner::MCTuner) = typeof_state(sampler)(tuner_state(tuner))
+tuner_state(sampler::MCSampler, tuner::VanillaMCTuner) = VanillaMCTune()
+
+tuner_state(sampler::MHSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune()
+tuner_state(sampler::LMCSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune(sampler.driftstep)

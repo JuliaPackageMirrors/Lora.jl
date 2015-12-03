@@ -16,6 +16,35 @@ logistic_rate_score(x::Real, k::Real=7.) = logistic(x, 2., k, 0., 0.)
 
 erf_rate_score(x::Real, k::Real=3.) = erf(k*x)+1
 
+### AcceptanceRateMCTune
+
+# AcceptanceRateMCTune holds the tuning-related local variables of a MCSampler that uses the AcceptanceRateMCTuner
+
+type AcceptanceRateMCTune <: MCTunerState
+  step::Real # Stepsize of MCMC iteration (for ex leapfrog in HMC or drift stepsize in MALA)
+  accepted::Int # Number of accepted MCMC samples during current tuning period
+  proposed::Int # Number of proposed MCMC samples during current tuning period
+  rate::Real # Observed acceptance rate over current tuning period
+
+  function AcceptanceRateMCTune(step::Real, accepted::Int, proposed::Int, rate::Real)
+    @assert step > 0 "Stepsize of MCMC iteration should be positive"
+    @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
+    @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
+    if !isnan(rate)
+      @assert 0 < rate < 1 "Observed acceptance rate should be between 0 and 1"
+    end
+    new(step, accepted, proposed, rate)
+  end
+end
+
+AcceptanceRateMCTune(step::Real=1., accepted::Int=0, proposed::Int=0) = AcceptanceRateMCTune(step, accepted, proposed, NaN)
+
+reset!(tune::AcceptanceRateMCTune) = ((tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN))
+
+count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
+
+rate!(tune::AcceptanceRateMCTune) = (tune.rate = tune.accepted/tune.proposed)
+
 ### AcceptanceRateMCTuner
 
 # AcceptanceRateMCTuner tunes empirically on the basis of the discrepancy between observed and target acceptance rate
@@ -43,6 +72,4 @@ AcceptanceRateMCTuner(
 ) =
   AcceptanceRateMCTuner(targetrate, score, period, verbose)
 
-tuner_state(tuner::AcceptanceRateMCTuner) = BasicMCTune()
-
-tune!(tune::BasicMCTune, tuner::AcceptanceRateMCTuner) = (tune.rate *= tuner.score(tune.rate-tuner.targetrate))
+tune!(tune::AcceptanceRateMCTune, tuner::AcceptanceRateMCTuner) = (tune.step *= tuner.score(tune.rate-tuner.targetrate))

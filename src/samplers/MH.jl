@@ -17,7 +17,7 @@ end
 
 MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) = MHState{S}(pstate, tune, ratio)
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=BasicMCTune()) = MHState(pstate, tune, NaN)
+MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=VanillaMCTune()) = MHState(pstate, tune, NaN)
 
 Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
 Base.eltype{S<:ParameterState}(s::MHState{S}) = S
@@ -81,7 +81,8 @@ end
 
 ## Initialize MHState
 
-sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) = MHState(generate_empty(pstate), tuner_state(tuner))
+sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) =
+  MHState(generate_empty(pstate), tuner_state(sampler, tuner))
 
 ## Reset parameter state
 

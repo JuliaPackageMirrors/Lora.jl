@@ -44,6 +44,7 @@ import Graphs:
 
 export
   ### Types
+  AcceptanceRateMCTune,
   AcceptanceRateMCTuner,
   BasicContMuvParameter,
   BasicContMuvParameterNState,
@@ -54,7 +55,6 @@ export
   BasicContUnvParameterState,
   BasicMCJob,
   BasicMCRange,
-  BasicMCTune,
   BasicMavVariableNState,
   BasicMavVariableState,
   BasicMuvVariableNState,
@@ -92,6 +92,7 @@ export
   Random,
   Sampleability,
   Transformation,
+  VanillaMCTune,
   VanillaMCTuner,
   Variable,
   VariableIOStream,

@@ -1,9 +1,9 @@
 using Base.Test
 using Lora
 
-println("    Testing BasicMCTune constructors and methods...")
+println("    Testing VanillaMCTune constructors and methods...")
 
-tune = BasicMCTune()
+tune = VanillaMCTune()
 
 @test tune.accepted == 0
 @test tune.proposed == 0

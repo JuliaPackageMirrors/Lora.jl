@@ -26,6 +26,12 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
     :($(:_pstate).value = copy($(:_sstate).pstate.value)),
     :($(:_pstate).logtarget = copy($(:_sstate).pstate.logtarget))
   ]
+  if in(:loglikelihood, outopts[:monitor]) && job.parameter.loglikelihood! != nothing
+    push!(update, :($(:_pstate).loglikelihood = copy($(:_sstate).pstate.loglikelihood)))
+  end
+  if in(:logprior, outopts[:monitor]) && job.parameter.logprior! != nothing
+    push!(update, :($(:_pstate).logprior = copy($(:_sstate).pstate.logprior)))
+  end
   if in(:accept, outopts[:diagnostics])
     push!(update, :($(:_pstate).diagnosticvalues[1] = true))
     push!(noupdate, :($(:_pstate).diagnosticvalues[1] = false))
@@ -33,6 +39,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
   if job.tuner.verbose
     push!(update, :($(:_sstate).tune.accepted += 1))
   end
+
   push!(body, Expr(:if, :($(:_sstate).ratio > 0 || ($(:_sstate).ratio > log(rand()))), Expr(:block, update...), noupdate...))
 
   if job.tuner.verbose

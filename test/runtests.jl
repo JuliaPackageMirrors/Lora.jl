@@ -15,7 +15,7 @@ tests =
     "generators",
     "tuners",
     "VanillaMCTuner",
-    "AcceptanceRateMCTuner",
+    # "AcceptanceRateMCTuner",
     "MH"
   ]
 

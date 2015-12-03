@@ -124,7 +124,7 @@ default_state{N<:Number}(variable::Transformation, value::Matrix{N}) = BasicMavV
 
 ### Random Variable subtypes
 
-## Astract Parameter types
+## Abstract Parameter types
 
 abstract Parameter{S<:ValueSupport, F<:VariateForm} <: Variable{Random}
 

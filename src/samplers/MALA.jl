@@ -8,7 +8,7 @@ abstract MALAState <: MCSamplerState
 
 type MuvMALAState{N<:Real} <: MALAState
   pstate::ParameterState{Continuous, Multivariate, N} # Parameter state used internally by MALA
-  driftstep::N # Drift step size for a single Monte Carlo iteration
+  driftstep::N # Drift stepsize for a single Monte Carlo iteration
   tune::MCTunerState
   ratio::N
   vmean::Vector{N}
@@ -48,7 +48,7 @@ MuvMALAState{N<:Real}(
 MuvMALAState{N<:Real}(
   pstate::ParameterState{Continuous, Multivariate, N},
   driftstep::N=1.,
-  tune::MCTunerState=BasicMCTune()
+  tune::MCTunerState=VanillaMCTune()
 ) =
   MuvMALAState(pstate, driftstep, tune, NaN, Array(N, pstate.size), NaN, NaN)
 
@@ -60,7 +60,7 @@ Base.eltype{N<:Real}(s::MuvMALAState{N}) = N
 immutable MALA <: LMCSampler
   driftstep::Real
 
-  function MALA(d::Real)
+  function MALA(driftstep::Real)
     @assert driftstep > 0 "Drift step is not positive"
     new(driftstep)
   end
@@ -80,13 +80,13 @@ function initialize!{N<:Real, S<:VariableState}(
 )
   parameter.uptogradlogtarget!(pstate, vstate)
   @assert isfinite(pstate.logtarget) "Log-target not finite: initial values out of parameter support"
-  @assert isfinite(pstate.gradlogtarget) "Gradient of log-target not finite: initial values out of parameter support"
+  @assert all(isfinite(pstate.gradlogtarget)) "Gradient of log-target not finite: initial values out of parameter support"
 end
 
 ## Initialize MuvMALAState
 
 sampler_state{N<:Real}(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Multivariate, N}) =
-  MuvMALAState(generate_empty(pstate), sampler.driftstep, tuner_state(tuner))
+  MuvMALAState(generate_empty(pstate), sampler.driftstep, tuner_state(sampler, tuner))
 
 ## Reset parameter state
 

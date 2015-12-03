@@ -22,7 +22,7 @@ tuner = AcceptanceRateMCTuner(trate)
 @test tuner.period == 100
 @test tuner.verbose == false
 
-tune = BasicMCTune(30, 100)
+tune = AcceptanceRateMCTune(1., 30, 100)
 rate!(tune)
 orate = tune.rate
 tune!(tune, tuner)
@@ -36,7 +36,7 @@ tuner = AcceptanceRateMCTuner(trate, score=erf_rate_score, period=1000, verbose=
 @test tuner.period == 1000
 @test tuner.verbose == true
 
-tune = BasicMCTune(621, 1000)
+tune = AcceptanceRateMCTune(1., 621, 1000)
 rate!(tune)
 orate = tune.rate
 tune!(tune, tuner)
