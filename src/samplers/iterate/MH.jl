@@ -1,8 +1,13 @@
 function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
   result::Expr
-  update::Vector{Expr}
+  update = []
   noupdate = []
   body = []
+
+  vform = variate_form(job.pstate)
+  if (vform != Univariate) && (vform != Multivariate)
+    error("Only univariate or multivariate parameter states allowed in MALA code generation")
+  end
 
   if job.tuner.verbose
     push!(body, :(_sstate.tune.proposed += 1))
@@ -22,12 +27,17 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
     )))
   end
 
-  update = [:(_pstate.value = copy(_sstate.pstate.value)), :(_pstate.logtarget = copy(_sstate.pstate.logtarget))]
+  if vform == Univariate
+    push!(update, :(_pstate.value = _sstate.pstate.value))
+  elseif vform == Multivariate
+    push!(update, :(_pstate.value = copy(_sstate.pstate.value)))
+  end
+  push!(update, :(_pstate.logtarget = _sstate.pstate.logtarget))
   if in(:loglikelihood, outopts[:monitor]) && job.parameter.loglikelihood! != nothing
-    push!(update, :(_pstate.loglikelihood = copy(_sstate.pstate.loglikelihood)))
+    push!(update, :(_pstate.loglikelihood = _sstate.pstate.loglikelihood))
   end
   if in(:logprior, outopts[:monitor]) && job.parameter.logprior! != nothing
-    push!(update, :(_pstate.logprior = copy(_sstate.pstate.logprior)))
+    push!(update, :(_pstate.logprior = _sstate.pstate.logprior))
   end
   if in(:accept, outopts[:diagnostics])
     push!(update, :(_pstate.diagnosticvalues[1] = true))

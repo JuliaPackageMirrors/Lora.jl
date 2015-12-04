@@ -1,9 +1,14 @@
 function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
   result::Expr
-  update::Vector{Expr}
+  update = []
   noupdate = []
   burninbody = []
   body = []
+
+  vform = variate_form(job.pstate)
+  if (vform != Univariate) && (vform != Multivariate)
+    error("Only univariate or multivariate parameter states allowed in MALA code generation")
+  end
 
   stepsize = isa(job.tuner, AcceptanceRateMCTuner) ? :(_sstate.tune.step) : :(_sstate.driftstep)
 
@@ -12,11 +17,6 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
   end
 
   push!(body, :(_sstate.vmean = _pstate.value+0.5*$(stepsize)*_pstate.gradlogtarget))
-
-  vform = variate_form(job.pstate)
-  if (vform != Univariate) && (vform != Multivariate)
-    error("Only univariate or multivariate parameter states allowed in MALA code generation")
-  end
 
   if vform == Univariate
     push!(body, :(_sstate.pstate.value = _sstate.vmean+sqrt($(stepsize))*randn()))
@@ -44,22 +44,34 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
 
   push!(body, :(_sstate.ratio = _sstate.pstate.logtarget+_sstate.poldgivennew-_pstate.logtarget-_sstate.pnewgivenold))
 
-  update = [
-    :(_pstate.value = copy(_sstate.pstate.value)),
-    :(_pstate.logtarget = _sstate.pstate.logtarget),
-    :(_pstate.gradlogtarget = copy(_sstate.pstate.gradlogtarget))
-  ]
+
+
+
+  if vform == Univariate
+    push!(update, :(_pstate.value = _sstate.pstate.value))
+    push!(update, :(_pstate.gradlogtarget = _sstate.pstate.gradlogtarget))
+    if in(:gradloglikelihood, outopts[:monitor]) && job.parameter.gradloglikelihood! != nothing
+      push!(update, :(_pstate.gradloglikelihood = _sstate.pstate.gradloglikelihood))
+    end
+    if in(:gradlogprior, outopts[:monitor]) && job.parameter.gradlogprior! != nothing
+      push!(update, :(_pstate.gradlogprior = _sstate.pstate.gradlogprior))
+    end
+  elseif vform == Multivariate
+    push!(update, :(_pstate.value = copy(_sstate.pstate.value)))
+    push!(update, :(_pstate.gradlogtarget = copy(_sstate.pstate.gradlogtarget)))
+    if in(:gradloglikelihood, outopts[:monitor]) && job.parameter.gradloglikelihood! != nothing
+      push!(update, :(_pstate.gradloglikelihood = copy(_sstate.pstate.gradloglikelihood)))
+    end
+    if in(:gradlogprior, outopts[:monitor]) && job.parameter.gradlogprior! != nothing
+      push!(update, :(_pstate.gradlogprior = copy(_sstate.pstate.gradlogprior)))
+    end
+  end
+  push!(update, :(_pstate.logtarget = _sstate.pstate.logtarget))
   if in(:loglikelihood, outopts[:monitor]) && job.parameter.loglikelihood! != nothing
     push!(update, :(_pstate.loglikelihood = _sstate.pstate.loglikelihood))
   end
   if in(:logprior, outopts[:monitor]) && job.parameter.logprior! != nothing
     push!(update, :(_pstate.logprior = _sstate.pstate.logprior))
-  end
-  if in(:gradloglikelihood, outopts[:monitor]) && job.parameter.gradloglikelihood! != nothing
-    push!(update, :(_pstate.gradloglikelihood = copy(_sstate.pstate.gradloglikelihood)))
-  end
-  if in(:gradlogprior, outopts[:monitor]) && job.parameter.gradlogprior! != nothing
-    push!(update, :(_pstate.gradlogprior = copy(_sstate.pstate.gradlogprior)))
   end
   if in(:accept, outopts[:diagnostics])
     push!(update, :(_pstate.diagnosticvalues[1] = true))
