@@ -346,7 +346,7 @@ function codegen_setdistribution_continuous_univariate_parameter(
   distribution::Symbol,
   f::Function
 )
-  body = :(setfield!($(parameter), $(QuoteNode(distribution)), $(f)($(:_state), $(:_states))))
+  body = :(setfield!($(parameter), $(QuoteNode(distribution)), $(f)(_state, _states)))
   @gensym setdistribution_continuous_univariate_parameter
   quote
     function $setdistribution_continuous_univariate_parameter{S<:VariableState}(
@@ -363,11 +363,7 @@ function codegen_setfield_via_distribution_continuous_univariate_parameter(
   distribution::Symbol,
   f::Function
 )
-  body = :(setfield!(
-    $(:_state),
-    $(QuoteNode(field)),
-    $(f)(getfield($(parameter), $(QuoteNode(distribution))), $(:_state).value)
-  ))
+  body = :(setfield!(_state, $(QuoteNode(field)), $(f)(getfield($(parameter), $(QuoteNode(distribution))), _state.value)))
   @gensym codegen_setfield_via_distribution_continuous_univariate_parameter
   quote
     function $codegen_setfield_via_distribution_continuous_univariate_parameter{S<:VariableState}(
@@ -388,12 +384,12 @@ function codegen_setfield_via_sum_continuous_univariate_parameter(
 )
   body = []
 
-  push!(body, :(getfield($(parameter), $(QuoteNode(plfield)))($(:_state), $(:_states))))
-  push!(body, :(getfield($(parameter), $(QuoteNode(ppfield)))($(:_state), $(:_states))))
+  push!(body, :(getfield($(parameter), $(QuoteNode(plfield)))(_state, _states)))
+  push!(body, :(getfield($(parameter), $(QuoteNode(ppfield)))(_state, _states)))
   push!(body, :(setfield!(
-    $(:_state),
+    _state,
     $(QuoteNode(stfield)),
-    getfield($(:_state), $(QuoteNode(slfield)))+getfield($(:_state), $(QuoteNode(spfield)))))
+    getfield(_state, $(QuoteNode(slfield)))+getfield(_state, $(QuoteNode(spfield)))))
   )
 
   @gensym codegen_setfield_via_sum_continuous_univariate_parameter
@@ -413,7 +409,7 @@ function codegen_setuptofields_continuous_univariate_parameter(parameter::BasicC
 
   for i in 1:length(fields)
     f = fields[i]
-    push!(body, :(getfield($(parameter), $(QuoteNode(f)))($(:_state), $(:_states))))
+    push!(body, :(getfield($(parameter), $(QuoteNode(f)))(_state, _states)))
   end
 
   @gensym codegen_setuptofields_continuous_univariate_parameter
