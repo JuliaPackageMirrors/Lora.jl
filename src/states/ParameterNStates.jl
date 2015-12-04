@@ -95,12 +95,12 @@ function codegen_copy_continuous_univariate_parameter_nstate(nstate::BasicContUn
   for j in 1:13
     if monitor[j]
       f = fnames[j]
-      push!(body, :(getfield($nstate, $(QuoteNode(f)))[$(:_i)] = getfield($(:_state), $(QuoteNode(f)))))
+      push!(body, :(getfield($nstate, $(QuoteNode(f)))[_i] = getfield(_state, $(QuoteNode(f)))))
     end
   end
 
   if !isempty(nstate.diagnosticvalues)
-    push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
+    push!(body, :($(nstate).diagnosticvalues[:, _i] = _state.diagnosticvalues))
   end
 
   @gensym copy_continuous_univariate_parameter_nstate
@@ -227,7 +227,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
   for j in 2:4
     if monitor[j]
       f = fnames[j]
-      push!(body, :(getfield($nstate, $(QuoteNode(f)))[$(:_i)] = getfield($(:_state), $(QuoteNode(f)))))
+      push!(body, :(getfield($nstate, $(QuoteNode(f)))[_i] = getfield(_state, $(QuoteNode(f)))))
     end
   end
 
@@ -236,10 +236,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       f = fnames[j]
       push!(
         body,
-        :(
-          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(:_state).size:$(:_i)*$(:_state).size] =
-          getfield($(:_state), $(QuoteNode(f)))
-        )
+        :(getfield($nstate, $(QuoteNode(f)))[1+(_i-1)*_state.size:_i*_state.size] = getfield(_state, $(QuoteNode(f))))
       )
     end
   end
@@ -252,10 +249,7 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       f = fnames[j]
       push!(
         body,
-        :(
-          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          getfield($(:_state), $(QuoteNode(f)))
-        )
+        :(getfield($nstate, $(QuoteNode(f)))[1+(_i-1)*$(statelen):_i*$(statelen)] = getfield(_state, $(QuoteNode(f))))
       )
     end
   end
@@ -268,16 +262,13 @@ function codegen_copy_continuous_multivariate_parameter_nstate(
       f = fnames[j]
       push!(
         body,
-        :(
-          getfield($nstate, $(QuoteNode(f)))[1+($(:_i)-1)*$(statelen):$(:_i)*$(statelen)] =
-          getfield($(:_state), $(QuoteNode(f)))
-        )
+        :(getfield($nstate, $(QuoteNode(f)))[1+(_i-1)*$(statelen):_i*$(statelen)] = getfield(_state, $(QuoteNode(f))))
       )
     end
   end
 
   if !isempty(nstate.diagnosticvalues)
-    push!(body, :($(nstate).diagnosticvalues[:, $(:_i)] = $(:_state).diagnosticvalues))
+    push!(body, :($(nstate).diagnosticvalues[:, _i] = _state.diagnosticvalues))
   end
 
   @gensym copy_continuous_multivariate_parameter_nstate

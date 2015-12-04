@@ -223,7 +223,7 @@ function codegen_resetplain_basic_mcjob(job::BasicMCJob)
   result::Expr
   body = []
 
-  push!(body, :(reset!($(job).pstate, $(job).vstate, $(:_x), $(job).parameter, $(job).sampler)))
+  push!(body, :(reset!($(job).pstate, $(job).vstate, _x, $(job).parameter, $(job).sampler)))
 
   push!(body, :(reset!($(job).sstate.tune, $(job).sampler)))
 
@@ -260,7 +260,7 @@ function codegen_reset_task_basic_mcjob(job::BasicMCJob)
   result::Expr
   body = []
 
-  push!(body, :($(job).task.storage[:reset]($(:_x))))
+  push!(body, :($(job).task.storage[:reset](_x)))
 
   @gensym reset_task_basic_mcjob
 

@@ -143,12 +143,12 @@ function codegen_open_continuous_parameter_iostream(iostream::BasicContParamIOSt
   body = []
   local f::Symbol
 
-  push!(body,:($(iostream).names = $(:_names)))
+  push!(body,:($(iostream).names = _names))
 
   for i in 1:14
     if iostream.(fnames[i]) != nothing
       f = fnames[i]
-      push!(body, :(setfield!($(iostream), $(QuoteNode(f)), open($(:_names)[$i], $(:_mode)))))
+      push!(body, :(setfield!($(iostream), $(QuoteNode(f)), open(_names[$i], _mode))))
     end
   end
 
@@ -224,7 +224,7 @@ end
 # To visually inspect code generation via codegen_write_continuous_parameter_iostream, try for example
 # using Lora
 #
-# iostream = BasicContParamIOStream((), 4, filepath="", "w")
+# iostream = BasicContParamIOStream((), 4, filepath="", mode="w")
 # Lora.codegen_write_continuous_parameter_iostream(iostream, fieldnames(BasicContParamIOStream))
 # close(iostream)
 
@@ -237,7 +237,7 @@ function codegen_write_continuous_parameter_iostream(iostream::BasicContParamIOS
       f = fnames[i]
       push!(
         body,
-        :(write(getfield($(iostream), $(QuoteNode(f))), join(getfield($(:_state), $(QuoteNode(f))), ','), "\n"))
+        :(write(getfield($(iostream), $(QuoteNode(f))), join(getfield(_state, $(QuoteNode(f))), ','), "\n"))
       )
     end
   end
