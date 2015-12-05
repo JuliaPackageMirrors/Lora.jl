@@ -65,7 +65,7 @@ type BasicMCJob{S<:VariableState} <: MCJob
       instance.close = () -> ()
       instance.save! = (i::Int) -> instance.output.copy(instance.pstate, i)
     elseif outopts[:destination] == :iostream
-      instance.close = () -> close(instance.output)
+      instance.close = () -> instance.output.close()
       instance.save! = eval(codegen_save_iostream_basic_mcjob(instance, outopts))
     else
       error(":destination must be set to :nstate or :iostream or :none, got $(outopts[:destination])")
@@ -217,7 +217,7 @@ function codegen_save_iostream_basic_mcjob(job::BasicMCJob, outopts::Dict)
   @gensym save_iostream_basic_mcjob
 
   quote
-    function $save_iostream_basic_mcjob()
+    function $save_iostream_basic_mcjob(_i::Int)
       $(body...)
     end
   end
