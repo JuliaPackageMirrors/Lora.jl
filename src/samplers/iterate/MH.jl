@@ -5,7 +5,7 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
   body = []
 
   vform = variate_form(job.pstate)
-  if (vform != Univariate) && (vform != Multivariate)
+  if vform != Univariate && vform != Multivariate
     error("Only univariate or multivariate parameter states allowed in MALA code generation")
   end
 
@@ -51,11 +51,11 @@ function codegen_iterate_mh(job::BasicMCJob, outopts::Dict)
 
   if job.tuner.verbose
     push!(body, :(
-      if _sstate.tune.proposed <= _range.burnin && mod(_sstate.tune.proposed, _tuner.period) == 0
+      if _sstate.tune.totproposed <= _range.burnin && mod(_sstate.tune.proposed, _tuner.period) == 0
         rate!(_sstate.tune)
         println(
           "Burnin iteration ",
-          _sstate.tune.proposed,
+          _sstate.tune.totproposed,
           " of ",
           _range.burnin,
           ": ",

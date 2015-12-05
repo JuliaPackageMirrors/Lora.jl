@@ -12,8 +12,8 @@ tests =
     "BasicContMuvParameter",
     "dependencies",
     "GenericModel",
-    "generators",
-    "tuners"
+    "generators"
+    # "tuners",
     # "VanillaMCTuner",
     # "AcceptanceRateMCTuner",
     # "MH"

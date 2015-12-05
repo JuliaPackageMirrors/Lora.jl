@@ -23,15 +23,6 @@ end
 
 VanillaMCTune(accepted::Int=0, proposed::Int=0, totproposed::Int=0) = VanillaMCTune(accepted, proposed, totproposed, NaN)
 
-function reset_burnin!(tune::VanillaMCTune)
-  tune.totproposed += tune.proposed
-  (tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN)
-end
-
-count!(tune::VanillaMCTune) = (tune.accepted += 1)
-
-rate!(tune::VanillaMCTune) = (tune.rate = tune.accepted/tune.proposed)
-
 ### VanillaMCTuner
 
 # VanillaMCTuner is a dummy tuner type in the sense that it does not perform any tuning

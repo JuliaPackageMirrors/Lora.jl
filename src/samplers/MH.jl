@@ -33,7 +33,7 @@ immutable MH <: MHSampler
   randproposal::Function # random sampling from proposal density
 
   function MH(symmetric::Bool, logproposal::Union{Function, Void}, randproposal::Function)
-    if symmetric && (logproposal != nothing)
+    if symmetric && logproposal != nothing
       error("If the symmetric field is true, then logproposal is not used in the calculations")
     end
     new(symmetric, logproposal, randproposal)

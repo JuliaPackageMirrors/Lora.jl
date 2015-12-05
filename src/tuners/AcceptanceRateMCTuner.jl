@@ -42,15 +42,6 @@ end
 AcceptanceRateMCTune(step::Real=1., accepted::Int=0, proposed::Int=0, totproposed::Int=0) =
   AcceptanceRateMCTune(step, accepted, proposed, totproposed, NaN)
 
-function reset_burnin!(tune::AcceptanceRateMCTune)
-  tune.totproposed += tune.proposed
-  (tune.accepted, tune.proposed, tune.rate) = (0, 0, NaN)
-end
-
-count!(tune::AcceptanceRateMCTune) = (tune.accepted += 1)
-
-rate!(tune::AcceptanceRateMCTune) = (tune.rate = tune.accepted/tune.proposed)
-
 ### AcceptanceRateMCTuner
 
 # AcceptanceRateMCTuner tunes empirically on the basis of the discrepancy between observed and target acceptance rate

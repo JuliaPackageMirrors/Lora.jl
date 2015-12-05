@@ -20,14 +20,15 @@ abstract HMCSampler <: MCSampler
 
 abstract LMCSampler <: MCSampler
 
-tuner_state(sampler::MCSampler, tuner::VanillaMCTuner) = VanillaMCTune()
+tuner_state(sampler::MCSampler, tuner::VanillaMCTuner) = VanillaMCTune(0, 0, tuner.period)
 
-tuner_state(sampler::MHSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune()
-tuner_state(sampler::LMCSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune(sampler.driftstep)
+tuner_state(sampler::MHSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune(1., 0, 0, tuner.period)
+tuner_state(sampler::LMCSampler, tuner::AcceptanceRateMCTuner) = AcceptanceRateMCTune(sampler.driftstep, 0, 0, tuner.period)
 
-reset!(tune::VanillaMCTune) = ((tune.accepted, tune.proposed, tune.totproposed, tune.rate) = (0, 0, 0, NaN))
+reset!(tune::VanillaMCTune, sampler::MCSampler, tuner::VanillaMCTuner) =
+  ((tune.accepted, tune.proposed, tune.totproposed, tune.rate) = (0, 0, tuner.period, NaN))
 
-function reset!(tune::AcceptanceRateMCTune, sampler::LMCSampler)
+function reset!(tune::AcceptanceRateMCTune, sampler::LMCSampler, tuner::AcceptanceRateMCTuner)
   tune.step = sampler.driftstep
-  (tune.accepted, tune.proposed, tune.totproposed, tune.rate) = (0, 0, 0, NaN)
+  (tune.accepted, tune.proposed, tune.totproposed, tune.rate) = (0, 0, tuner.period, NaN)
 end
