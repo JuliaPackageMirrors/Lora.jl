@@ -434,5 +434,9 @@ value_support(s::BasicContMuvParameter) = value_support(super(typeof(s)))
 variate_form(s::Type{BasicContMuvParameter}) = variate_form(super(s))
 variate_form(s::BasicContMuvParameter) = variate_form(super(typeof(s)))
 
-default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}) =
-  BasicContMuvParameterState(value)
+default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}, outopts::Dict) =
+  BasicContMuvParameterState(
+    value,
+    [getfield(variable, fieldnames(BasicContMuvParameter)[i]) == nothing ? false : true for i in 10:18],
+    in(:accept, outopts[:diagnostics]) ? [:accept] : Symbol[]
+  )

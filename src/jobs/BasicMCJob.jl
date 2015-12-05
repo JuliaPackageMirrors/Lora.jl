@@ -170,7 +170,11 @@ function BasicMCJob(
     elseif isa(v0[i], Number) ||
       (isa(v0[i], Vector) && issubtype(eltype(v0[i]), Number)) ||
       (isa(v0[i], Matrix) && issubtype(eltype(v0[i]), Number))
-      vstate[i] = default_state(model.vertices[i], v0[i])
+      if isa(model.vertices[pindex], Parameter)
+        vstate[i] = default_state(model.vertices[i], v0[i], outopts)
+      else
+        vstate[i] = default_state(model.vertices[i], v0[i])
+      end
     else
       error("Variable state or state value of type $(typeof(v0[i])) not valid")
     end

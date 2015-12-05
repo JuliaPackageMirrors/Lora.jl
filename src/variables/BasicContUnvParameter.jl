@@ -429,4 +429,5 @@ value_support(s::BasicContUnvParameter) = value_support(super(typeof(s)))
 variate_form(s::Type{BasicContUnvParameter}) = variate_form(super(s))
 variate_form(s::BasicContUnvParameter) = variate_form(super(typeof(s)))
 
-default_state{N<:Real}(variable::BasicContUnvParameter, value::Vector{N}) = BasicContUnvParameterState(value)
+default_state{N<:Real}(variable::BasicContUnvParameter, value::N, outopts::Dict) =
+  BasicContUnvParameterState(value, in(:accept, outopts[:diagnostics]) ? [:accept] : Symbol[])
