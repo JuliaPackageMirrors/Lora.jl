@@ -44,9 +44,6 @@ function codegen_iterate_mala(job::BasicMCJob, outopts::Dict)
 
   push!(body, :(_sstate.ratio = _sstate.pstate.logtarget+_sstate.poldgivennew-_pstate.logtarget-_sstate.pnewgivenold))
 
-
-
-
   if vform == Univariate
     push!(update, :(_pstate.value = _sstate.pstate.value))
     push!(update, :(_pstate.gradlogtarget = _sstate.pstate.gradlogtarget))
