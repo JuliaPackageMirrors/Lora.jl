@@ -423,11 +423,11 @@ function codegen_setuptofields_continuous_univariate_parameter(parameter::BasicC
   end
 end
 
-value_support(s::Type{BasicContUnvParameter}) = value_support(super(s))
-value_support(s::BasicContUnvParameter) = value_support(super(typeof(s)))
+value_support(s::Type{BasicContUnvParameter}) = Continuous
+value_support(s::BasicContUnvParameter) = Continuous
 
-variate_form(s::Type{BasicContUnvParameter}) = variate_form(super(s))
-variate_form(s::BasicContUnvParameter) = variate_form(super(typeof(s)))
+variate_form(s::Type{BasicContUnvParameter}) = Univariate
+variate_form(s::BasicContUnvParameter) = Univariate
 
 default_state{N<:Real}(variable::BasicContUnvParameter, value::N, outopts::Dict) =
   BasicContUnvParameterState(value, in(:accept, outopts[:diagnostics]) ? [:accept] : Symbol[])

@@ -1,16 +1,14 @@
 ### Abstract parameter NStates
 
-abstract ParameterNState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableNState{F, N}
+abstract ParameterNState{S<:ValueSupport, F<:VariateForm} <: VariableNState{F}
 
 typealias MarkovChain ParameterNState
-
-Base.eltype{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterNState{S, F, N}}) = N
 
 ### Parameter NState subtypes
 
 ## BasicContUnvParameterNState
 
-type BasicContUnvParameterNState{N<:Real} <: ParameterNState{Continuous, Univariate, N}
+type BasicContUnvParameterNState{N<:Real} <: ParameterNState{Continuous, Univariate}
   value::Vector{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}
@@ -123,7 +121,7 @@ Base.isequal{S<:BasicContUnvParameterNState}(z::S, w::S) =
 
 ## BasicContMuvParameterNState
 
-type BasicContMuvParameterNState{N<:Real} <: ParameterNState{Continuous, Multivariate, N}
+type BasicContMuvParameterNState{N<:Real} <: ParameterNState{Continuous, Multivariate}
   value::Matrix{N}
   loglikelihood::Vector{N}
   logprior::Vector{N}

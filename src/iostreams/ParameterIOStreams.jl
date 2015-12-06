@@ -245,7 +245,7 @@ function codegen_write_continuous_parameter_iostream(iostream::BasicContParamIOS
   @gensym write_continuous_parameter_iostream
 
   quote
-    function $write_continuous_parameter_iostream{F<:VariateForm, N<:Number}(_state::ParameterState{Continuous, F, N})
+    function $write_continuous_parameter_iostream{F<:VariateForm}(_state::ParameterState{Continuous, F})
       $(body...)
     end
   end
@@ -345,7 +345,7 @@ function Base.read!{N<:Real}(iostream::BasicContParamIOStream, nstate::BasicCont
 end
 
 function Base.read{N<:Real}(iostream::BasicContParamIOStream, T::Type{N})
-  nstate::Union{ParameterNState{Continuous, Univariate, N}, ParameterNState{Continuous, Multivariate, N}}
+  nstate::Union{ParameterNState{Continuous, Univariate}, ParameterNState{Continuous, Multivariate}}
   fnames = fieldnames(BasicContParamIOStream)
   l = length(iostream.size)
 

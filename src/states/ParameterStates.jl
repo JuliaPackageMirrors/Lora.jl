@@ -1,16 +1,15 @@
 ### Abstract parameter states
 
-abstract ParameterState{S<:ValueSupport, F<:VariateForm, N<:Number} <: VariableState{F, N}
+abstract ParameterState{S<:ValueSupport, F<:VariateForm} <: VariableState{F}
 
-value_support{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = S
-variate_form{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = F
-Base.eltype{S<:ValueSupport, F<:VariateForm, N<:Number}(::Type{ParameterState{S, F, N}}) = N
+value_support{S<:ValueSupport, F<:VariateForm}(::Type{ParameterState{S, F}}) = S
+variate_form{S<:ValueSupport, F<:VariateForm}(::Type{ParameterState{S, F}}) = F
 
 ### Parameter state subtypes
 
 ## BasicContUnvParameterState
 
-type BasicContUnvParameterState{N<:Real} <: ParameterState{Continuous, Univariate, N}
+type BasicContUnvParameterState{N<:Real} <: ParameterState{Continuous, Univariate}
   value::N
   loglikelihood::N
   logprior::N
@@ -44,11 +43,11 @@ BasicContUnvParameterState{N<:Real}(
 ) =
   BasicContUnvParameterState(convert(N, NaN), diagnostickeys, diagnosticvalues)
 
-value_support{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = value_support(super(s))
-value_support{N<:Real}(s::BasicContUnvParameterState{N}) = value_support(super(typeof(s)))
+value_support{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = Continuous
+value_support{N<:Real}(s::BasicContUnvParameterState{N}) = Continuous
 
-variate_form{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = variate_form(super(s))
-variate_form{N<:Real}(s::BasicContUnvParameterState{N}) = variate_form(super(typeof(s)))
+variate_form{N<:Real}(s::Type{BasicContUnvParameterState{N}}) = Univariate
+variate_form{N<:Real}(s::BasicContUnvParameterState{N}) = Univariate
 
 Base.eltype{N<:Real}(::Type{BasicContUnvParameterState{N}}) = N
 Base.eltype{N<:Real}(s::BasicContUnvParameterState{N}) = N
@@ -63,7 +62,7 @@ generate_empty(state::BasicContUnvParameterState) = BasicContUnvParameterState(s
 
 ## BasicContMuvParameterState
 
-type BasicContMuvParameterState{N<:Real} <: ParameterState{Continuous, Multivariate, N}
+type BasicContMuvParameterState{N<:Real} <: ParameterState{Continuous, Multivariate}
   value::Vector{N}
   loglikelihood::N
   logprior::N
@@ -145,11 +144,11 @@ BasicContMuvParameterState{N<:Real}(
 ) =
   BasicContMuvParameterState(Array(N, size), monitor, diagnostickeys, diagnosticvalues)
 
-value_support{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = value_support(super(s))
-value_support{N<:Real}(s::BasicContMuvParameterState{N}) = value_support(super(typeof(s)))
+value_support{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = Continuous
+value_support{N<:Real}(s::BasicContMuvParameterState{N}) = Continuous
 
-variate_form{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = variate_form(super(s))
-variate_form{N<:Real}(s::BasicContMuvParameterState{N}) = variate_form(super(typeof(s)))
+variate_form{N<:Real}(s::Type{BasicContMuvParameterState{N}}) = Multivariate
+variate_form{N<:Real}(s::BasicContMuvParameterState{N}) = Multivariate
 
 Base.eltype{N<:Real}(::Type{BasicContMuvParameterState{N}}) = N
 Base.eltype{N<:Real}(s::BasicContMuvParameterState{N}) = N

@@ -2,12 +2,12 @@
 
 # MHState holds the internal state ("local variables") of the Metropolis-Hastings sampler
 
-type MHState{S<:ParameterState} <: MCSamplerState
-  pstate::S # Parameter state used internally by MH
+type MHState <: MCSamplerState
+  pstate::ParameterState # Parameter state used internally by MH
   tune::MCTunerState
   ratio::Real # Acceptance ratio
 
-  function MHState(pstate::S, tune::MCTunerState, ratio::Real)
+  function MHState(pstate::ParameterState, tune::MCTunerState, ratio::Real)
     if !isnan(ratio)
       @assert 0 < ratio < 1 "Acceptance ratio should be between 0 and 1"
     end
@@ -15,12 +15,7 @@ type MHState{S<:ParameterState} <: MCSamplerState
   end
 end
 
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState, ratio::Real) = MHState{S}(pstate, tune, ratio)
-
-MHState{S<:ParameterState}(pstate::S, tune::MCTunerState=VanillaMCTune()) = MHState(pstate, tune, NaN)
-
-Base.eltype{S<:ParameterState}(::Type{MHState{S}}) = S
-Base.eltype{S<:ParameterState}(s::MHState{S}) = S
+MHState(pstate::ParameterState, tune::MCTunerState=VanillaMCTune()) = MHState(pstate, tune, NaN)
 
 ### Metropolis-Hastings (MH) sampler
 
@@ -59,8 +54,8 @@ MH{N<:Real}(::Type{N}=Float64) = MH(x::N -> rand(Normal(x, 1.0)))
 
 ## Initialize parameter state
 
-function initialize!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function initialize!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
   parameter::Parameter{Continuous, Univariate},
   sampler::MH
@@ -69,8 +64,8 @@ function initialize!{N<:Real, S<:VariableState}(
   @assert isfinite(pstate.logtarget) "Log-target not finite: initial values out of parameter support"
 end
 
-function initialize!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+function initialize!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
   parameter::Parameter{Continuous, Multivariate},
   sampler::MH
@@ -86,10 +81,10 @@ sampler_state(sampler::MH, tuner::MCTuner, pstate::ParameterState) =
 
 ## Reset parameter state
 
-function reset!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function reset!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
-  x::N,
+  x::Real,
   parameter::Parameter{Continuous, Univariate},
   sampler::MH
 )
@@ -98,7 +93,7 @@ function reset!{N<:Real, S<:VariableState}(
 end
 
 function reset!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
   x::Vector{N},
   parameter::Parameter{Continuous, Multivariate},
@@ -110,10 +105,10 @@ end
 
 ## Initialize task
 
-function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function initialize_task!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
-  sstate::MHState{ParameterState{Continuous, Univariate, N}},
+  sstate::MHState,
   parameter::Parameter{Continuous, Univariate},
   sampler::MH,
   tuner::MCTuner,
@@ -129,10 +124,10 @@ function initialize_task!{N<:Real, S<:VariableState}(
   end
 end
 
-function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+function initialize_task!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
-  sstate::MHState{ParameterState{Continuous, Multivariate, N}},
+  sstate::MHState,
   parameter::Parameter{Continuous, Multivariate},
   sampler::MH,
   tuner::MCTuner,

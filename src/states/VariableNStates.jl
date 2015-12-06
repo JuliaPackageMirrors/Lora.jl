@@ -1,8 +1,6 @@
 ### Abstract variable NStates
 
-abstract VariableNState{F<:VariateForm, N<:Number}
-
-Base.eltype{F<:VariateForm, N<:Number}(::Type{VariableNState{F, N}}) = N
+abstract VariableNState{F<:VariateForm}
 
 add_dimension(n::Number) = eltype(n)[n]
 add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)
@@ -11,7 +9,7 @@ add_dimension(a::Array, sa::Tuple=size(a)) = reshape(a, sa..., 1)
 
 ## BasicUnvVariableNState
 
-type BasicUnvVariableNState{N<:Number} <: VariableNState{Univariate, N}
+type BasicUnvVariableNState{N<:Number} <: VariableNState{Univariate}
   value::Vector{N}
   n::Int
 end
@@ -27,7 +25,7 @@ Base.copy!(nstate::BasicUnvVariableNState, state::BasicUnvVariableState, i::Int)
 
 ## BasicMuvVariableNState
 
-type BasicMuvVariableNState{N<:Number} <: VariableNState{Multivariate, N}
+type BasicMuvVariableNState{N<:Number} <: VariableNState{Multivariate}
   value::Matrix{N}
   size::Int
   n::Int
@@ -46,7 +44,7 @@ Base.copy!(nstate::BasicMuvVariableNState, state::BasicMuvVariableState, i::Int)
 
 ## BasicMavVariableNState
 
-type BasicMavVariableNState{N<:Number} <: VariableNState{Matrixvariate, N}
+type BasicMavVariableNState{N<:Number} <: VariableNState{Matrixvariate}
   value::Array{N, 3}
   size::Tuple{Int, Int}
   n::Int

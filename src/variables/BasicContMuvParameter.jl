@@ -428,11 +428,11 @@ function codegen_setuptofields_continuous_multivariate_parameter(
   end
 end
 
-value_support(s::Type{BasicContMuvParameter}) = value_support(super(s))
-value_support(s::BasicContMuvParameter) = value_support(super(typeof(s)))
+value_support(s::Type{BasicContMuvParameter}) = Continuous
+value_support(s::BasicContMuvParameter) = Continuous
 
-variate_form(s::Type{BasicContMuvParameter}) = variate_form(super(s))
-variate_form(s::BasicContMuvParameter) = variate_form(super(typeof(s)))
+variate_form(s::Type{BasicContMuvParameter}) = Multivariate
+variate_form(s::BasicContMuvParameter) = Multivariate
 
 default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}, outopts::Dict) =
   BasicContMuvParameterState(

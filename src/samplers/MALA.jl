@@ -6,23 +6,23 @@ abstract MALAState <: MCSamplerState
 
 ## UnvMALAState holds the internal state ("local variables") of the MALA sampler for univariate parameters
 
-type UnvMALAState{N<:Real} <: MALAState
-  pstate::ParameterState{Continuous, Univariate, N} # Parameter state used internally by MALA
-  driftstep::N # Drift stepsize for a single Monte Carlo iteration
+type UnvMALAState <: MALAState
+  pstate::ParameterState{Continuous, Univariate} # Parameter state used internally by MALA
+  driftstep::Real # Drift stepsize for a single Monte Carlo iteration
   tune::MCTunerState
-  ratio::N
-  vmean::N
-  pnewgivenold::N
-  poldgivennew::N
+  ratio::Real
+  vmean::Real
+  pnewgivenold::Real
+  poldgivennew::Real
 
   function UnvMALAState(
-    pstate::ParameterState{Continuous, Univariate, N},
-    driftstep::N,
+    pstate::ParameterState{Continuous, Univariate},
+    driftstep::Real,
     tune::MCTunerState,
-    ratio::N,
-    vmean::N,
-    pnewgivenold::N,
-    poldgivennew::N
+    ratio::Real,
+    vmean::Real,
+    pnewgivenold::Real,
+    poldgivennew::Real
   )
     if !isnan(driftstep)
       @assert driftstep > 0 "Drift step size must be positive"
@@ -34,46 +34,28 @@ type UnvMALAState{N<:Real} <: MALAState
   end
 end
 
-UnvMALAState{N<:Real}(
-  pstate::ParameterState{Continuous, Univariate, N},
-  driftstep::N,
-  tune::MCTunerState,
-  ratio::N,
-  vmean::N,
-  pnewgivenold::N,
-  poldgivennew::N
-) =
-  UnvMALAState{N}(pstate, driftstep, tune, ratio, vmean, pnewgivenold, poldgivennew)
-
-UnvMALAState{N<:Real}(
-  pstate::ParameterState{Continuous, Univariate, N},
-  driftstep::N=1.,
-  tune::MCTunerState=VanillaMCTune()
-) =
+UnvMALAState(pstate::ParameterState{Continuous, Univariate}, driftstep::Real=1., tune::MCTunerState=VanillaMCTune()) =
   UnvMALAState(pstate, driftstep, tune, NaN, NaN, NaN, NaN)
-
-Base.eltype{N<:Real}(::Type{UnvMALAState{N}}) = N
-Base.eltype{N<:Real}(s::UnvMALAState{N}) = N
 
 ## MuvMALAState holds the internal state ("local variables") of the MALA sampler for multivariate parameters
 
 type MuvMALAState{N<:Real} <: MALAState
-  pstate::ParameterState{Continuous, Multivariate, N} # Parameter state used internally by MALA
-  driftstep::N # Drift stepsize for a single Monte Carlo iteration
+  pstate::ParameterState{Continuous, Multivariate} # Parameter state used internally by MALA
+  driftstep::Real # Drift stepsize for a single Monte Carlo iteration
   tune::MCTunerState
-  ratio::N
+  ratio::Real
   vmean::Vector{N}
-  pnewgivenold::N
-  poldgivennew::N
+  pnewgivenold::Real
+  poldgivennew::Real
 
   function MuvMALAState(
-    pstate::ParameterState{Continuous, Multivariate, N},
-    driftstep::N,
+    pstate::ParameterState{Continuous, Multivariate},
+    driftstep::Real,
     tune::MCTunerState,
-    ratio::N,
+    ratio::Real,
     vmean::Vector{N},
-    pnewgivenold::N,
-    poldgivennew::N
+    pnewgivenold::Real,
+    poldgivennew::Real
   )
     if !isnan(driftstep)
       @assert driftstep > 0 "Drift step size must be positive"
@@ -86,21 +68,17 @@ type MuvMALAState{N<:Real} <: MALAState
 end
 
 MuvMALAState{N<:Real}(
-  pstate::ParameterState{Continuous, Multivariate, N},
-  driftstep::N,
+  pstate::ParameterState{Continuous, Multivariate},
+  driftstep::Real,
   tune::MCTunerState,
-  ratio::N,
+  ratio::Real,
   vmean::Vector{N},
-  pnewgivenold::N,
-  poldgivennew::N
+  pnewgivenold::Real,
+  poldgivennew::Real
 ) =
   MuvMALAState{N}(pstate, driftstep, tune, ratio, vmean, pnewgivenold, poldgivennew)
 
-MuvMALAState{N<:Real}(
-  pstate::ParameterState{Continuous, Multivariate, N},
-  driftstep::N=1.,
-  tune::MCTunerState=VanillaMCTune()
-) =
+MuvMALAState(pstate::ParameterState{Continuous, Multivariate}, driftstep::Real=1., tune::MCTunerState=VanillaMCTune()) =
   MuvMALAState(pstate, driftstep, tune, NaN, Array(N, pstate.size), NaN, NaN)
 
 Base.eltype{N<:Real}(::Type{MuvMALAState{N}}) = N
@@ -123,8 +101,8 @@ MALA() = MALA(1.)
 
 ## Initialize parameter state
 
-function initialize!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function initialize!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
   parameter::Parameter{Continuous, Univariate},
   sampler::MALA
@@ -134,8 +112,8 @@ function initialize!{N<:Real, S<:VariableState}(
   @assert isfinite(pstate.gradlogtarget) "Gradient of log-target not finite: initial values out of parameter support"
 end
 
-function initialize!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+function initialize!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
   parameter::Parameter{Continuous, Multivariate},
   sampler::MALA
@@ -147,18 +125,18 @@ end
 
 ## Initialize MuvMALAState
 
-sampler_state{N<:Real}(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Univariate, N}) =
+sampler_state(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Univariate}) =
   UnvMALAState(generate_empty(pstate), sampler.driftstep, tuner_state(sampler, tuner))
 
-sampler_state{N<:Real}(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Multivariate, N}) =
+sampler_state(sampler::MALA, tuner::MCTuner, pstate::ParameterState{Continuous, Multivariate}) =
   MuvMALAState(generate_empty(pstate), sampler.driftstep, tuner_state(sampler, tuner))
 
 ## Reset parameter state
 
-function reset!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function reset!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
-  x::N,
+  x::Real,
   parameter::Parameter{Continuous, Univariate},
   sampler::MALA
 )
@@ -167,7 +145,7 @@ function reset!{N<:Real, S<:VariableState}(
 end
 
 function reset!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
   x::Vector{N},
   parameter::Parameter{Continuous, Multivariate},
@@ -179,10 +157,10 @@ end
 
 ## Initialize task
 
-function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Univariate, N},
+function initialize_task!{S<:VariableState}(
+  pstate::ParameterState{Continuous, Univariate},
   vstate::Vector{S},
-  sstate::UnvMALAState{N},
+  sstate::UnvMALAState,
   parameter::Parameter{Continuous, Univariate},
   sampler::MALA,
   tuner::MCTuner,
@@ -199,7 +177,7 @@ function initialize_task!{N<:Real, S<:VariableState}(
 end
 
 function initialize_task!{N<:Real, S<:VariableState}(
-  pstate::ParameterState{Continuous, Multivariate, N},
+  pstate::ParameterState{Continuous, Multivariate},
   vstate::Vector{S},
   sstate::MuvMALAState{N},
   parameter::Parameter{Continuous, Multivariate},
