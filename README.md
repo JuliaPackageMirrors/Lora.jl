@@ -15,7 +15,7 @@ well as further developments, will be completed shortly. Progress is being track
 The documentation is out of date, but will be brought up-to-date fairly soon. In the meantime, this README file provides a
 few examples of the new interface, explaining how to get up to speed with the new face of Lora.
 
-Example 1: sampling from an unnormalized normal target
+Example: sampling from an unnormalized normal target
 ------------------------------
 
 ```
@@ -157,6 +157,57 @@ Task-based jobs can also be reset:
 
 ```
 job.reset!([-2.8, 3.4])
+
+chain = run(job)
+```
+
+To run a sampler which requires the gradient of the log-target, such as MALA, try
+
+```
+using Lora
+
+vkeys = [:p]
+
+plogtarget(z::Vector{Float64}) = -dot(z, z)
+
+pgradlogtarget(z::Vector{Float64}) = -2*z
+
+p = BasicContMuvParameter(vkeys, 1, logtarget=plogtarget, gradlogtarget=pgradlogtarget)
+
+model = single_parameter_likelihood_model(p)
+
+### Set driftstep to 0.9
+
+sampler = MALA(0.9)
+
+mcrange = BasicMCRange(nsteps=10000, burnin=1000)
+
+v0 = Dict(:p=>[5.1, -0.9])
+
+### Save grad-log-target along with the chain (value and log-target)
+
+outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget, :gradlogtarget], :diagnostics=>[:accept])
+
+job = BasicMCJob(model, sampler, mcrange, v0, tuner=VanillaMCTuner(verbose=true), outopts=outopts)
+
+chain = run(job)
+
+chain.gradlogtarget
+
+[mean(chain.value[i, :]) for i in 1:2]
+```
+
+To adapt the MALA driftstep empirically during burnin towards an intended acceptance rate of 60%, run
+
+```
+job = BasicMCJob(
+  model,
+  sampler,
+  mcrange,
+  v0,
+  tuner=AcceptanceRateMCTuner(0.6, verbose=true),
+  outopts=outopts
+)
 
 chain = run(job)
 ```

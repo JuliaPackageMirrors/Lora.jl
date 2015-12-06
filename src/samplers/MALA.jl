@@ -79,7 +79,7 @@ MuvMALAState{N<:Real}(
   MuvMALAState{N}(pstate, driftstep, tune, ratio, vmean, pnewgivenold, poldgivennew)
 
 MuvMALAState(pstate::ParameterState{Continuous, Multivariate}, driftstep::Real=1., tune::MCTunerState=VanillaMCTune()) =
-  MuvMALAState(pstate, driftstep, tune, NaN, Array(N, pstate.size), NaN, NaN)
+  MuvMALAState(pstate, driftstep, tune, NaN, Array(eltype(pstate), pstate.size), NaN, NaN)
 
 Base.eltype{N<:Real}(::Type{MuvMALAState{N}}) = N
 Base.eltype{N<:Real}(s::MuvMALAState{N}) = N
