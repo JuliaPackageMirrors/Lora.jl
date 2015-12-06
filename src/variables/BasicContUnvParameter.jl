@@ -429,5 +429,7 @@ value_support(s::BasicContUnvParameter) = Continuous
 variate_form(s::Type{BasicContUnvParameter}) = Univariate
 variate_form(s::BasicContUnvParameter) = Univariate
 
-default_state{N<:Real}(variable::BasicContUnvParameter, value::N, outopts::Dict) =
+function default_state{N<:Real}(variable::BasicContUnvParameter, value::N, outopts::Dict)
+  augment!(outopts)
   BasicContUnvParameterState(value, in(:accept, outopts[:diagnostics]) ? [:accept] : Symbol[])
+end

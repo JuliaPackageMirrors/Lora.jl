@@ -434,9 +434,11 @@ value_support(s::BasicContMuvParameter) = Continuous
 variate_form(s::Type{BasicContMuvParameter}) = Multivariate
 variate_form(s::BasicContMuvParameter) = Multivariate
 
-default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}, outopts::Dict) =
+function default_state{N<:Real}(variable::BasicContMuvParameter, value::Vector{N}, outopts::Dict)
+  augment!(outopts)
   BasicContMuvParameterState(
     value,
     [getfield(variable, fieldnames(BasicContMuvParameter)[i]) == nothing ? false : true for i in 10:18],
     in(:accept, outopts[:diagnostics]) ? [:accept] : Symbol[]
   )
+end

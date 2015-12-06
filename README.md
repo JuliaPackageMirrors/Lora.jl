@@ -110,14 +110,16 @@ outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget], :diagnostics=>[:acce
 job = BasicMCJob(model, sampler, mcrange, v0, tuner=VanillaMCTuner(verbose=true), outopts=outopts)
 
 chain = run(job)
-
-chain.logtarget
 ```
 
 Instead of saving the output in memory, it can be written in file via the output option `:destination=>:iostream`:
 
 ```
-outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget], :diagnostics=>[:accept], :destination=>:iostream)
+outopts = Dict{Symbol, Any}(
+  :monitor=>[:value, :logtarget],
+  :diagnostics=>[:accept],
+  :destination=>:iostream
+)
 
 job = BasicMCJob(model, sampler, mcrange, v0, tuner=VanillaMCTuner(verbose=true), outopts=outopts)
 
@@ -139,6 +141,24 @@ outopts = Dict{Symbol, Any}(
 job = BasicMCJob(model, sampler, mcrange, v0, tuner=VanillaMCTuner(verbose=true), outopts=outopts)
 
 run(job)
+```
+
+To use Julia tasks for running the job, set `plain=false`:
+
+```
+outopts = Dict{Symbol, Any}(:monitor=>[:value, :logtarget], :diagnostics=>[:accept])
+
+job = BasicMCJob(model, sampler, mcrange, v0, tuner=VanillaMCTuner(verbose=true), outopts=outopts, plain=false)
+
+chain = run(job)
+```
+
+Task-based jobs can also be reset:
+
+```
+job.reset!([-2.8, 3.4])
+
+chain = run(job)
 ```
 
 Documentation
